@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SG Mobile Fix Setia Alam - smartphone services & repairing</title>
+
+  <link rel="manifest" href="/manifest.json">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  
+</head>
+<body class="font-sans bg-gray-50 text-gray-800">
+
+  <!-- ==================== NAVBAR (Top Header - Hamburger kiri) ==================== -->
+<nav class="sticky top-0 z-50 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-300 border-b border-slate-300 shadow-md">
+  <div class="container mx-auto px-3 flex justify-between items-center py-2">
+
+    <!-- KIRI: Hamburger Button -->
+    <div class="flex items-center">
+      <button type="button" 
+              class="menu-button text-slate-500 hover:text-orange-400 transition px-3 py-2 rounded-full hover:bg-gray-300 active" 
+              id="bottom-menu-button">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- KANAN: Social Media + Share Button -->
+    <div class="flex items-center gap-2">
+
+      <!-- Social Media Icons - Bulat + Warna Asal -->
+      <a href="https://wa.me/60122626434" target="_blank" 
+         class="w-6 h-6 rounded-full bg-[#25D366] hover:bg-[#128C7E] text-white flex items-center justify-center transition text-xm shadow-md hover:shadow-lg hover:scale-105 transition" 
+         id="shareWhatsapp" title="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+
+      <a href="https://t.me/sgmobile" target="_blank" 
+         class="w-6 h-6 rounded-full bg-[#26A5E4] hover:bg-[#1A8BC0] text-white flex items-center justify-center transition text-sm shadow-md hover:shadow-lg hover:scale-105 transition" 
+         id="shareTelegram" title="Telegram">
+        <i class="fab fa-telegram-plane"></i>
+      </a>
+
+      <a href="https://twitter.com/sgmobile" target="_blank" 
+         class="w-6 h-6 rounded-full bg-black hover:bg-[#1a1a1a] text-white flex items-center justify-center transition text-sm shadow-md hover:shadow-lg hover:scale-105 transition" 
+         id="shareTwitter" title="Twitter">
+        <i class="fa-brands fa-x-twitter"></i>
+      </a>
+
+      <a href="https://facebook.com/sgmobile" target="_blank" 
+         class="w-6 h-6 rounded-full bg-[#1877F2] hover:bg-[#0D65D9] text-white flex items-center justify-center transition text-sm shadow-md hover:shadow-lg hover:scale-105 transition" 
+         id="shareFacebook" title="Facebook">
+        <i class="fab fa-facebook-f"></i>
+      </a>
+
+      <!-- Share Button -->
+<button id="share-btn" 
+        class="w-9 h-9 rounded-full bg-blue-500 hover:bg-amber-500 text-white flex items-center justify-center transition-all duration-300 text-xl shadow-md hover:shadow-lg hover:scale-105">
+  <i class="fas fa-share-alt"></i>
+</button>
+
+    </div>
+
+  </div>
+</nav>
+
+  <!-- ==================== MOBILE MENU OVERLAY ==================== -->
+  <div id="mobile-menu-overlay"></div>
+
+  <!-- ==================== MOBILE MENU (Full Screen Grid 2 lajur) ==================== -->
+  <div id="mobile-menu">
+    <div class="menu-header">
+      <div class="flex items-center gap-3">
+        <img src="https://i.postimg.cc/LXBwsj4D/file_0000000089b871fabddc7461e7799b4c.png"
+             alt="SG Mobile Fix"
+             class="h-16 w-auto object-contain">
+        <span class="logo-text" data-i18n-key="Menu">Menu</span>
+      </div>
+      <button id="close-menu-btn" class="close-btn" aria-label="Tutup menu">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="menu-grid">
+
+      <!-- Night mode / Light mode -->
+      <a href="#" id="theme-toggle" class="menu-link">
+        <i class="fas fa-moon text-yellow-500"></i>
+        <span></span>
+      </a>
+
+      <!-- Bahasa Malaysia / English -->
+      <a href="#" id="language-toggle" class="menu-link">
+        <i class="fas fa-globe-americas text-blue-500"></i>
+        <span id="language-text" data-i18n-key="LanguageToggle"></span>
+      </a>
+
+      <!-- Link Tree -->
+<a href="https://linktr.ee/sgsetiaalam" class="menu-link" id="linktree-link">
+  <i class="fas fa-tree" id="icon-linktree-link"></i>
+  <span data-i18n-key="LinkTree">Link Tree</span>
+</a>
+
+    </div>
+  </div>
+
+
+  <!-- ==================== MAIN CONTENT TABS ==================== -->
+  <main id="main-content">
+    <!-- HOME TAB -->
+    <section id="home-tab" class="tab-content active">
+      <!-- ==================== HERO SECTION ==================== -->
+      <section class="bg-gradient-to-r from-cyan-400 to-pink-400 text-white py-5 px-2">
+        <div class="container mx-auto px-4 text-center mt-0 mb-10">
+          <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            <img src="https://i.postimg.cc/LXBwsj4D/file_0000000089b871fabddc7461e7799b4c.png"
+                 alt="SG Mobile Fix Setia Alam"
+                 class="h-40 md:h-12 w-auto object-contain mx-auto mb-4">
+            <span data-i18n-key="HeroTitle">SMARTPHONE SERVICES & REPAIRING</span>
+          </h1>
+</div>
+</div>
+</section>
+
+          <!-- Info tambahan -->
+<div class="mt-8 text-center">
+  <div class="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm font-semibold">
+    <i class="fas fa-clock" style="font-size:18px;"></i>
+    <span data-i18n-key="OperatingHours">Waktu Operasi: 10AM - 8PM (Setiap Hari)</span>
+  </div>
+</div>
+            
+<!-- ==================== GAMBAR KEDAI ==================== -->
+<section id="Gambar-Kedai" class="container mx-auto text-center px-3 mb-2 mt-16">
+  <h1 class="text-3xl font-bold text-blue-800 mb-6" data-i18n-key="GalleryTitle">Gambar Kedai</h1>
+  
+  <!-- CONTAINER SCROLL HORIZONTAL -->
+  <div id="gambarScrollContainer" 
+       class="flex overflow-x-auto pb-4 px-4 snap-x snap-mandatory scroll-smooth"
+       style="gap: 24px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; background: transparent;">
+    
+    <!-- GAMBAR AKAN DI GENERATE OLEH JS DI SINI -->
+    
+  </div>
+  
+  <div class="text-center mt-4 text-gray-500 text-sm">
+    <p class="hidden md:block" data-i18n-key="GalleryScrollDesktop">Gunakan mouse wheel atau scroll horizontal</p>
+    <p class="md:hidden" data-i18n-key="GalleryScrollMobile">Scroll ke kiri atau kanan untuk melihat lebih banyak</p>
+  </div>
+</section>
+
+
+    <!-- ==================== TESTIMONI ==================== -->
+<section id="testimoni" class="py-8 bg-white mt-16">
+    <div class="container mx-auto px-0">
+    <h2 class="text-3xl font-bold text-center text-blue-800 mb-1" data-i18n-key="TestimonialTitle">Testimoni Pelanggan</h2>
+    <p class="text-center text-gray-600 mb-8 text-xs" data-i18n-key="TestimonialDesc">Pengalaman sebenar pelanggan SG Mobile Fix Setia Alam</p>
+    
+    <!-- SCROLL HORIZONTAL CONTAINER -->
+    <div id="videoScrollContainer" 
+         class="overflow-x-auto overflow-y-hidden pb-2 snap-x snap-mandatory scroll-smooth" 
+         style="display: flex; flex-wrap: nowrap; gap: 40px; -webkit-overflow-scrolling: touch; padding: 4px 20px; scrollbar-width: none; background: transparent;">
+      
+      <!-- VIDEO AKAN DI GENERATE OLEH JS DI SINI -->
+      
+    </div>
+    
+    <!-- SWIPE TEXT -->
+    <div class="text-center mt-3">
+      <p style="color: #9ca3af; font-size: 12px; letter-spacing: 1px;" data-i18n-key="TestimonialSwipe">
+        <i class="fas fa-arrows-left-right" style="margin-right: 6px;"></i>
+        Swipe kiri / kanan untuk lihat testimoni lain
+      </p>
+    </div>
+    
+    <!-- PROFIL -->
+    <div class="text-center mt-4 hover:scale-105 transition">
+      <a href="https://www.tiktok.com/@sgmobilesetiaalam" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         style="display: inline-flex; align-items: center; gap: 8px; background: #000; color: white; border: 1px solid white!important; padding: 10px 28px; border-radius: 50px; font-weight: bold; font-size: 14px; text-decoration: none;">
+        <i class="fab fa-tiktok" style="font-size: 18px;"></i> 
+        @sgmobilesetiaalam
+      </a>
+    </div>
+    
+  </div>
+</section>
+
+      <!-- ==================== SOCIAL MEDIA ==================== -->
+      <section class="py-2 mt-20">
+        <div class="container mx-auto px-4">
+          <h2 class="text-2xl font-bold text-center text-blue-800 mb-12" data-i18n-key="SocialTitle">Ikuti Kami di Media Sosial</h2>
+          <div class="flex overflow-x-auto pb-4 space-x-6 px-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing custom-scrollbar">
+            <a href="https://www.tiktok.com/@sgmobilesetiaalam" class="flex-shrink-0 w-32 bg-white rounded-full py-4 px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col items-center snap-center">
+              <div class="w-16 h-16 rounded-full bg-black flex items-center justify-center mb-3"><i class="fab fa-tiktok text-white text-3xl"></i></div>
+              <span class="font-semibold text-gray-800">TikTok</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61575714642080" class="flex-shrink-0 w-32 bg-white rounded-full py-4 px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col items-center snap-center">
+              <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-3"><i class="fab fa-facebook-f text-white text-3xl"></i></div>
+              <span class="font-semibold text-gray-800">Facebook</span>
+            </a>
+            <a href="https://wa.me/60122626434" class="flex-shrink-0 w-32 bg-white rounded-full py-4 px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col items-center snap-center">
+              <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mb-3"><i class="fab fa-whatsapp text-white text-3xl"></i></div>
+              <span class="font-semibold text-gray-800">WhatsApp</span>
+            </a>
+            <a href="https://www.instagram.com/sgmobilefixsetiaalam" class="flex-shrink-0 w-32 bg-white rounded-full py-4 px-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col items-center snap-center">
+              <div class="w-16 h-16 rounded-full bg-pink-400 flex items-center justify-center mb-3"><i class="fab fa-instagram text-white text-3xl"></i></div>
+              <span class="font-semibold text-gray-800">Instagram</span>
+            </a>
+          </div>
+          <div class="text-center mt-6 text-gray-500 text-sm">
+            <p class="hidden md:block" data-i18n-key="GalleryScrollDesktop">Gunakan mouse wheel atau scroll horizontal</p>
+            <p class="md:hidden" data-i18n-key="GalleryScrollMobile">Scroll ke kiri atau kanan untuk melihat lebih banyak</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== ABOUT SECTION DATA DIAMBIL DARI JAVASCRIPT ==================== -->
+<section class="py-10 bg-white mt-20">
+  <div class="container mx-auto px-4">
+    <div class="max-w-4xl mx-auto bg-gradient-to-br from-pink-100 to-blue-100 rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-8 md:p-12">
+
+        <!-- Title -->
+        <h2 class="text-3xl font-bold text-blue-800 mb-6 flex items-center">
+          <i class="fas fa-info-circle mr-3 text-blue-500"></i> 
+          <span data-i18n-key="AboutTitle"></span>
+        </h2>
+
+        <!-- Description -->
+        <p class="text-lg mb-4 leading-relaxed text-gray-700" data-i18n-key="AboutText1"></p>
+        <p class="text-lg mb-6 leading-relaxed text-gray-700" data-i18n-key="AboutText2"></p>
+
+        <!-- Service Points -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-pink-200">
+            <p class="text-sm text-gray-700" data-i18n-key="AboutText3_Point1"></p>
+          </div>
+          <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-200">
+            <p class="text-sm text-gray-700" data-i18n-key="AboutText3_Point2"></p>
+          </div>
+          <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-green-200">
+            <p class="text-sm text-gray-700" data-i18n-key="AboutText3_Point3"></p>
+          </div>
+          <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-yellow-200">
+            <p class="text-sm text-gray-700" data-i18n-key="AboutText3_Point4"></p>
+          </div>
+          <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-purple-200 md:col-span-2">
+            <p class="text-sm text-gray-700" data-i18n-key="AboutText3_Point5"></p>
+          </div>
+        </div>
+
+        <!-- Highlight -->
+        <div class="text-center bg-yellow-50 border-l-4 border-yellow-400 rounded-xl px-6 py-4">
+          <p class="text-lg font-semibold text-blue-600">
+            <i class="fas fa-star text-yellow-400 mr-2"></i>
+            <span data-i18n-key="AboutHighlight"></span>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PENILAIAN PELANGGAN -->
+      <section class="text-center py-4">
+  <div class="container mx-auto px-4">
+    <div class="inline-flex items-center bg-amber-500 text-white px-4 py-3 rounded-lg shadow font-semibold text-sm">
+      <i class="fas fa-star text-white mr-2"></i>
+      <span data-i18n-key="RatingText">Penilaian Pelanggan: 9/10 (150+ Ulasan)</span>
+    </div>
+  </div>
+</section>
+    </section>
+
+    <!-- CTA SERVICES TAB -->
+    <section id="services-tab" class="tab-content">
+      <!-- ==================== SENARAI PERKHIDMATAN ==================== -->
+      <section id="senarai-perkhidmatan" class="scroll-mt-20">
+        <div class="container mx-auto px-4 py-8">
+          <h2 class="text-3xl font-bold text-center text-blue-800 mb-2" data-i18n-key="ServicesTitle">Perkhidmatan SG Mobile Fix</h2>
+          <p class="text-gray-600 text-center mb-8" data-i18n-key="ServicesDesc">Kami Menyediakan Pelbagai jenis Perkhidmatan Pembaikan Telefon &amp; Tablet</p>
+
+          <!-- Filter Menu -->
+          <div class="filter-menu mb-12">
+            <div class="relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-purple-50 rounded-2xl -z-10"></div>
+              <div class="filter-pyramid flex flex-col items-center gap-2">
+  <div class="flex justify-center mb-2">
+  <button class="filter-btn bg-gradient-to-r from-blue-600 to-blue-700 group" data-filter="all">
+    <i class="fas fa-th-large ml-2 group-hover:animate-bounce group-active:animate-bounce"></i>
+    <span data-i18n-key="FilterAll">Semua Perkhidmatan</span>
+    <span></span>
+  </button>
+</div>
+
+<div class="flex justify-center gap-4 mb-2">
+  <button class="filter-btn bg-gradient-to-r from-gray-600 to-gray-700 group" data-filter="iphone">
+    <i class="fab fa-apple ml-2 group-hover:animate-bounce group-active:animate-bounce"></i>
+    <span data-i18n-key="FilteriPhone">iPhone</span>
+    <span></span>
+  </button>
+  
+  <button class="filter-btn bg-gradient-to-r from-green-600 to-green-700 group" data-filter="android">
+    <i class="fab fa-android ml-2 group-hover:animate-bounce group-active:animate-bounce"></i>
+    <span data-i18n-key="FilterAndroid">Android</span>
+    <span></span>
+  </button>
+</div>
+
+<div class="flex justify-center gap-4">
+  <button class="filter-btn bg-gradient-to-r from-purple-600 to-purple-700 group" data-filter="tablet">
+    <i class="fas fa-tablet-alt ml-2 group-hover:animate-bounce group-active:animate-bounce"></i>
+    <span data-i18n-key="FilterTablet">Tablet</span>
+    <span></span>
+  </button>
+  
+  <button class="filter-btn bg-gradient-to-r from-amber-500 to-amber-600 group" data-filter="aksesori">
+    <i class="fas fa-cube ml-2 group-hover:animate-bounce group-active:animate-bounce"></i>
+    <span data-i18n-key="FilterAccessories">Aksesori</span>
+    <span></span>
+  </button>
+</div>
+</div>
+            </div>
+          </div>
+
+          <!-- CTA Service Cards Horizontal Scroll -->
+          <div class="services-container">
+            <div class="flex overflow-x-auto pb-4 gap-5 px-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing custom-scrollbar" id="cardsContainer">
+
+              <!-- CARD 1: Penggantian Bateri -->
+<div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-blue-700 hover:border-blue-400 snap-start" data-category="iphone android tablet">
+  <div class="p-5">
+    <div class="flex justify-between items-start mb-3">
+      <div class="w-12 h-12 rounded-xl bg-blue-800 flex items-center justify-center"><i class="fas fa-battery-full text-white text-xl"></i></div>
+      <span class="bg-blue-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 150</span>
+    </div>
+    <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="BatteryTitle">Penggantian Bateri</h3>
+    <p class="text-blue-100 text-sm mb-4" data-i18n-key="BatteryDesc">Bateri Lithium-ion iPhone. Kecekapan tinggi, hayat panjang.</p>
+    <div class="flex items-center justify-between">
+      <a href="#" id="whatsapp-battery" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+        <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+      </a>
+      <div class="flex gap-1">
+        <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+        <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+              <!-- CARD 2: Pembaikan Kamera -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-purple-700 hover:border-purple-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-purple-800 flex items-center justify-center"><i class="fas fa-camera text-white text-xl"></i></div>
+                    <span class="bg-purple-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 120</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="CameraTitle">Pembaikan Kamera</h3>
+                  <p class="text-purple-100 text-sm mb-4" data-i18n-key="CameraDesc">Baiki kamera iPhone rosak. Kualiti gambar rendah atau tak berfungsi.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-camera" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 3: Pembaikan Casing -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-gray-600 to-gray-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-700 hover:border-gray-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center"><i class="fas fa-mobile-alt text-white text-xl"></i></div>
+                    <span class="bg-gray-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 150</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="CasingTitle">Pembaikan Casing Phone</h3>
+                  <p class="text-gray-100 text-sm mb-4" data-i18n-key="CasingDesc">Baiki casing iPhone rosak akibat jatuh, hentakan, atau penggunaan kasar.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-casing" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+                    
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 4: Port Pengecasan -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-violet-600 to-violet-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-violet-700 hover:border-violet-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-violet-800 flex items-center justify-center"><i class="fas fa-plug text-white text-xl"></i></div>
+                    <span class="bg-violet-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 150</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="ChargingPortTitle">Port Pengecasan</h3>
+                  <p class="text-violet-100 text-sm mb-4" data-i18n-key="ChargingPortDesc">Port pengecasan iPhone rosak? Masalah tak boleh charge? Kami sedia bantu.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-charging" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 5: Imbasan Diagnostik -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-red-600 to-red-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-red-700 hover:border-red-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-red-800 flex items-center justify-center"><i class="fas fa-search text-white text-xl"></i></div>
+                    <span class="bg-red-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 80</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="DiagnosticTitle">Imbasan Diagnostik</h3>
+                  <p class="text-red-100 text-sm mb-4" data-i18n-key="DiagnosticDesc">Diagnosa masalah peranti dengan perisian khusus. Semua isu dikesan.</p>
+                  <div class="flex items-center justify-between">
+                    
+                    <a href="#" id="whatsapp-diagnostic" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+                    
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 6: Mikrofon/Pembesar Suara -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-cyan-600 to-cyan-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-cyan-700 hover:border-cyan-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-800 flex items-center justify-center"><i class="fas fa-volume-up text-white text-xl"></i></div>
+                    <span class="bg-cyan-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 150</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="SpeakerTitle">Mikrofon/Pembesar Suara</h3>
+                  <p class="text-cyan-100 text-sm mb-4" data-i18n-key="SpeakerDesc">Baiki mikrofon atau pembesar suara rosak. Audio jelas, komunikasi lancar.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-speaker" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+                    </a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 7: Butang Kuasa -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-orange-600 to-orange-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-orange-700 hover:border-orange-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-orange-800 flex items-center justify-center"><i class="fas fa-power-off text-white text-xl"></i></div>
+                    <span class="bg-orange-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 80</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="PowerButtonTitle">Butang Kuasa Suis On/Off</h3>
+                  <p class="text-orange-100 text-sm mb-4" data-i18n-key="PowerButtonDesc">Baiki pita fleksibel butang kuasa suis on/off iPhone &amp; Android.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-power" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+                    </a>
+                    
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 8: Pembaikan Skrin -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-indigo-700 hover:border-indigo-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-800 flex items-center justify-center"><i class="fas fa-mobile text-white text-xl"></i></div>
+                    <span class="bg-indigo-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 150</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="ScreenTitle">Pembaikan Skrin</h3>
+                  <p class="text-indigo-100 text-sm mb-4" data-i18n-key="ScreenDesc">Skrin retak, tak responsif, berkelip? Kami ganti skrin iPhone berkualiti.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-screen" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 9: Masalah Perisian -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-emerald-700 hover:border-emerald-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-800 flex items-center justify-center"><i class="fas fa-code text-white text-xl"></i></div>
+                    <span class="bg-emerald-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 80</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="SoftwareTitle">Masalah Perisian</h3>
+                  <p class="text-emerald-100 text-sm mb-4" data-i18n-key="SoftwareDesc">iPhone lambat, apps crash, OS error? Kami selesaikan masalah perisian SOFTWARE.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-software" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 10: Pembaikan Tablet -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-rose-600 to-rose-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-rose-700 hover:border-rose-400 snap-start" data-category="tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-rose-800 flex items-center justify-center"><i class="fas fa-tablet-alt text-white text-xl"></i></div>
+                    <span class="bg-rose-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 200</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="TabletTitle">Pembaikan Tablet</h3>
+                  <p class="text-rose-100 text-sm mb-4" data-i18n-key="TabletDesc">Semua jenis pembaikan tablet: skrin, bateri, port, speaker, perisian.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-tablet" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-purple-700 text-white px-2 py-1 rounded text-xs"><i class="fas fa-tablet-alt"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 11: Kerosakan Air -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-sky-600 to-sky-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-sky-700 hover:border-sky-400 snap-start" data-category="iphone android tablet">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-sky-800 flex items-center justify-center"><i class="fas fa-tint text-white text-xl"></i></div>
+                    <span class="bg-sky-800 text-white px-3 py-1 rounded-full text-sm font-bold">N/A</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="WaterDamageTitle">Kerosakan Air</h3>
+                  <p class="text-sky-100 text-sm mb-4" data-i18n-key="WaterDamageDesc">Handphone terdedah air? Baik pulih kecemasan cegah karat dan kerosakan kekal.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-water" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                      <span class="bg-green-700 text-white px-2 py-1 rounded text-xs"><i class="fab fa-android"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 12: Button iPhone Original -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-pink-600 to-pink-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-pink-700 hover:border-pink-400 snap-start" data-category="aksesori iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-pink-800 flex items-center justify-center"><i class="fab fa-apple text-white text-xl"></i></div>
+                    <span class="bg-pink-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 180</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="ButtonOriginalTitle">Button iPhone Original</h3>
+                  <p class="text-pink-100 text-sm mb-4" data-i18n-key="ButtonOriginalDesc">Button Genuine Apple Part. 1 jam siap, pengesahan dalam setting iPhone.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-button" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-amber-700 text-white px-2 py-1 rounded text-xs"><i class="fas fa-check-circle"></i> Original</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 13: Backglass iPhone -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-slate-600 to-slate-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-slate-700 hover:border-slate-400 snap-start" data-category="iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center"><i class="fas fa-layer-group text-white text-xl"></i></div>
+                    <span class="bg-slate-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 350</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="BackglassTitle">Backglass iPhone</h3>
+                  <p class="text-slate-100 text-sm mb-4" data-i18n-key="BackglassDesc">Tukar backglass guna mesin laser. 2 jam siap, semua model &amp; warna ada.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-backglass" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 14: Apple iWatch Repair -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-teal-600 to-teal-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-teal-700 hover:border-teal-400 snap-start" data-category="aksesori">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-teal-800 flex items-center justify-center"><i class="fas fa-clock text-white text-xl"></i></div>
+                    <span class="bg-teal-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 450</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="iWatchTitle">Apple iWatch Repair</h3>
+                  <p class="text-teal-100 text-sm mb-4" data-i18n-key="iWatchDesc">Baiki Apple iWatch: skrin, bateri, komponen. Semua model disokong.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-watch" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 15: Face ID iPhone -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-fuchsia-600 to-fuchsia-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-fuchsia-700 hover:border-fuchsia-400 snap-start" data-category="iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-fuchsia-800 flex items-center justify-center"><i class="fas fa-user-circle text-white text-xl"></i></div>
+                    <span class="bg-fuchsia-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 350</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="FaceIDTitle">Face ID iPhone</h3>
+                  <p class="text-fuchsia-100 text-sm mb-4" data-i18n-key="FaceIDDesc">Face ID iPhone rosak? Sistem pengenalan muka tak berfungsi? Kami baiki.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-faceid" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 16: Motherboard iPhone -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-amber-700 hover:border-amber-400 snap-start" data-category="iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-800 flex items-center justify-center"><i class="fas fa-microchip text-white text-xl"></i></div>
+                    <span class="bg-amber-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 250</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="MotherboardTitle">Motherboard iPhone</h3>
+                  <p class="text-amber-100 text-sm mb-4" data-i18n-key="MotherboardDesc">Diagnosa &amp; baiki motherboard iPhone. Komponen IC micro diperiksa rapi.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-motherboard" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 17: Green/White/Purple Screen -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-lime-600 to-lime-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-lime-700 hover:border-lime-400 snap-start" data-category="iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-lime-800 flex items-center justify-center"><i class="fas fa-exclamation-triangle text-white text-xl"></i></div>
+                    <span class="bg-lime-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 450</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="ScreenColorTitle">Green/White/Purple Screen</h3>
+                  <p class="text-lime-100 text-sm mb-4" data-i18n-key="ScreenColorDesc">Common issue iPhone 13 Pro/Pro Max. Masalah skrin warna aneh? Kami selesaikan.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-screen-color" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>
+                    
+                    <div class="flex gap-1">
+                      <span class="bg-gray-900 text-white px-2 py-1 rounded text-xs"><i class="fab fa-apple"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD 18: Genuine Apple Part -->
+              <div class="service-card flex-shrink-0 w-80 bg-gradient-to-br from-yellow-600 to-yellow-800 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-yellow-700 hover:border-yellow-400 snap-start" data-category="aksesori iphone">
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-800 flex items-center justify-center"><i class="fab fa-apple text-white text-xl"></i></div>
+                    <span class="bg-yellow-800 text-white px-3 py-1 rounded-full text-sm font-bold">RM 429</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-white mb-2" data-i18n-key="GenuinePartTitle">Genuine Apple Part</h3>
+                  <p class="text-yellow-100 text-sm mb-4" data-i18n-key="GenuinePartDesc">Alat ganti Apple Parts original: kamera, bateri, skrin, body. Ready stock.</p>
+                  <div class="flex items-center justify-between">
+
+                    <a href="#" id="whatsapp-genuine" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition hover:scale-105">
+  <i class="fab fa-whatsapp mr-2"></i> <span data-i18n-key="WhatsApp">WhatsApp</span>
+</a>                    
+                    <div class="flex gap-1">
+                      <span class="bg-amber-800 text-white px-2 py-1 rounded text-xs"><i class="fas fa-check-circle"></i> Original</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+           
+            
+         <div class="text-center mt-6 text-gray-500 text-xs">
+              <p class="hidden md:block" data-i18n-key="GalleryScrollDesktop">Gunakan mouse wheel atau scroll horizontal</p>
+              <p class="md:hidden" data-i18n-key="GalleryScrollMobile">Scroll ke kiri atau kanan untuk melihat lebih banyak</p>
+            
+          </div>
+
+            <div class="text-center mt-8">
+              <div class="inline-flex items-center bg-gray-100 rounded-full px-4 py-2">
+                <span class="text-gray-700 font-bold mr-2" id="visibleCount">18</span>
+                <span class="text-gray-600" data-i18n-key="ServicesAvailable">perkhidmatan tersedia</span>
+              </div>
+            </div>
+          </div>
+          
+
+          <!-- CTA Button WhatsApp -->
+<div class="text-center mt-12">
+  <a href="#" id="whatsapp-cta" class="inline-flex items-center bg-green-500 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+    <i class="fab fa-whatsapp mr-3 text-4xl"></i>
+    <span data-i18n-key="ServicesCTA">Untuk lebih lanjut semua Perkhidmatan servis</span>
+  </a>
+  <p class="text-gray-500 mt-4 text-sm" data-i18n-key="ServicesPriceNote">
+    Semua harga adalah bermula dari, harga sebenar bergantung kepada model dan kerosakan peranti
+  </p>
+</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- LOCATION TAB -->
+    <section id="location-tab" class="tab-content">
+      <!-- ==================== LOCATION ==================== -->
+      <section id="lokasi" class="py-1 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center text-blue-800 mb-4 mt-8" data-i18n-key="LocationTitle"><i class="fas fa-map-marked-alt mr-2"></i> Cari Kami</h2>
+          <p class="text-center text-gray-600 mb-8" data-i18n-key="LocationDesc">Dapatkan arahan pemanduan segera ke kedai kami</p>
+
+<p class="text-xm mb-8 opacity-90 text-center font-semibold">
+            <i class="fas fa-map-marker-alt mr-2 text-red-500"></i>
+            
+              55-G Jalan Setia Perdana BA U13/BA Setia Alam, Bandar Setia Alam, 40170, Selangor Malaysia.
+            </a>
+          </p>
+        
+        
+          <div class="max-w-4xl mx-auto">
+            <div class="mb-8 rounded-2xl overflow-hidden shadow-xl">
+              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.0!2d101.4693732!3d3.1253077!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM8KwMDcnMzEuMSJOIDEwMcKwMjgnMDkuNyJF!5e0!3m2!1sen!2smy!4v1" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" class="rounded-2xl"></iframe>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+              <a href="https://maps.app.goo.gl/ACMa62PiTNtAA1QH7?g_st=atm" 
+   class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full text-lg shadow-lg flex items-center justify-center transition transform hover:scale-105">
+  <i class="fab fa-google mr-3 text-2xl"></i> 
+  <span data-i18n-key="GoogleMaps">Google Maps</span>
+</a>
+
+<a href="https://ul.waze.com/ul?place=ChIJt-tIohRRzDERaLetgu7BbiM&ll=3.12530770%2C101.46937320&navigate=yes" 
+   class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full text-lg shadow-lg flex items-center justify-center transition transform hover:scale-105">
+  <i class="fab fa-waze mr-3 text-2xl"></i> 
+  <span data-i18n-key="Waze">Waze</span>
+</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- CTA CONTACT TAB -->
+    <section id="contact-tab" class="tab-content">
+      <!-- ==================== BUTANG CONTACT CEPAT ==================== -->
+      <section id="contact-buttons" class="py-12 bg-gradient-to-b from-white to-slate-50">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center text-blue-800 mb-3" data-i18n-key="ContactTitle">
+            <i class="fas fa-headset mr-2" ></i> Hubungi Kami
+          </h2>
+          <p class="text-center text-gray-600 mb-8 max-w-xl mx-auto" data-i18n-key="ContactDesc">
+            Pilih cara yang paling mudah untuk anda hubungi kami. Kami sedia membantu!
+          </p>
+
+          <!-- Grid 2x2 Butang Contact -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+
+            <!-- 1. WhatsApp Kedai -->
+<a href="#" id="whatsapp-contact" class="group flex items-center gap-4 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-5 px-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.03] transition-all duration-300">
+  <div class="flex-shrink-0 w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+    <i class="fab fa-whatsapp text-3xl"></i>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="text-lg leading-tight" data-i18n-key="WhatsAppShop">WhatsApp Kedai</div>
+    <div class="text-xs font-normal opacity-90 mt-1 truncate" data-i18n-key="WhatsAppNumber">012-262 6434</div>
+  </div>
+  <i class="fas fa-external-link text-white/70 group-hover:translate-x-1 transition-transform"></i>
+</a>
+
+            <!-- 2. Senior Technician -->
+            <a href="#" id="whatsapp-senior" class="group flex items-center gap-4 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-5 px-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.03] transition-all duration-300">
+  <div class="flex-shrink-0 w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+    <i class="fas fa-tools text-3xl"></i>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="text-lg leading-tight" data-i18n-key="SeniorTech">Senior Technician</div>
+    <div class="text-xs font-normal opacity-90 mt-1 truncate" data-i18n-key="SeniorTechDesc">Konsultasi pakar</div>
+  </div>
+  <i class="fas fa-external-link text-white/70 group-hover:translate-x-1 transition-transform"></i>
+</a>
+
+            <!-- 3. Buat Appointment -->
+            <a href="#" id="whatsapp-appointment" class="group flex items-center gap-4 bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-bold py-5 px-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.03] transition-all duration-300">
+  <div class="flex-shrink-0 w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+    <i class="fas fa-calendar-check text-3xl"></i>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="text-lg leading-tight" data-i18n-key="Appointment">Buat Appointment</div>
+    <div class="text-xs font-normal opacity-90 mt-1 truncate" data-i18n-key="AppointmentDesc">Tempah slot servis</div>
+  </div>
+  <i class="fas fa-external-link text-white/70 group-hover:translate-x-1 transition-transform"></i>
+</a>
+
+            <!-- 4. Email Kedai -->
+<a href="#" id="email-shop" class="group flex items-center gap-4 bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-5 px-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-[1.03] transition-all duration-300">
+  <div class="flex-shrink-0 w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform">
+    <i class="fab fa-yahoo text-3xl"></i>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="text-lg leading-tight" data-i18n-key="EmailShop">Email Kedai</div>
+    <div class="text-xs font-normal opacity-90 mt-1 truncate">sgmobile@yahoo.com</div>
+  </div>
+  <i class="fas fa-external-link text-white/70 group-hover:translate-x-1 transition-transform"></i>
+</a>
+
+          </div>
+
+          <!-- Info tambahan -->
+<div class="mt-8 text-center">
+  <div class="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-semibold">
+    <i class="fas fa-clock" style="font-size:18px;"></i>
+    <span data-i18n-key="OperatingHours">Waktu Operasi: 10AM - 8PM (Setiap Hari)</span>
+  </div>
+</div>
+
+        </div>
+      </section>
+    </section>
+
+    <!-- ==================== CARD TAB ==================== -->
+<section id="card-tab" class="tab-content">
+  <!-- ==================== BUSINESS CARD ==================== -->
+  <section id="Business-Card" class="container mx-auto text-center px-3 scroll-mt-20 py-8">
+    <h1 class="text-3xl font-bold text-blue-800 mb-6" data-i18n-key="BusinessCard"></h1>
+    <div class="flex flex-col items-center justify-center gap-4 max-w-full mx-auto">
+      <img src="https://i.postimg.cc/pXwSDPGc/1769152996380.png"
+           alt="Bisnes kad"
+           class="h-auto max-w-xs md:max-w-md object-contain rounded-lg shadow-md">
+      <div class="text-3xl font-semibold text-blue-800 mt-1 mb-1" data-i18n-key="VsCard"></div>
+      <div class="text-center text-sm">
+        <div class="actions flex gap-6 justify-center mt-2">
+          <button class="share bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition" onclick="shareCard()">
+            <i class="fas fa-share mr-2"></i> <span data-i18n-key="ShareCard"></span>
+          </button>
+          <button class="pdf bg-lime-500 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition" onclick="saveCard()">
+            <i class="fas fa-copy mr-2"></i> <span data-i18n-key="SaveCard"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+  </main>
+
+
+<!-- ==================== AI CHATBOT ELIZA AI STAR SPARKLE  ==================== -->
+<div class="fixed bottom-24 right-5 z-50">
+  <button id="chatbot-toggle" 
+          class="relative w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 transition-all duration-300 transform hover:scale-110 group">
+    
+    <!-- Outer Glow -->
+    <span class="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></span>
+    
+    <!-- Bintang Sparkle -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="28" 
+         height="28" 
+         viewBox="0 0 24 24" 
+         fill="currentColor" 
+         stroke="white" 
+         stroke-width="1.5" 
+         stroke-linecap="round" 
+         stroke-linejoin="round" 
+         class="relative z-10 group-hover:rotate-180 transition-transform duration-500"
+         style="filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.5));">
+      
+      <defs>
+        <linearGradient id="starFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#60A5FA" />
+          <stop offset="100%" style="stop-color:#C084FC" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Bintang -->
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z" 
+            fill="url(#starFill)"/>
+      
+      <!-- Sparkles -->
+      <path d="M5 3L6.5 5.5L9 6L6.5 7L5 9.5L3.5 7L1 6L3.5 5.5L5 3Z" opacity="0.6" fill="white"/>
+      <path d="M19 17L20 18.5L22 19L20 19.5L19 21L18 19.5L16 19L18 18.5L19 17Z" opacity="0.6" fill="white"/>
+    </svg>
+    
+    <!-- Sparkle Particles -->
+    <span class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.2s;"></span>
+    <span class="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.6s;"></span>
+    
+    <!-- Pulse Rings -->
+    <span class="absolute inset-0 rounded-full border-2 border-blue-400/30 animate-ping" style="animation-duration: 2s;"></span>
+    <span class="absolute inset-0 rounded-full border-2 border-purple-400/20 animate-ping" style="animation-duration: 3s; animation-delay: 0.5s;"></span>
+  </button>
+</div>
+
+    <!-- ==================== CHATBOT WINDOW ==================== -->
+<div id="chatbot-window" class="absolute bottom-20 right-0 w-80 bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 opacity-0 translate-y-5 invisible z-50">
+  
+  <!-- HEADER - Version Sparkle Badge -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 flex items-center">
+  
+  <!-- Avatar -->
+  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/30 relative">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="white" stroke-width="1.5">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z"/>
+    </svg>
+    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border-2 border-white"></span>
+  </div>
+  
+  <!-- Teks -->
+  <div>
+    <h3 class="font-bold text-sm flex items-center gap-1">
+      <span data-i18n-key="ChatbotTitle">AI Pembantu Servis</span>
+      <span class="bg-lime-300 text-indigo-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full" data-i18n-key="ChatbotBadge">ELIZA Ai</span>
+    </h3>
+    <p class="text-xs opacity-90" data-i18n-key="ChatbotSubtitle">✨ 24/7 Bantuan Pintar</p>
+  </div>
+  
+  <!-- Close -->
+  <button id="chatbot-close" class="ml-auto text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full py-1.5 px-3 transition-colors">
+    <i class="fas fa-times text-sm"></i>
+  </button>
+</div>
+  
+  <!-- MESSAGES -->
+  <div class="chat-container p-4 h-80 overflow-y-auto space-y-3" id="chatbot-messages">
+    <div class="flex">
+      <div class="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-xs shadow">
+        <p class="text-sm" data-i18n-key="ChatbotGreeting">✨ Helo! Saya Eliza Ai Pembantu Servis 24/7 Sg Mobile Fix. Ada apa-apa yang saya boleh bantu?</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- INPUT -->
+  <div class="p-3 border-t flex">
+    <input type="text" id="chatbot-input" class="flex-1 border rounded-l-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-400" data-i18n-placeholder="ChatbotPlaceholder" placeholder="Taip soalan anda...">
+
+    <button id="chatbot-send" 
+        class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white w-12 h-12 rounded-full hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 flex items-center justify-center shadow-lg shadow-indigo-500/40 ">
+  
+  <!-- Container untuk Paper Plane + Sparkle -->
+  <span class="relative flex items-center justify-center">
+    
+    <!-- PAPER PLANE ARAH KANAN (→) -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="22" 
+         height="22" 
+         viewBox="0 0 24 24" 
+         fill="none" 
+         stroke="currentColor" 
+         stroke-width="2" 
+         stroke-linecap="round" 
+         stroke-linejoin="round"
+         class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
+         style="transform: rotate(45deg);">
+      <path d="M22 2L11 13"/>
+      <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+    </svg>
+    
+    <!-- SPARKLE - LINTASAN DI BELAKANG / BAWAH HUJUNG -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="16" 
+         height="16" 
+         viewBox="0 0 24 24" 
+         fill="currentColor" 
+         stroke="none"
+         class="absolute -top-2 -right-2 text-yellow-300 animate-pulse"
+         style="filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.7));">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z"/>
+    </svg>
+    
+   
+  </span>
+</button>
+  </div>
+  
+  <!-- FOOTER -->
+  <div class="p-2 bg-gray-50 border-t text-center">
+    <button id="chatbot-speak" class="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center mx-auto gap-1">
+      <i class="fas fa-volume-up mr-1"></i> <span data-i18n-key="ChatbotSpeak">Baca Jawapan Terakhir</span>
+    </button>
+  </div>
+</div>
+
+  <!-- ==================== FOOTER ==================== -->
+<footer class="bg-slate-300 text-gray-700 py-8">
+  <div class="container mx-auto px-2 text-center">
+
+    <!-- Brand: Logo + Teks (sebelah kiri) -->
+    <div class="flex items-center justify-left gap-1 ml-5">
+      <img src="https://i.postimg.cc/LXBwsj4D/file_0000000089b871fabddc7461e7799b4c.png"
+           alt="SG Mobile Fix"
+           class="h-14 w-auto object-contain">
+      <span class="text-xl font-bold items-center" data-i18n-key="FooterBrand">SG Mobile Fix Setia Alam</span>
+    </div>
+
+    <!-- Tagline -->
+    <p class="text-gray-500 mb-4 text-xs font-bold" data-i18n-key="FooterTagline">SMARTPHONE SERVICES & REPAIRING</p>
+
+    <!-- Social Media -->
+    <div class="flex justify-center space-x-6 mb-6">
+      <a href="https://wa.me/60122626434" class="text-green-600 hover:text-green-700 transition"><i class="fab fa-whatsapp text-xl"></i></a>
+      <a href="https://www.facebook.com/profile.php?id=61575714642080" class="text-blue-500 hover:text-blue-700 transition"><i class="fab fa-facebook-f text-xl"></i></a>
+      <a href="https://www.instagram.com/sgmobilefixsetiaalam" class="text-pink-500 hover:text-pink-700 transition"><i class="fab fa-instagram text-xl"></i></a>
+      <a href="https://www.tiktok.com/@sgmobilesetiaalam" class="text-gray-600 hover:text-white transition"><i class="fab fa-tiktok text-xl"></i></a>
+    </div>
+
+    <!-- Copyright -->
+    <p class="text-gray-500 text-xs">&copy; <span id="current-year"></span> <span data-i18n-key="FooterCopyright">SG Mobile Fix Setia Alam. Hak Cipta Terpelihara.</span></p>
+    <p class="text-gray-500 text-xs" data-i18n-key="FooterTrademark">&trade; SG Mobile Fix Setia Alam - SmartPhone Services & Repairing</p>
+
+    <!-- Platform -->
+    <p class="text-gray-500 text-xs">
+      <span data-i18n-key="FooterPlatform">Pembina Platform:</span>
+      <i class="fab fa-telegram mr-1 text-sm"></i>
+      <a href="https://t.me/johansetia"><b class="text-blue-500 text-xs hover:underline hover:text-blue-700 transition">@Johan setia</b></a>
+    </p>
+
+  </div>
+</footer>
+
+
+  <script src="script.js" defer></script>
+
+</body>
+</html>
