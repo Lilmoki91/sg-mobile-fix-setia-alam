@@ -622,6 +622,7 @@ function initLanguage() {
   applyTranslations(nextLanguage);
   updateWhatsAppLinks();
   updateEmailLink();
+  updateMetaTags(nextLanguage);
 
 
     // 🔥 REFRESH THEME TEXT LEPAS TUKAR BAHASA
@@ -995,34 +996,28 @@ function setStorage(key, value) {
   }
 }
 
-/* ==================== SHARE ==================== */
-
+/* ==================== MEDIA SOCIAL SHARE  BUTTON ==================== */
 function initShareButton() {
   const shareButton = document.getElementById("share-btn");
   if (!shareButton) return;
 
-  // Text dwibahasa
-  const shareTexts = {
-    ms: {
-      title: "SG Mobile Fix Setia Alam",
-      text: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi!"
-    },
-    en: {
-      title: "SG Mobile Fix Setia Alam",
-      text: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more!"
-    }
-  };
-
   function getShareText() {
     const lang = document.documentElement.lang || 'ms';
+    const shareTexts = {
+      ms: {
+        title: "SG Mobile Fix Setia Alam",
+        text: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi!"
+      },
+      en: {
+        title: "SG Mobile Fix Setia Alam",
+        text: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more!"
+      }
+    };
     return shareTexts[lang] || shareTexts.ms;
   }
 
-  // Gambar untuk kad share
-  const shareImage = "https://i.postimg.cc/gJCYbPzK/sg-mobile-(2).webp";
-
   shareButton.addEventListener("click", async () => {
-    const text = getShareText();
+    const text = getShareText(); // 🔥 Ambil bahasa semasa
     const shareData = {
       title: text.title,
       text: text.text,
@@ -1031,21 +1026,15 @@ function initShareButton() {
 
     try {
       if (navigator.share) {
-        // Mobile native share
         await navigator.share(shareData);
       } else if (navigator.clipboard) {
-        // Desktop - copy link + kad
-        await navigator.clipboard.writeText(
-          `${text.title}\n${text.text}\n${window.location.href}`
-        );
+        await navigator.clipboard.writeText(`${text.title}\n${text.text}\n${window.location.href}`);
         
-        // Tunjukkan feedback
         const originalContent = shareButton.innerHTML;
         shareButton.innerHTML = '<i class="fas fa-check"></i>';
         shareButton.classList.remove('bg-blue-500');
         shareButton.classList.add('bg-green-500');
         
-        // Toast notification
         showToast('✅ Link & maklumat disalin!');
         
         setTimeout(() => {
@@ -1060,9 +1049,33 @@ function initShareButton() {
   });
 }
 
-// Toast notification
+// FUNGSI TAG META TUKAR BAHASA
+function updateMetaTags(lang) {
+  const metaTitle = document.querySelector('meta[property="og:title"]');
+  const metaDesc = document.querySelector('meta[property="og:description"]');
+  const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+  const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+
+  const texts = {
+    ms: {
+      title: "SG Mobile Fix Setia Alam",
+      desc: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi!"
+    },
+    en: {
+      title: "SG Mobile Fix Setia Alam",
+      desc: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more!"
+    }
+  };
+
+  const t = texts[lang] || texts.ms;
+  if (metaTitle) metaTitle.content = t.title;
+  if (metaDesc) metaDesc.content = t.desc;
+  if (twitterTitle) twitterTitle.content = t.title;
+  if (twitterDesc) twitterDesc.content = t.desc;
+}
+
+// TOAST FUNCTION
 function showToast(message) {
-  // Buang toast lama
   const oldToast = document.querySelector('.share-toast');
   if (oldToast) oldToast.remove();
 
@@ -1070,9 +1083,10 @@ function showToast(message) {
   toast.className = 'share-toast fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 text-sm transition-all duration-300';
   toast.textContent = message;
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.classList.add('opacity-0');
     setTimeout(() => toast.remove(), 300);
   }, 2000);
 }
+
