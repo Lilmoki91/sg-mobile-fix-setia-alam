@@ -937,7 +937,7 @@ function initTestimonials() {
     iframe.allowFullscreen = true;
     iframe.style.cssText = `
       width: 100%;
-      height: 55vh;
+      height: 58vh;
       border: none;
       border-radius: 16px;
     `;
