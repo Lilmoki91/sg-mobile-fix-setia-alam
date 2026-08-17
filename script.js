@@ -1090,3 +1090,59 @@ function showToast(message) {
   }, 2000);
 }
 
+/* ==================== SHARE SOCIAL MEDIA ==================== */
+
+function initShareSocial() {
+  const shareButtons = document.querySelectorAll('.share-social');
+  if (!shareButtons.length) return;
+
+  // Teks share ikut bahasa
+  function getShareText() {
+    const lang = document.documentElement.lang || 'ms';
+    const shareTexts = {
+      ms: {
+        title: "SG Mobile Fix Setia Alam",
+        text: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi!"
+      },
+      en: {
+        title: "SG Mobile Fix Setia Alam",
+        text: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more!"
+      }
+    };
+    return shareTexts[lang] || shareTexts.ms;
+  }
+
+  shareButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const platform = this.dataset.platform;
+      const shareData = getShareText();
+      const url = encodeURIComponent(window.location.href);
+      const text = encodeURIComponent(shareData.text);
+      const title = encodeURIComponent(shareData.title);
+      
+      let shareUrl = '';
+      
+      switch (platform) {
+        case 'whatsapp':
+          shareUrl = `https://wa.me/?text=${text}%20${url}`;
+          break;
+        case 'telegram':
+          shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
+          break;
+        case 'twitter':
+          shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+          break;
+        case 'facebook':
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+          break;
+        default:
+          return;
+      }
+      
+      // Buka dalam tab baru
+      window.open(shareUrl, '_blank', 'width=600,height=500');
+    });
+  });
+}
