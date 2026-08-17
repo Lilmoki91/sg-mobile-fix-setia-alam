@@ -1097,7 +1097,6 @@ function initShareSocial() {
   const shareButtons = document.querySelectorAll('.share-social');
   if (!shareButtons.length) return;
 
-  // Teks share ikut bahasa
   function getShareText() {
     const lang = document.documentElement.lang || 'ms';
     const shareTexts = {
@@ -1133,16 +1132,17 @@ function initShareSocial() {
           shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
           break;
         case 'twitter':
+          // 🔥 Twitter (X) — guna text & url
           shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
           break;
         case 'facebook':
-          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+          // 🔥 Facebook — guna quote + url
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`;
           break;
         default:
           return;
       }
       
-      // Buka dalam tab baru
       window.open(shareUrl, '_blank', 'width=600,height=500');
     });
   });
