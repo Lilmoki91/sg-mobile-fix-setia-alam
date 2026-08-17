@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initGallery();
   initTestimonials();
   initTranslation();
+  initShareSocial();
 
   const currentYear = document.getElementById("current-year");
   if (currentYear) {
