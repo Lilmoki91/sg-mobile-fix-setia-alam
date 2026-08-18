@@ -1135,10 +1135,20 @@ function initShareSocial() {
           // 🔥 Twitter (X) — guna text & url
           shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
           break;
+        
+        // Dalam initShareSocial() FUNCTION COPY OVERLAY FACEBOOK
         case 'facebook':
-          // 🔥 Facebook — guna quote + url
-          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`;
-          break;
+       e.preventDefault();
+       // Buka overlay, bukan buka popup
+        if (window.facebookOverlay) {
+      window.facebookOverlay.openOverlay();
+      } else {
+       // Fallback — buka popup biasa
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+      window.open(shareUrl, '_blank', 'width=600,height=500');
+     }
+        break;
+        
         default:
           return;
       }
