@@ -764,3 +764,21 @@ html[data-theme="dark"] #bottom-menu-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50px;
 }
+
+/* OVERLAY FACEBOOK */
+#fb-overlay {
+  transition: opacity 0.3s ease;
+}
+
+#fb-overlay:not(.hidden) {
+  display: flex !important;
+}
+
+#fb-overlay .bg-lime-400 {
+  background-color: #a3e635; /* lime-400 */
+}
+
+#fb-overlay .text-black {
+  color: #000000;
+}
+
