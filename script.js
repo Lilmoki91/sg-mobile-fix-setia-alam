@@ -1143,17 +1143,15 @@ function initShareSocial() {
         
         // Dalam initShareSocial() FUNCTION COPY OVERLAY FACEBOOK
         case 'facebook':
-       e.preventDefault();
-       // Buka overlay, bukan buka popup
-        if (window.facebookOverlay) {
-      window.facebookOverlay.openOverlay();
-      } else {
-       // Fallback — buka popup biasa
-      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-      window.open(shareUrl, '_blank', 'width=600,height=500');
-     }
-        break;
-        
+          e.preventDefault();
+          const url = encodeURIComponent(window.location.href); // 🔥 TAMBAH NI
+          if (window.facebookOverlay) {
+            window.facebookOverlay.openOverlay();
+          } else {
+            const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+            window.open(shareUrl, '_blank', 'width=600,height=500');
+          }
+          break;
         default:
           return;
       }
