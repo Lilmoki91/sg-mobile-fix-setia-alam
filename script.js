@@ -189,7 +189,13 @@ Sekian, terima kasih.
 
 Yang benar,
 [Nama Anda]`,
-  },
+
+// ===== BAHASA MELAYU =====
+FacebookOverlayTitle: "📋 Salin Teks untuk Facebook",
+FacebookOverlayText: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/",
+FacebookOverlayCopy: "Salin Teks",
+FacebookOverlayHint: "📋 Salin teks ini dan tampal di ruang status Facebook.",
+      },
 
 
   en: {
@@ -361,6 +367,12 @@ Thank you.
 
 Yours sincerely,
 [Your Name]`,
+
+// ===== BAHASA INGGERIS =====
+FacebookOverlayTitle: "📋 Copy Text for Facebook",
+FacebookOverlayText: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/",
+FacebookOverlayCopy: "Copy Text",
+FacebookOverlayHint: "📋 Copy this text and paste it in your Facebook status.",    
   }
 };
 
@@ -1191,17 +1203,26 @@ function initFacebookOverlay() {
     document.body.classList.remove('overflow-hidden');
   }
 
-  // Copy teks & url
+ // function button teks confirm
+  function getCopiedText() {
+  const lang = document.documentElement.lang || 'ms';
+  const texts = {
+    ms: 'Disalin! ✅',
+    en: 'Copied! ✅'
+  };
+  return texts[lang] || texts.ms;
+  }
+
+  // function Copy teks & url
   async function copyToClipboard() {
   const text = copyText.textContent;
-  const url = encodeURIComponent(window.location.href); // 🔥 TAMBAH NI
+  const url = encodeURIComponent(window.location.href);
   
   try {
     await navigator.clipboard.writeText(text);
     const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`; // 🔥 GUNA FUNCTION
     
-    // 🔥 BUKA FACEBOOK SHARER DENGAN URL
     setTimeout(() => {
       closeOverlay();
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500');
@@ -1219,7 +1240,7 @@ function initFacebookOverlay() {
     document.execCommand('copy');
     document.body.removeChild(textarea);
     const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
     
     setTimeout(() => {
       closeOverlay();
