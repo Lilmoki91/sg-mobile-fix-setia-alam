@@ -1172,8 +1172,8 @@ function initFacebookOverlay() {
   function getFacebookText() {
     const lang = document.documentElement.lang || 'ms';
     const texts = {
-      ms: `Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! \nhttps://lilmoki91.github.io/sg-mobile-fix-setia-alam/`,
-      en: `Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! \nhttps://lilmoki91.github.io/sg-mobile-fix-setia-alam/`
+      ms: `Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/`,
+      en: `Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/`
     };
     return texts[lang] || texts.ms;
   }
