@@ -1193,29 +1193,43 @@ function initFacebookOverlay() {
 
   // Copy teks
   async function copyToClipboard() {
-    const text = copyText.textContent;
-    try {
-      await navigator.clipboard.writeText(text);
-      const original = copyBtn.innerHTML;
-      copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
-      setTimeout(() => {
-        copyBtn.innerHTML = original;
-      }, 2000);
-    } catch (err) {
-      // Fallback
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      const original = copyBtn.innerHTML;
-      copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
-      setTimeout(() => {
-        copyBtn.innerHTML = original;
-      }, 2000);
-    }
+  const text = copyText.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+    
+    // 🔥 TUTUP OVERLAY LEPAS 1 SAAT
+    setTimeout(() => {
+      closeOverlay();
+      // 🔥 BUKA FACEBOOK DALAM TAB BARU
+      window.open('https://www.facebook.com', '_blank');
+    }, 1000);
+    
+    setTimeout(() => {
+      copyBtn.innerHTML = original;
+    }, 2000);
+  } catch (err) {
+    // Fallback
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    const original = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+    
+    setTimeout(() => {
+      closeOverlay();
+      window.open('https://www.facebook.com', '_blank');
+    }, 1000);
+    
+    setTimeout(() => {
+      copyBtn.innerHTML = original;
+    }, 2000);
   }
+}
 
   // Event listeners
   closeBtn.addEventListener('click', closeOverlay);
