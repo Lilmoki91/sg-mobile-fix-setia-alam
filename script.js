@@ -14,11 +14,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initGallery();
   initTestimonials();
   initTranslation();
-  initShareSocial();
+  
   // Init Facebook overlay
   window.facebookOverlay = initFacebookOverlay();
-  // Init share social (guna overlay untuk Facebook)
   
+  // Init share social (guna overlay untuk Facebook)
+  initShareSocial();
 
   const currentYear = document.getElementById("current-year");
   if (currentYear) {
