@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initTestimonials();
   initTranslation();
   initShareSocial();
+  // Init Facebook overlay
+  window.facebookOverlay = initFacebookOverlay();
+  // Init share social (guna overlay untuk Facebook)
+  
 
   const currentYear = document.getElementById("current-year");
   if (currentYear) {
