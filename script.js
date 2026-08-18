@@ -1147,3 +1147,77 @@ function initShareSocial() {
     });
   });
 }
+
+/* ==================== OVERLAY COPY FACEBOOK ==================== */
+
+function initFacebookOverlay() {
+  const overlay = document.getElementById('fb-overlay');
+  const closeBtn = document.getElementById('fb-overlay-close');
+  const copyBtn = document.getElementById('fb-copy-btn');
+  const copyText = document.getElementById('fb-copy-text');
+
+  // Text dwibahasa
+  function getFacebookText() {
+    const lang = document.documentElement.lang || 'ms';
+    const texts = {
+      ms: `Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! \nhttps://lilmoki91.github.io/sg-mobile-fix-setia-alam/`,
+      en: `Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! \nhttps://lilmoki91.github.io/sg-mobile-fix-setia-alam/`
+    };
+    return texts[lang] || texts.ms;
+  }
+
+  // Buka overlay
+  function openOverlay() {
+    copyText.textContent = getFacebookText();
+    overlay.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  // Tutup overlay
+  function closeOverlay() {
+    overlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  // Copy teks
+  async function copyToClipboard() {
+    const text = copyText.textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    } catch (err) {
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    }
+  }
+
+  // Event listeners
+  closeBtn.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) closeOverlay();
+  });
+  copyBtn.addEventListener('click', copyToClipboard);
+
+  // Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+      closeOverlay();
+    }
+  });
+
+  return { openOverlay, closeOverlay };
+}
