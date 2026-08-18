@@ -1191,19 +1191,20 @@ function initFacebookOverlay() {
     document.body.classList.remove('overflow-hidden');
   }
 
-  // Copy teks
+  // Copy teks & url
   async function copyToClipboard() {
   const text = copyText.textContent;
+  const url = encodeURIComponent(window.location.href); // 🔥 TAMBAH NI
+  
   try {
     await navigator.clipboard.writeText(text);
     const original = copyBtn.innerHTML;
     copyBtn.innerHTML = '<i class="fas fa-check"></i> Disalin!';
     
-    // 🔥 TUTUP OVERLAY LEPAS 1 SAAT
+    // 🔥 BUKA FACEBOOK SHARER DENGAN URL
     setTimeout(() => {
       closeOverlay();
-      // 🔥 BUKA FACEBOOK DALAM TAB BARU
-      window.open('https://www.facebook.com/sharer/sharer.php?u=${url}', '_blank');
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500');
     }, 1000);
     
     setTimeout(() => {
@@ -1222,7 +1223,7 @@ function initFacebookOverlay() {
     
     setTimeout(() => {
       closeOverlay();
-      window.open('https://www.facebook.com/sharer/sharer.php?u=${url}', '_blank');
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500');
     }, 1000);
     
     setTimeout(() => {
