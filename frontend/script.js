@@ -939,7 +939,7 @@ function initTestimonials() {
     card.className = "snap-center";
     card.style.cssText = `
       flex: 0 0 auto;
-      height: 95vh;
+      height: 113vh;
       width: 100%;
       max-width: 420px;
       background: transparent;
@@ -955,7 +955,7 @@ function initTestimonials() {
     iframe.allowFullscreen = true;
     iframe.style.cssText = `
       width: 100%;
-      height: 95vh;
+      height: 113vh;
       border: none;
       border-radius: 16px;
     `;
