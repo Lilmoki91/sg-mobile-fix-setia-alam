@@ -2,6 +2,9 @@
 
 Laman web statik untuk kedai pembaikan telefon "SG Mobile Fix Setia Alam". Papar servis, galeri, lokasi, dan butang hubungi (WhatsApp / Email). Termasuk sokongan dua bahasa (Melayu / Inggeris), mod gelap, dan chatbot ringkas.
 
+## 🌐 link url:
+https://sg-mobile-fix-setia-alam.pages.dev/
+
 ## Ciri utama
 - Halaman tunggal (SPA) berfokus pada mudah alih
 - Senarai perkhidmatan dengan kad dan pautan WhatsApp siap mesej
