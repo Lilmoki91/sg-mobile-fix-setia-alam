@@ -6,7 +6,7 @@
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": "./frontend"
   },
   "compatibility_flags": [
     "nodejs_compat"
