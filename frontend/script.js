@@ -1281,7 +1281,7 @@ if ('serviceWorker' in navigator) {
   
   // Register SW baru
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(reg => {
         console.log('✅ SW v2 registered');
         
