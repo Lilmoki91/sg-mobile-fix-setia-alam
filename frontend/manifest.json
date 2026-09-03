@@ -10,14 +10,24 @@
     {
       "src": "assets/pwa-icon/sg-mobile-fix-icon-512.jpeg",
       "sizes": "512x512",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/pwa-icon/sg-mobile-fix-icon-512.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "assets/pwa-icon/sg-mobile-fix-icon-512.jpeg",
+      "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     },
     {
       "src": "assets/pwa-icon/sg-mobile-fix-icon-512.jpeg",
       "sizes": "192x192",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
