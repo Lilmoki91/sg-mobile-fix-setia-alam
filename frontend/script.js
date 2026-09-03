@@ -1270,18 +1270,35 @@ function initFacebookOverlay() {
   return { openOverlay, closeOverlay };
 }
 
-// ======================
-// PWA service-worker.js 
-// ======================
-// Daftar Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(error => {
-          console.log('Service Worker registration failed:', error);
-        });
-    });
-  } 
+// ==============================================
+// 🚨 PWA FORCE SERVICE WORKER UPDATE
+// ==============================================
+if ('serviceWorker' in navigator) {
+  // Unregister semua SW lama
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister());
+  });
+  
+  // Register SW baru
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => {
+        console.log('✅ SW v2 registered');
+        
+        // Auto update
+        reg.update();
+        
+        // Kalau ada waiting, activate
+        if (reg.waiting) {
+          reg.waiting.postMessage({type: 'SKIP_WAITING'});
+        }
+      })
+      .catch(err => console.log('❌ SW failed:', err));
+  });
+  
+  // Reload bila SW baru active
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
+
