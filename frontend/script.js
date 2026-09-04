@@ -1277,7 +1277,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('✅ SW V5 registered');
+        console.log('✅ SW V6 registered');
 
         // Paksa update
         reg.update();
