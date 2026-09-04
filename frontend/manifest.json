@@ -4,11 +4,11 @@
   "description": "Servis smartphone & tablet di Setia Alam",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0088CC",
-  "theme_color": "#5B9BD5",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0088CC",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-512.png",
+      "src": "https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
