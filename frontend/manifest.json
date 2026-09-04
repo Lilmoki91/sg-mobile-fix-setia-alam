@@ -7,6 +7,7 @@
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#0088CC",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "assets/pwa-icon/sg-mobile-fix-icon-192.png",
