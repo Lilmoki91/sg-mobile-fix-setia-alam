@@ -782,3 +782,12 @@ html[data-theme="dark"] #bottom-menu-button:hover {
   color: #000000;
 }
 
+#fb-copy-btn {
+  color: #FFFFFF; /* white */
+}
+
+#fb-copy-text {
+    color: blue;
+    font-style: italic;
+    font-weight: 450;
+}
