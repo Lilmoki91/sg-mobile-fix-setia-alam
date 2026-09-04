@@ -3,12 +3,12 @@ const CACHE_NAME = 'sg-mobile-fix-v2';
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
-  './',
-  './index.html',
-  './styles.css',
-  './manifest.json',
-  './assets/pwa-icon/sg-mobile-fix-icon-192.png',
-  './assets/pwa-icon/sg-mobile-fix-icon-512.png'
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/manifest.json',
+  '/assets/pwa-icon/sg-mobile-fix-icon-192.png',
+  '/assets/pwa-icon/sg-mobile-fix-icon-512.png'
 ];
 
 // 1. Install Service Worker (Cache fail)
