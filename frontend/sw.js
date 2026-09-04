@@ -1,5 +1,5 @@
 // Nama cache (versi) - Tukar jika ada kemaskini
-const CACHE_NAME = 'sg-mobile-fix-V8';
+const CACHE_NAME = 'sg-mobile-fix-V9'; // <-- Tukar ke V9
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
@@ -21,7 +21,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
-  self.skipWaiting(); // <-- PENTING: Aktifkan SW segera
+  self.skipWaiting();
 });
 
 // 2. Aktifkan Service Worker
@@ -38,7 +38,7 @@ self.addEventListener('activate', event => {
       );
     })
   );
-  self.clients.claim(); // <-- PENTING: Kawal semua tab segera
+  self.clients.claim();
 });
 
 // 3. Intercept Request
