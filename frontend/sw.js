@@ -7,8 +7,8 @@ const urlsToCache = [
   '/index.html',
   '/styles.css',
   '/manifest.json',
-  '/assets/pwa-icon/sg-mobile-fix-icon-192.png',
-  '/assets/pwa-icon/sg-mobile-fix-icon-512.png'
+  'https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-512.png',
+  'https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-192.png'
 ];
 
 // 1. Install Service Worker (Cache fail)
