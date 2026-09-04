@@ -451,7 +451,7 @@ nav img {
 #chatbot-window {
   position: fixed;
   right: 20px;
-  bottom: 85px;
+  bottom: 125px;
   z-index: 50;
   width: 320px;
   overflow: hidden;
