@@ -1,5 +1,5 @@
 // Nama cache (versi) - Tukar jika ada kemaskini
-const CACHE_NAME = 'sg-mobile-fix-v2';
+const CACHE_NAME = 'sg-mobile-fix-V3';
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
