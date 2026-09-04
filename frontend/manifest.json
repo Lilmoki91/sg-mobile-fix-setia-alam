@@ -3,7 +3,7 @@
   "name": "SG Mobile Fix Setia Alam - Smartphone Services & Repairing",
   "short_name": "SG Mobile Fix",
   "description": "Perkhidmatan servis smartphone & tablet profesional di Setia Alam, Selangor. Baiki skrin, bateri, water damage & banyak lagi.",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#0088CC",
