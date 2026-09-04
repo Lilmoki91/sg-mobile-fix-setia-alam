@@ -1283,7 +1283,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then(reg => {
-        console.log('✅ SW v2 registered');
+        console.log('✅ SW V3 registered');
         
         // Auto update
         reg.update();
