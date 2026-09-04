@@ -1,5 +1,5 @@
 // Nama cache (versi) - Tukar jika ada kemaskini
-const CACHE_NAME = 'sg-mobile-fix-V5';
+const CACHE_NAME = 'sg-mobile-fix-V6';
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
@@ -8,8 +8,8 @@ const urlsToCache = [
   '/styles.css',
   '/script.js',
   '/manifest.json',
-  'https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-512.png',
-  'https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-192.png'
+  '/assets/pwa-icon/sg-mobile-fix-icon-192.png',  // <-- GUNA LALUAN TEMPATAN
+  '/assets/pwa-icon/sg-mobile-fix-icon-512.png'   // <-- GUNA LALUAN TEMPATAN
 ];
 
 // 1. Install Service Worker
