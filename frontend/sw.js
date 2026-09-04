@@ -1,5 +1,5 @@
 // Nama cache (versi) - Tukar jika ada kemaskini
-const CACHE_NAME = 'sg-mobile-fix-V4';
+const CACHE_NAME = 'sg-mobile-fix-V5';
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
@@ -12,7 +12,7 @@ const urlsToCache = [
   'https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/pwa-icon/sg-mobile-fix-icon-192.png'
 ];
 
-// 1. Install Service Worker (Cache fail)
+// 1. Install Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -21,9 +21,10 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting(); // <-- PENTING: Aktifkan SW segera
 });
 
-// 2. Aktifkan Service Worker (Padam cache lama)
+// 2. Aktifkan Service Worker
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -37,25 +38,22 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  self.clients.claim(); // <-- PENTING: Kawal semua tab segera
 });
 
-// 3. Intercept Request (Hidangkan dari cache atau network)
+// 3. Intercept Request
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
-        // Clone request dan fetch dari network
         const fetchRequest = event.request.clone();
         return fetch(fetchRequest).then(response => {
-          // Cek response valid
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
-          // Clone response untuk cache
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then(cache => {
