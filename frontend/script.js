@@ -1274,31 +1274,29 @@ function initFacebookOverlay() {
 // 🚨 PWA FORCE SERVICE WORKER UPDATE
 // ==============================================
 if ('serviceWorker' in navigator) {
-  // Unregister semua SW lama
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.unregister());
-  });
-  
-  // Register SW baru
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('✅ SW V4 registered');
-        
-        // Auto update
+        console.log('✅ SW V5 registered');
+
+        // Paksa update
         reg.update();
-        
-        // Kalau ada waiting, activate
+
+        // Jika ada waiting, activate
         if (reg.waiting) {
           reg.waiting.postMessage({type: 'SKIP_WAITING'});
+        }
+
+        // Jika SW aktif, log
+        if (reg.active) {
+          console.log('✅ SW is active');
         }
       })
       .catch(err => console.log('❌ SW failed:', err));
   });
-  
+
   // Reload bila SW baru active
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload();
   });
 }
-
