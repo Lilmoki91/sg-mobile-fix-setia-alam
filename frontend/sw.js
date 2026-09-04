@@ -3,13 +3,13 @@ const CACHE_NAME = 'sg-mobile-fix-V8';
 
 // Senarai fail yang hendak di-cache
 const urlsToCache = [
-  './',
-  './index.html',
-  './styles.css',
-  './script.js',
-  './manifest.json',
-  './sg-mobile-fix-icon-192.png',
-  './sg-mobile-fix-icon-512.png'
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/script.js',
+  '/manifest.json',
+  '/sg-mobile-fix-icon-192.png',
+  '/sg-mobile-fix-icon-512.png'
 ];
 
 // 1. Install Service Worker
