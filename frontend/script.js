@@ -1277,7 +1277,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('✅ SW V8 registered');
+        console.log('✅ SW V9 registered');
 
         // Paksa update
         reg.update();
@@ -1300,3 +1300,76 @@ if ('serviceWorker' in navigator) {
     window.location.reload();
   });
 }
+
+// ==============================================
+// 🚀 AUTO POP-UP INSTALL PWA
+// ==============================================
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  console.log('✅ beforeinstallprompt event fired');
+
+  // Optional: Show your own custom install button or pop-up
+  // Tunjukkan pop-up automatik selepas 3 saat
+  setTimeout(() => {
+    showInstallPromotion();
+  }, 3000);
+});
+
+function showInstallPromotion() {
+  if (!deferredPrompt) {
+    console.log('❌ No deferred prompt available');
+    return;
+  }
+
+  // Tunjukkan pop-up custom (contoh)
+  const userChoice = confirm('📱 Pasang aplikasi SG Mobile Fix di telefon anda untuk pengalaman lebih baik?');
+  
+  if (userChoice) {
+    // Tunjukkan pop-up install sebenar
+    deferredPrompt.prompt();
+    // Tunggu pengguna buat pilihan
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('✅ User accepted the install prompt');
+      } else {
+        console.log('❌ User dismissed the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    console.log('❌ User declined the custom prompt');
+    deferredPrompt = null;
+  }
+}
+
+// Optional: Butang Install (Jika ada di menu)
+// Boleh tambah butang "Install App" di menu jika perlu
+// Contoh: <button id="install-btn">Install App</button>
+const installBtn = document.getElementById('install-btn');
+if (installBtn) {
+  installBtn.addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+        } else {
+          console.log('❌ User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    } else {
+      console.log('❌ No deferred prompt available');
+    }
+  });
+}
+
+// Log jika PWA sudah dipasang
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 PWA installed successfully!');
+});
