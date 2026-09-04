@@ -1184,8 +1184,8 @@ function initFacebookOverlay() {
   function getFacebookText() {
     const lang = document.documentElement.lang || 'ms';
     const texts = {
-      ms: `Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/`,
-      en: `Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/`
+      ms: `Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! https://sg-mobile-fix-setia-alam.pages.dev/`,
+      en: `Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! https://sg-mobile-fix-setia-alam.pages.dev/`
     };
     return texts[lang] || texts.ms;
   }
@@ -1207,8 +1207,8 @@ function initFacebookOverlay() {
   function getCopiedText() {
   const lang = document.documentElement.lang || 'ms';
   const texts = {
-    ms: 'Disalin! ✅',
-    en: 'Copied! ✅'
+    ms: 'Disalin!',
+    en: 'Copied!'
   };
   return texts[lang] || texts.ms;
   }
