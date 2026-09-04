@@ -1,8 +1,12 @@
-// Nama cache (versi) - Tukar jika ada kemaskini
-const CACHE_NAME = 'sg-mobile-fix-V7';
+// ==============================================
+// SERVICE WORKER V8
+// CACHE STRATEGIC + AUTO CLEAN OLD
+// ==============================================
 
-// Senarai fail yang hendak di-cache
-const urlsToCache = [
+const CACHE_NAME = 'sg-mobile-fix-V8';
+
+// 🔥 FAIL PENTING UNTUK DI-CACHE
+const FILES_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
@@ -12,55 +16,98 @@ const urlsToCache = [
   './sg-mobile-fix-icon-512.png'   // <-- GUNA LALUAN TEMPATAN
 ];
 
-// 1. Install Service Worker
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
-  );
-  self.skipWaiting(); // <-- PENTING: Aktifkan SW segera
-});
-
-// 2. Aktifkan Service Worker
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Deleting old cache:', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim(); // <-- PENTING: Kawal semua tab segera
-});
-
-// 3. Intercept Request
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        const fetchRequest = event.request.clone();
-        return fetch(fetchRequest).then(response => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
+// ==============================================
+// 📦 INSTALL - PRECACHE FAIL PENTING
+// ==============================================
+self.addEventListener('install', (event) => {
+    console.log('Sg Mobile Fix V8: Install');
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('📦 Pre-caching essential files...');
+            return cache.addAll(FILES_TO_CACHE).catch((err) => {
+                console.warn('⚠️ Some files failed to pre-cache:', err);
             });
-          return response;
-        });
-      })
-  );
+        })
+    );
+    self.skipWaiting();
+});
+
+// ==============================================
+// 🚀 ACTIVATE - BUANG CACHE LAMA SAHAJA
+// ==============================================
+self.addEventListener('activate', (event) => {
+    console.log('Sg Mobile Fix V8: Activate');
+    event.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.map((key) => {
+                    // 🔥 HANYA BUANG CACHE YANG BUKAN VERSI SEMASA
+                    if (key !== CACHE_NAME) {
+                        console.log('🗑️ Old cache deleted:', key);
+                        return caches.delete(key);
+                    }
+                })
+            );
+        }).then(() => {
+            console.log('✅ Activation complete — cache V8 ready');
+            return self.clients.claim();
+        })
+    );
+});
+
+// ==============================================
+// 🔄 FETCH - CACHE FIRST, NETWORK FALLBACK
+// ==============================================
+self.addEventListener('fetch', (event) => {
+    // Skip untuk API calls
+    const url = event.request.url;
+    if (url.includes('onrender.com') || url.includes('api/')) {
+        return; // Biar network handle — jangan cache API
+    }
+    
+    if (event.request.method !== 'GET') return;
+    
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            // ✅ Guna cache dulu (loading laju)
+            if (cachedResponse) {
+                // Update cache di background
+                fetch(event.request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, networkResponse.clone());
+                        });
+                    }
+                }).catch(() => {});
+                return cachedResponse;
+            }
+            
+            // Tiada cache — cuba network
+            return fetch(event.request).then((networkResponse) => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const clone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clone);
+                    });
+                }
+                return networkResponse;
+            }).catch(() => {
+                // Offline fallback
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+                return new Response('Offline', { status: 503 });
+            });
+        })
+    );
+});
+
+// ==============================================
+// ⚡ MESSAGE - SKIP WAITING
+// ==============================================
+self.addEventListener('message', (event) => {
+    if (event.data === 'SKIP_WAITING') {
+        console.log('SW V8: Skip waiting');
+        self.skipWaiting();
+    }
 });
