@@ -1,8 +1,8 @@
 {
   "name": "SG Mobile Fix Setia Alam",
   "short_name": "SG Mobile Fix",
-  "description": "Servis smartphone & tablet di Setia Alam",
-  "start_url": "/",
+  "description": "Servis smartphone &amp; tablet di Setia Alam",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#0088CC",
@@ -19,5 +19,16 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "categories": [
+    "utilities"
+  ],
+  "dir": "auto",
+  "lang": "ms",
+  "orientation": "any",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
   ]
 }
