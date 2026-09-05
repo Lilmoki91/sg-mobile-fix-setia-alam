@@ -791,3 +791,20 @@ html[data-theme="dark"] #bottom-menu-button:hover {
     font-style: italic;
     font-weight: 450;
 }
+
+/* teks cancel overlay install pwa */
+#close-overlay-link {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  margin-top: 16px;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.15s ease; /* Animasi pertukaran warna */
+}
+
+#close-overlay-link:active {
+  color: #0088CC; /* Warna biru Telegram semasa klik */
+}
+
