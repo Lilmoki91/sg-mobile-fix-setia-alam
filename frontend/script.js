@@ -1338,12 +1338,18 @@ setTimeout(() => {
 
 // Tutup overlay (butang X)
 if (closeBtn) {
-  closeBtn.addEventListener('click', hideOverlay);
+  closeBtn.addEventListener('click', () => {
+    hideOverlay();
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
 }
 
 // Tutup overlay (link "Tidak sekarang")
 if (closeLink) {
-  closeLink.addEventListener('click', hideOverlay);
+  closeLink.addEventListener('click', () => {
+    hideOverlay();
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
 }
 
 // Tutup overlay jika klik di luar popup (pada background)
@@ -1351,33 +1357,53 @@ if (overlay) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       hideOverlay();
+      sessionStorage.setItem('overlayClosed', 'true');
     }
   });
 }
+
+// ==============================================
+// 🚀 POPUP ASLI CHROME (TANPA ALERT)
+// ==============================================
 
 // Tangkap event sebelum install
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
+
+  // TUNJUKKAN POPUP ASLI CHROME TERUS SELEPAS 2 SAAT
+  setTimeout(() => {
+    if (deferredPrompt && !isAppInstalled()) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+          hideOverlay();
+        } else {
+          console.log('❌ User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    }
+  }, 2000);
 });
 
 // Fungsi install (apabila klik butang Install)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
+    if (deferredPrompt && !isAppInstalled()) {
       // Tunjukkan popup asli Chrome
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
       if (result.outcome === 'accepted') {
         console.log('✅ PWA installed');
-        hideOverlay(); // Sembunyi overlay
+        hideOverlay();
       }
       deferredPrompt = null;
     } else {
-      // Jika tiada popup, arahkan ke menu Chrome
-      alert('📱 Untuk memasang, buka menu Chrome (3 titik) dan pilih "Install app" atau "Add to Home Screen".');
-      hideOverlay();
+      // DIAM JE - TIADA ALERT
+      console.log('❌ No deferredPrompt available atau sudah install');
     }
   });
 }
@@ -1393,22 +1419,9 @@ window.addEventListener('pageshow', () => {
   if (isAppInstalled()) {
     hideOverlay();
   } else {
-    // Tunjukkan overlay hanya jika belum ditutup secara manual (guna sessionStorage)
     const overlayClosed = sessionStorage.getItem('overlayClosed');
     if (!overlayClosed) {
       showOverlay();
     }
   }
 });
-
-// Simpan status tutup overlay dalam sessionStorage (supaya tak muncul lagi dalam sesi yang sama)
-if (closeBtn) {
-  closeBtn.addEventListener('click', () => {
-    sessionStorage.setItem('overlayClosed', 'true');
-  });
-}
-if (closeLink) {
-  closeLink.addEventListener('click', () => {
-    sessionStorage.setItem('overlayClosed', 'true');
-  });
-}
