@@ -1328,7 +1328,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }, 3000);
 });
 
-// Fungsi untuk tunjuk popup asli Chrome TERUS (tanpa confirm)
+// Fungsi untuk tunjuk popup asli Chrome
 function showNativeInstallPrompt() {
   if (!deferredPrompt) {
     console.log('❌ No deferred prompt available');
@@ -1340,7 +1340,7 @@ function showNativeInstallPrompt() {
     return;
   }
 
-  // TUNJUKKAN POPUP INSTALL ASLI CHROME TERUS
+  // TUNJUKKAN POPUP INSTALL ASLI CHROME
   deferredPrompt.prompt();
   
   // Tunggu pengguna buat pilihan
@@ -1363,6 +1363,3 @@ if (installBtn) {
     showNativeInstallPrompt();
   });
 }
-
-
-  
