@@ -1300,6 +1300,7 @@ if ('serviceWorker' in navigator) {
     window.location.reload();
   });
 }
+// 📌 ==============================================
 
 // ==============================================
 // 🚀 OVERLAY INSTALL APP (Popup Tengah)
@@ -1401,11 +1402,12 @@ if (installBtn) {
   installBtn.addEventListener('click', async () => {
     const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
 
-    // 1. Jika SUDAH install → BUKA APP
+    // 1. Jika SUDAH install → BUKA APP (bukan refresh)
     if (isAppInstalled()) {
       console.log('✅ App already installed - opening app');
       hideOverlay();
-      window.location.replace(PWA_URL);
+      // BUKA APLIKASI (bukan refresh)
+      window.open(PWA_URL, '_blank');
       return;
     }
 
@@ -1421,7 +1423,8 @@ if (installBtn) {
     } else {
       console.log('❌ No deferredPrompt available');
       hideOverlay();
-      window.location.replace(PWA_URL);
+      // BUKA APLIKASI (bukan refresh)
+      window.open(PWA_URL, '_blank');
     }
   });
 }
@@ -1450,4 +1453,3 @@ window.addEventListener('load', () => {
     hideOverlay();
   }
 });
-
