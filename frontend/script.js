@@ -1302,23 +1302,57 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==============================================
-// 🚀 BUTANG INSTALL PWA UNTUK SEMUA PENGGUNA
+// 🚀 OVERLAY INSTALL APP (Popup Tengah)
 // ==============================================
 let deferredPrompt;
+const overlay = document.getElementById('install-overlay');
+const closeBtn = document.getElementById('close-overlay-btn');
+const closeLink = document.getElementById('close-overlay-link');
+const installBtn = document.getElementById('install-btn-overlay');
 
 // SEMAK: Jika sudah dalam mode standalone (sudah install)
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('✅ App already installed - hiding banner');
-  const banner = document.getElementById('install-banner');
-  if (banner) {
-    banner.style.display = 'none';
+function isAppInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches;
+}
+
+// Fungsi untuk tunjuk overlay
+function showOverlay() {
+  if (!isAppInstalled() && overlay) {
+    overlay.style.display = 'flex';
+    console.log('📱 Overlay install ditunjukkan');
   }
-} else {
-  // Tunjukkan banner jika belum install
-  const banner = document.getElementById('install-banner');
-  if (banner) {
-    banner.style.display = 'block';
+}
+
+// Fungsi untuk sembunyi overlay
+function hideOverlay() {
+  if (overlay) {
+    overlay.style.display = 'none';
+    console.log('❌ Overlay install ditutup');
   }
+}
+
+// Tunjukkan overlay selepas 1.5 saat (jika belum install)
+setTimeout(() => {
+  showOverlay();
+}, 1500);
+
+// Tutup overlay (butang X)
+if (closeBtn) {
+  closeBtn.addEventListener('click', hideOverlay);
+}
+
+// Tutup overlay (link "Tidak sekarang")
+if (closeLink) {
+  closeLink.addEventListener('click', hideOverlay);
+}
+
+// Tutup overlay jika klik di luar popup (pada background)
+if (overlay) {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      hideOverlay();
+    }
+  });
 }
 
 // Tangkap event sebelum install
@@ -1326,16 +1360,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
-  
-  // Tunjukkan banner (kalau belum nampak)
-  const banner = document.getElementById('install-banner');
-  if (banner) {
-    banner.style.display = 'block';
-  }
 });
 
-// Fungsi install (apabila klik butang)
-const installBtn = document.getElementById('install-btn');
+// Fungsi install (apabila klik butang Install)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
     if (deferredPrompt) {
@@ -1344,35 +1371,44 @@ if (installBtn) {
       const result = await deferredPrompt.userChoice;
       if (result.outcome === 'accepted') {
         console.log('✅ PWA installed');
-        // Sembunyi banner
-        const banner = document.getElementById('install-banner');
-        if (banner) {
-          banner.style.display = 'none';
-        }
+        hideOverlay(); // Sembunyi overlay
       }
       deferredPrompt = null;
     } else {
       // Jika tiada popup, arahkan ke menu Chrome
       alert('📱 Untuk memasang, buka menu Chrome (3 titik) dan pilih "Install app" atau "Add to Home Screen".');
+      hideOverlay();
     }
   });
 }
 
-// Event selepas install (redundant, tapi untuk keselamatan)
+// Event selepas install (sembunyi overlay)
 window.addEventListener('appinstalled', () => {
-  console.log('🎉 PWA installed - removing banner');
-  const banner = document.getElementById('install-banner');
-  if (banner) {
-    banner.style.display = 'none';
-  }
+  console.log('🎉 PWA installed - hiding overlay');
+  hideOverlay();
 });
 
-// Semak setiap kali halaman fokus (jika pengguna install dari luar)
+// Semak setiap kali halaman fokus
 window.addEventListener('pageshow', () => {
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    const banner = document.getElementById('install-banner');
-    if (banner) {
-      banner.style.display = 'none';
+  if (isAppInstalled()) {
+    hideOverlay();
+  } else {
+    // Tunjukkan overlay hanya jika belum ditutup secara manual (guna sessionStorage)
+    const overlayClosed = sessionStorage.getItem('overlayClosed');
+    if (!overlayClosed) {
+      showOverlay();
     }
   }
 });
+
+// Simpan status tutup overlay dalam sessionStorage (supaya tak muncul lagi dalam sesi yang sama)
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => {
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
+}
+if (closeLink) {
+  closeLink.addEventListener('click', () => {
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
+}
