@@ -167,19 +167,6 @@
     </div>
   </div>
 
-
-<!-- 📌 ========================================== -->
-<!-- 📌 BUTANG INSTALL APP UNTUK SEMUA PENGGUNA    -->
-<!-- 📌 ========================================== -->
-<div id="install-banner" style="display: none; background: linear-gradient(135deg, #0088CC, #005F8A); color: white; padding: 16px; text-align: center; border-radius: 16px; margin: 16px; box-shadow: 0 8px 25px rgba(0,136,204,0.4);">
-  <button id="install-btn" style="background: white; color: #0088CC; border: none; padding: 14px 32px; border-radius: 50px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-     Install Apps SG Mobile Fix
-  </button>
-  <p style="margin: 10px 0 0; font-size: 13px; opacity: 0.9; font-style: italic;">install Apps untuk akses pantas & pengalaman lebih baik</p>
-</div>
-<!-- 📌 ========================================== -->
-  
-  
 <!-- ==================== MAIN CONTENT TABS ==================== -->
   <main id="main-content">
     <!-- HOME TAB -->
@@ -1186,4 +1173,56 @@
   <script src="script.js" defer></script>
 
 </body>
+<!-- ========================================== -->
+<!-- 🚀 OVERLAY INSTALL APP (Popup Tengah)      -->
+<!-- ========================================== -->
+<div id="install-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; animation: fadeIn 0.3s ease;">
+  
+  <!-- Kotak Popup -->
+  <div style="background: white; max-width: 400px; width: 90%; padding: 30px 24px 24px; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); text-align: center; position: relative; animation: slideUp 0.4s ease;">
+    
+    <!-- Butang Tutup (X) -->
+    <button id="close-overlay-btn" style="position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 28px; color: #999; cursor: pointer; transition: 0.2s; padding: 4px 8px; line-height: 1;">
+      <i class="fas fa-times"></i>
+    </button>
+    
+    <!-- Ikon/Logo -->
+    <div style="margin: 0 auto 16px; width: 80px; height: 80px; background: linear-gradient(135deg, #0088CC, #005F8A); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; box-shadow: 0 8px 20px rgba(0,136,204,0.3);">
+      <i class="fas fa-mobile-alt"></i>
+    </div>
+    
+    <!-- Tajuk -->
+    <h2 style="font-size: 22px; font-weight: bold; color: #1a1a1a; margin: 0 0 8px;">
+      Pasang App SG Mobile Fix
+    </h2>
+    
+    <!-- Penerangan -->
+    <p style="font-size: 15px; color: #666; margin: 0 0 24px; line-height: 1.5;">
+      Akses pantas, pengalaman lebih baik, & notifikasi terus ke telefon anda.
+    </p>
+    
+    <!-- Butang Install -->
+    <button id="install-btn-overlay" style="background: linear-gradient(135deg, #0088CC, #005F8A); color: white; border: none; padding: 14px 32px; border-radius: 50px; font-weight: bold; font-size: 17px; cursor: pointer; box-shadow: 0 8px 25px rgba(0,136,204,0.4); transition: 0.2s; width: 100%;">
+      <i class="fas fa-download" style="margin-right: 10px;"></i> Install App
+    </button>
+    
+    <!-- Link Tutup (Alternatif) -->
+    <button id="close-overlay-link" style="background: none; border: none; color: #999; font-size: 13px; margin-top: 16px; cursor: pointer; text-decoration: underline;">
+      Tidak sekarang
+    </button>
+    
+  </div>
+</div>
+
+<!-- CSS Animasi -->
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</style>
 </html>
