@@ -1331,7 +1331,7 @@ function hideOverlay() {
   }
 }
 
-// Tunjukkan overlay selepas 1.5 saat (sentiasa muncul)
+// Tunjukkan overlay selepas 1.5 saat
 setTimeout(() => {
   showOverlay();
 }, 1500);
@@ -1352,7 +1352,7 @@ if (closeLink) {
   });
 }
 
-// Tutup overlay jika klik di luar popup (pada background)
+// Tutup overlay jika klik di luar popup
 if (overlay) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
@@ -1363,7 +1363,7 @@ if (overlay) {
 }
 
 // ==============================================
-// 🚀 BUTANG INSTALL: Install ATAU BUKA APP
+// 🚀 POPUP ASLI CHROME (TANPA ALERT)
 // ==============================================
 
 // Tangkap event sebelum install
@@ -1371,15 +1371,34 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
+
+  // TUNJUKKAN POPUP ASLI CHROME TERUS SELEPAS 2 SAAT
+  setTimeout(() => {
+    if (deferredPrompt && !isAppInstalled()) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+          hideOverlay();
+        } else {
+          console.log('❌ User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    }
+  }, 2000);
 });
 
-// Fungsi utama untuk butang Install
+// ==============================================
+// 🚀 BUTANG INSTALL: Install ATAU BUKA APP
+// ==============================================
+
+// Fungsi install (apabila klik butang Install)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
     // SEMAK: Jika sudah install, BUKA APP
     if (isAppInstalled()) {
       console.log('✅ App already installed - opening app');
-      // Cuba buka app (jika ada)
       window.location.href = '/';
       hideOverlay();
       return;
@@ -1387,7 +1406,6 @@ if (installBtn) {
 
     // Jika BELUM install dan ada deferredPrompt
     if (deferredPrompt) {
-      // Tunjukkan popup asli Chrome
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
       if (result.outcome === 'accepted') {
@@ -1396,8 +1414,10 @@ if (installBtn) {
       }
       deferredPrompt = null;
     } else {
-      // Jika tiada deferredPrompt, arahkan ke menu Chrome
-      alert('📱 Untuk memasang, buka menu Chrome (3 titik) dan pilih "Install app" atau "Add to Home Screen".');
+      // Jika tiada deferredPrompt, refresh je
+      console.log('❌ No deferredPrompt available');
+      window.location.href = '/';
+      hideOverlay();
     }
   });
 }
