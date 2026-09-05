@@ -1363,6 +1363,74 @@ if (overlay) {
 }
 
 // ==============================================
+// 🚀 OVERLAY INSTALL APP (Popup Tengah)
+// ==============================================
+let deferredPrompt;
+const overlay = document.getElementById('install-overlay');
+const closeBtn = document.getElementById('close-overlay-btn');
+const closeLink = document.getElementById('close-overlay-link');
+const installBtn = document.getElementById('install-btn-overlay');
+
+// SEMAK: Jika sudah dalam mode standalone (sudah install)
+function isAppInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches;
+}
+
+// Fungsi untuk tunjuk overlay
+function showOverlay() {
+  // JANGAN tunjuk jika sudah install
+  if (isAppInstalled()) {
+    console.log('✅ App already installed - overlay hidden');
+    if (overlay) overlay.style.display = 'none';
+    return;
+  }
+  
+  if (overlay) {
+    overlay.style.display = 'flex';
+    console.log('📱 Overlay install ditunjukkan');
+  }
+}
+
+// Fungsi untuk sembunyi overlay
+function hideOverlay() {
+  if (overlay) {
+    overlay.style.display = 'none';
+    console.log('❌ Overlay install ditutup');
+  }
+}
+
+// Tunjukkan overlay selepas 1.5 saat (jika belum install)
+setTimeout(() => {
+  showOverlay();
+}, 1500);
+
+// Tutup overlay (butang X)
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => {
+    hideOverlay();
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
+}
+
+// Tutup overlay (link "Tidak sekarang")
+if (closeLink) {
+  closeLink.addEventListener('click', () => {
+    hideOverlay();
+    sessionStorage.setItem('overlayClosed', 'true');
+  });
+}
+
+// Tutup overlay jika klik di luar popup (pada background)
+if (overlay) {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      hideOverlay();
+      sessionStorage.setItem('overlayClosed', 'true');
+    }
+  });
+}
+
+// ==============================================
 // 🚀 POPUP ASLI CHROME (TANPA ALERT)
 // ==============================================
 
@@ -1425,3 +1493,13 @@ window.addEventListener('pageshow', () => {
     }
   }
 });
+
+// SEMAK SETIAP KALI HALAMAN DIMUAT (PASTI OVERLAY TAK MUNCUL LEPAS INSTALL)
+window.addEventListener('load', () => {
+  if (isAppInstalled()) {
+    hideOverlay();
+  }
+});
+
+
+    
