@@ -1317,7 +1317,6 @@ function isAppInstalled() {
 
 // Fungsi untuk tunjuk overlay
 function showOverlay() {
-  // JANGAN tunjuk jika sudah install
   if (isAppInstalled()) {
     console.log('✅ App already installed - overlay hidden');
     if (overlay) overlay.style.display = 'none';
@@ -1338,7 +1337,7 @@ function hideOverlay() {
   }
 }
 
-// Tunjukkan overlay selepas 1.5 saat (jika belum install)
+// Tunjukkan overlay selepas 1.5 saat
 setTimeout(() => {
   showOverlay();
 }, 1500);
@@ -1359,7 +1358,7 @@ if (closeLink) {
   });
 }
 
-// Tutup overlay jika klik di luar popup (pada background)
+// Tutup overlay jika klik di luar popup
 if (overlay) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
@@ -1370,16 +1369,14 @@ if (overlay) {
 }
 
 // ==============================================
-// 🚀 POPUP ASLI CHROME (TANPA ALERT)
+// 🚀 POPUP ASLI CHROME
 // ==============================================
 
-// Tangkap event sebelum install
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
 
-  // TUNJUKKAN POPUP ASLI CHROME TERUS SELEPAS 2 SAAT
   setTimeout(() => {
     if (deferredPrompt && !isAppInstalled()) {
       deferredPrompt.prompt();
@@ -1402,25 +1399,18 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
+    const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
+
     // 1. Jika SUDAH install → BUKA APP
     if (isAppInstalled()) {
       console.log('✅ App already installed - opening app');
       hideOverlay();
-      
-      // Cuba buka PWA (android / ios)
-      if (window.navigator && window.navigator.standalone) {
-        // iOS
-        window.location.href = '/';
-      } else {
-        // Android / Lain
-        window.location.href = '/';
-      }
+      window.location.replace(PWA_URL);
       return;
     }
 
     // 2. Jika BELUM install
     if (deferredPrompt) {
-      // Tunjukkan popup asli Chrome
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
       if (result.outcome === 'accepted') {
@@ -1429,16 +1419,14 @@ if (installBtn) {
       }
       deferredPrompt = null;
     } else {
-      // Jika tiada deferredPrompt
       console.log('❌ No deferredPrompt available');
-      // Cuba buka app (kalau ada)
-      window.location.href = '/';
       hideOverlay();
+      window.location.replace(PWA_URL);
     }
   });
 }
 
-// Event selepas install (sembunyi overlay)
+// Event selepas install
 window.addEventListener('appinstalled', () => {
   console.log('🎉 PWA installed - hiding overlay');
   hideOverlay();
@@ -1456,9 +1444,10 @@ window.addEventListener('pageshow', () => {
   }
 });
 
-// SEMAK SETIAP KALI HALAMAN DIMUAT (PASTI OVERLAY TAK MUNCUL LEPAS INSTALL)
+// Semak setiap kali halaman dimuat
 window.addEventListener('load', () => {
   if (isAppInstalled()) {
     hideOverlay();
   }
 });
+
