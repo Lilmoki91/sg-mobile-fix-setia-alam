@@ -1304,28 +1304,6 @@ if ('serviceWorker' in navigator) {
 // ==============================================
 // 🚀 OVERLAY INSTALL APP (Popup Tengah)
 // ==============================================
-  console.log('✅ beforeinstallprompt event fired');
-
-  // TUNJUKKAN POPUP ASLI CHROME TERUS SELEPAS 2 SAAT
-  setTimeout(() => {
-    if (deferredPrompt && !isAppInstalled()) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('✅ User accepted the install prompt');
-          hideOverlay();
-        } else {
-          console.log('❌ User dismissed the install prompt');
-        }
-        deferredPrompt = null;
-      });
-    }
-  }, 2000);
-});
-
-// ==============================================
-// 🚀 OVERLAY INSTALL APP (Popup Tengah)
-// ==============================================
 let deferredPrompt;
 const overlay = document.getElementById('install-overlay');
 const closeBtn = document.getElementById('close-overlay-btn');
@@ -1484,4 +1462,3 @@ window.addEventListener('load', () => {
     hideOverlay();
   }
 });
-
