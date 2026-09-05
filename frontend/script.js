@@ -1310,6 +1310,7 @@ const overlay = document.getElementById('install-overlay');
 const closeBtn = document.getElementById('close-overlay-btn');
 const closeLink = document.getElementById('close-overlay-link');
 const installBtn = document.getElementById('install-btn-overlay');
+const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
 
 // SEMAK: Jika sudah dalam mode standalone (sudah install)
 function isAppInstalled() {
@@ -1338,60 +1339,49 @@ function hideOverlay() {
   }
 }
 
-// Tunjukkan overlay selepas 1.5 saat
+// Tunjukkan overlay selepas 1.5 saat (hanya jika pengguna belum tutup sebelum ini)
 setTimeout(() => {
-  showOverlay();
+  const overlayClosed = sessionStorage.getItem('overlayClosed');
+  if (!isAppInstalled() && !overlayClosed) {
+    showOverlay();
+  }
 }, 1500);
+
+// Fungsi utiliti untuk menyimpan status tutup overlay
+function handleCloseOverlay() {
+  hideOverlay();
+  sessionStorage.setItem('overlayClosed', 'true');
+}
 
 // Tutup overlay (butang X)
 if (closeBtn) {
-  closeBtn.addEventListener('click', () => {
-    hideOverlay();
-    sessionStorage.setItem('overlayClosed', 'true');
-  });
+  closeBtn.addEventListener('click', handleCloseOverlay);
 }
 
 // Tutup overlay (link "Tidak sekarang")
 if (closeLink) {
-  closeLink.addEventListener('click', () => {
-    hideOverlay();
-    sessionStorage.setItem('overlayClosed', 'true');
-  });
+  closeLink.addEventListener('click', handleCloseOverlay);
 }
 
 // Tutup overlay jika klik di luar popup
 if (overlay) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
-      hideOverlay();
-      sessionStorage.setItem('overlayClosed', 'true');
+      handleCloseOverlay();
     }
   });
 }
 
 // ==============================================
-// 🚀 POPUP ASLI CHROME
+// 🚀 POPUP ASLI CHROME (Event Tangkapan)
 // ==============================================
 
 window.addEventListener('beforeinstallprompt', (e) => {
+  // Halang popup default Chrome dari muncul secara automatik
   e.preventDefault();
+  // Simpan event supaya ia boleh dipanggil apabila butang diklik
   deferredPrompt = e;
-  console.log('✅ beforeinstallprompt event fired');
-
-  setTimeout(() => {
-    if (deferredPrompt && !isAppInstalled()) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('✅ User accepted the install prompt');
-          hideOverlay();
-        } else {
-          console.log('❌ User dismissed the install prompt');
-        }
-        deferredPrompt = null;
-      });
-    }
-  }, 2000);
+  console.log('✅ beforeinstallprompt event fired and saved');
 });
 
 // ==============================================
@@ -1400,36 +1390,38 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
-
-    // 1. Jika SUDAH install → BUKA APP (bukan refresh)
+    // 1. Jika SUDAH install → BUKA APP
     if (isAppInstalled()) {
       console.log('✅ App already installed - opening app');
       hideOverlay();
-      // BUKA APLIKASI (bukan refresh)
       window.open(PWA_URL, '_blank');
       return;
     }
 
-    // 2. Jika BELUM install
+    // 2. Jika BELUM install dan event tersedia
     if (deferredPrompt) {
+      // Tunjukkan popup asli Chrome
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
+      
       if (result.outcome === 'accepted') {
         console.log('✅ PWA installed');
         hideOverlay();
+      } else {
+        console.log('❌ User dismissed the install prompt');
       }
+      // Kosongkan prompt kerana ia hanya boleh digunakan sekali
       deferredPrompt = null;
     } else {
-      console.log('❌ No deferredPrompt available');
+      // Fallback jika browser tidak sokong atau prompt tiada
+      console.log('❌ No deferredPrompt available, fallback to URL');
       hideOverlay();
-      // BUKA APLIKASI (bukan refresh)
       window.open(PWA_URL, '_blank');
     }
   });
 }
 
-// Event selepas install
+// Event selepas install berjaya
 window.addEventListener('appinstalled', () => {
   console.log('🎉 PWA installed - hiding overlay');
   hideOverlay();
@@ -1439,11 +1431,6 @@ window.addEventListener('appinstalled', () => {
 window.addEventListener('pageshow', () => {
   if (isAppInstalled()) {
     hideOverlay();
-  } else {
-    const overlayClosed = sessionStorage.getItem('overlayClosed');
-    if (!overlayClosed) {
-      showOverlay();
-    }
   }
 });
 
@@ -1453,3 +1440,4 @@ window.addEventListener('load', () => {
     hideOverlay();
   }
 });
+    
