@@ -1304,6 +1304,28 @@ if ('serviceWorker' in navigator) {
 // ==============================================
 // 🚀 OVERLAY INSTALL APP (Popup Tengah)
 // ==============================================
+  console.log('✅ beforeinstallprompt event fired');
+
+  // TUNJUKKAN POPUP ASLI CHROME TERUS SELEPAS 2 SAAT
+  setTimeout(() => {
+    if (deferredPrompt && !isAppInstalled()) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+          hideOverlay();
+        } else {
+          console.log('❌ User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    }
+  }, 2000);
+});
+
+// ==============================================
+// 🚀 OVERLAY INSTALL APP (Popup Tengah)
+// ==============================================
 let deferredPrompt;
 const overlay = document.getElementById('install-overlay');
 const closeBtn = document.getElementById('close-overlay-btn');
@@ -1317,6 +1339,13 @@ function isAppInstalled() {
 
 // Fungsi untuk tunjuk overlay
 function showOverlay() {
+  // JANGAN tunjuk jika sudah install
+  if (isAppInstalled()) {
+    console.log('✅ App already installed - overlay hidden');
+    if (overlay) overlay.style.display = 'none';
+    return;
+  }
+  
   if (overlay) {
     overlay.style.display = 'flex';
     console.log('📱 Overlay install ditunjukkan');
@@ -1331,7 +1360,7 @@ function hideOverlay() {
   }
 }
 
-// Tunjukkan overlay selepas 1.5 saat
+// Tunjukkan overlay selepas 1.5 saat (jika belum install)
 setTimeout(() => {
   showOverlay();
 }, 1500);
@@ -1352,7 +1381,7 @@ if (closeLink) {
   });
 }
 
-// Tutup overlay jika klik di luar popup
+// Tutup overlay jika klik di luar popup (pada background)
 if (overlay) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
@@ -1393,19 +1422,27 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // 🚀 BUTANG INSTALL: Install ATAU BUKA APP
 // ==============================================
 
-// Fungsi install (apabila klik butang Install)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    // SEMAK: Jika sudah install, BUKA APP
+    // 1. Jika SUDAH install → BUKA APP
     if (isAppInstalled()) {
       console.log('✅ App already installed - opening app');
-      window.location.href = '/';
       hideOverlay();
+      
+      // Cuba buka PWA (android / ios)
+      if (window.navigator && window.navigator.standalone) {
+        // iOS
+        window.location.href = '/';
+      } else {
+        // Android / Lain
+        window.location.href = '/';
+      }
       return;
     }
 
-    // Jika BELUM install dan ada deferredPrompt
+    // 2. Jika BELUM install
     if (deferredPrompt) {
+      // Tunjukkan popup asli Chrome
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
       if (result.outcome === 'accepted') {
@@ -1414,8 +1451,9 @@ if (installBtn) {
       }
       deferredPrompt = null;
     } else {
-      // Jika tiada deferredPrompt, refresh je
+      // Jika tiada deferredPrompt
       console.log('❌ No deferredPrompt available');
+      // Cuba buka app (kalau ada)
       window.location.href = '/';
       hideOverlay();
     }
@@ -1430,16 +1468,20 @@ window.addEventListener('appinstalled', () => {
 
 // Semak setiap kali halaman fokus
 window.addEventListener('pageshow', () => {
-  const overlayClosed = sessionStorage.getItem('overlayClosed');
-  if (!overlayClosed) {
-    showOverlay();
+  if (isAppInstalled()) {
+    hideOverlay();
+  } else {
+    const overlayClosed = sessionStorage.getItem('overlayClosed');
+    if (!overlayClosed) {
+      showOverlay();
+    }
   }
 });
 
-// SEMAK SETIAP KALI HALAMAN DIMUAT
+// SEMAK SETIAP KALI HALAMAN DIMUAT (PASTI OVERLAY TAK MUNCUL LEPAS INSTALL)
 window.addEventListener('load', () => {
-  const overlayClosed = sessionStorage.getItem('overlayClosed');
-  if (!overlayClosed) {
-    showOverlay();
+  if (isAppInstalled()) {
+    hideOverlay();
   }
 });
+
