@@ -1302,68 +1302,77 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==============================================
-// 🚀 POPUP ASLI CHROME (TANPA POPUP PERANTARAAN)
+// 🚀 BUTANG INSTALL PWA UNTUK SEMUA PENGGUNA
 // ==============================================
 let deferredPrompt;
-let isAppInstalled = false;
 
-// Semak jika PWA sudah dipasang
-window.addEventListener('appinstalled', () => {
-  isAppInstalled = true;
-  deferredPrompt = null;
-  console.log('✅ PWA installed successfully!');
-});
+// SEMAK: Jika sudah dalam mode standalone (sudah install)
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  console.log('✅ App already installed - hiding banner');
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'none';
+  }
+} else {
+  // Tunjukkan banner jika belum install
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'block';
+  }
+}
 
 // Tangkap event sebelum install
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
-  // Stash the event so it can be triggered later.
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
-
-  // TUNJUKKAN POPUP ASLI CHROME SELEPAS 3 SAAT
-  setTimeout(() => {
-    showNativeInstallPrompt();
-  }, 3000);
+  
+  // Tunjukkan banner (kalau belum nampak)
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'block';
+  }
 });
 
-// Fungsi untuk tunjuk popup asli Chrome
-function showNativeInstallPrompt() {
-  if (!deferredPrompt) {
-    console.log('❌ No deferred prompt available');
-    return;
-  }
-
-  if (isAppInstalled) {
-    console.log('✅ App already installed');
-    return;
-  }
-
-  // TUNJUKKAN POPUP INSTALL ASLI CHROME
-  deferredPrompt.prompt();
-  
-  // Tunggu pengguna buat pilihan
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('✅ User accepted the install prompt');
-      isAppInstalled = true;
-    } else {
-      console.log('❌ User dismissed the install prompt');
-    }
-    deferredPrompt = null;
-  });
-}
-
-// BUTANG INSTALL (Pasti Berkesan)
-// Tambah butang ini di HTML:
-// <button id="install-btn" class="menu-link">
-//   <i class="fas fa-download"></i> Install App
-// </button>
+// Fungsi install (apabila klik butang)
 const installBtn = document.getElementById('install-btn');
 if (installBtn) {
-  installBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    showNativeInstallPrompt();
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      // Tunjukkan popup asli Chrome
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      if (result.outcome === 'accepted') {
+        console.log('✅ PWA installed');
+        // Sembunyi banner
+        const banner = document.getElementById('install-banner');
+        if (banner) {
+          banner.style.display = 'none';
+        }
+      }
+      deferredPrompt = null;
+    } else {
+      // Jika tiada popup, arahkan ke menu Chrome
+      alert('📱 Untuk memasang, buka menu Chrome (3 titik) dan pilih "Install app" atau "Add to Home Screen".');
+    }
   });
 }
+
+// Event selepas install (redundant, tapi untuk keselamatan)
+window.addEventListener('appinstalled', () => {
+  console.log('🎉 PWA installed - removing banner');
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'none';
+  }
+});
+
+// Semak setiap kali halaman fokus (jika pengguna install dari luar)
+window.addEventListener('pageshow', () => {
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    const banner = document.getElementById('install-banner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
+  }
+});
