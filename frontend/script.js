@@ -1302,7 +1302,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==============================================
-// 🚀 AUTO POPUP INSTALL PWA (Native Chrome)
+// 🚀 POPUP ASLI CHROME (TANPA POPUP PERANTARAAN)
 // ==============================================
 let deferredPrompt;
 let isAppInstalled = false;
@@ -1355,7 +1355,11 @@ function showNativeInstallPrompt() {
   });
 }
 
-// Optional: Butang Install (sebagai alternatif)
+// BUTANG INSTALL (Pasti Berkesan)
+// Tambah butang ini di HTML:
+// <button id="install-btn" class="menu-link">
+//   <i class="fas fa-download"></i> Install App
+// </button>
 const installBtn = document.getElementById('install-btn');
 if (installBtn) {
   installBtn.addEventListener('click', (e) => {
