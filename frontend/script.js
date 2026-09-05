@@ -1302,10 +1302,19 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==============================================
-// 🚀 AUTO POP-UP INSTALL PWA
+// 🚀 AUTO POPUP INSTALL PWA (Native Chrome)
 // ==============================================
 let deferredPrompt;
+let isAppInstalled = false;
 
+// Semak jika PWA sudah dipasang
+window.addEventListener('appinstalled', () => {
+  isAppInstalled = true;
+  deferredPrompt = null;
+  console.log('✅ PWA installed successfully!');
+});
+
+// Tangkap event sebelum install
 window.addEventListener('beforeinstallprompt', (e) => {
   // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
@@ -1313,63 +1322,47 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
   console.log('✅ beforeinstallprompt event fired');
 
-  // Optional: Show your own custom install button or pop-up
-  // Tunjukkan pop-up automatik selepas 3 saat
+  // TUNJUKKAN POPUP ASLI CHROME SELEPAS 3 SAAT
   setTimeout(() => {
-    showInstallPromotion();
+    showNativeInstallPrompt();
   }, 3000);
 });
 
-function showInstallPromotion() {
+// Fungsi untuk tunjuk popup asli Chrome TERUS (tanpa confirm)
+function showNativeInstallPrompt() {
   if (!deferredPrompt) {
     console.log('❌ No deferred prompt available');
     return;
   }
 
-  // Tunjukkan pop-up custom (contoh)
-  const userChoice = confirm('📱 Pasang aplikasi SG Mobile Fix di telefon anda untuk pengalaman lebih baik?');
-  
-  if (userChoice) {
-    // Tunjukkan pop-up install sebenar
-    deferredPrompt.prompt();
-    // Tunggu pengguna buat pilihan
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('✅ User accepted the install prompt');
-      } else {
-        console.log('❌ User dismissed the install prompt');
-      }
-      deferredPrompt = null;
-    });
-  } else {
-    console.log('❌ User declined the custom prompt');
-    deferredPrompt = null;
+  if (isAppInstalled) {
+    console.log('✅ App already installed');
+    return;
   }
-}
 
-// Optional: Butang Install (Jika ada di menu)
-// Boleh tambah butang "Install App" di menu jika perlu
-// Contoh: <button id="install-btn">Install App</button>
-const installBtn = document.getElementById('install-btn');
-if (installBtn) {
-  installBtn.addEventListener('click', () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('✅ User accepted the install prompt');
-        } else {
-          console.log('❌ User dismissed the install prompt');
-        }
-        deferredPrompt = null;
-      });
+  // TUNJUKKAN POPUP INSTALL ASLI CHROME TERUS
+  deferredPrompt.prompt();
+  
+  // Tunggu pengguna buat pilihan
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('✅ User accepted the install prompt');
+      isAppInstalled = true;
     } else {
-      console.log('❌ No deferred prompt available');
+      console.log('❌ User dismissed the install prompt');
     }
+    deferredPrompt = null;
   });
 }
 
-// Log jika PWA sudah dipasang
-window.addEventListener('appinstalled', () => {
-  console.log('🎉 PWA installed successfully!');
-});
+// Optional: Butang Install (sebagai alternatif)
+const installBtn = document.getElementById('install-btn');
+if (installBtn) {
+  installBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showNativeInstallPrompt();
+  });
+}
+
+
+  
