@@ -1302,3 +1302,87 @@ if ('serviceWorker' in navigator) {
 }
 // 📌 ==============================================
 
+// ==============================================
+// 🚀 KOD PENUH OVERLAY PWA (Muncul Kembali Jika Refresh)
+// ==============================================
+let deferredPrompt = null;
+const overlay = document.getElementById('install-overlay');
+const closeBtn = document.getElementById('close-overlay-btn');
+const closeLink = document.getElementById('close-overlay-link');
+const installBtn = document.getElementById('install-btn-overlay');
+const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
+
+// 1. Fungsi Semak Status Aplikasi
+// (Hanya bernilai "true" jika pengguna membuka melalui ikon aplikasi di Home Screen)
+function isAppInstalled() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+// 2. Fungsi Papar Overlay
+function showOverlay() {
+  // Jika pengguna sedang menggunakan app sebenar (standalone), batalkan paparan
+  if (isAppInstalled()) return;
+  
+  // Tunjuk overlay dengan menukar gaya paparan
+  if (overlay) {
+    overlay.style.display = 'flex';
+  }
+}
+
+// 3. Fungsi Sembunyi Overlay
+function hideOverlay() {
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
+}
+
+// 4. KAWALAN REFRESH: Papar overlay selepas 1.5 saat halaman siap dimuatkan
+// (Kerana kita tidak guna sessionStorage, ia akan sentiasa muncul setiap kali di-refresh)
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    showOverlay();
+  }, 1500);
+});
+
+// 5. Tangkap Isyarat Chrome Asli
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+// 6. Tutup Overlay Sementara (Butang X & Tidak Sekarang)
+// (Bila di-refresh, logik nombor 4 akan berjalan semula)
+if (closeBtn) closeBtn.addEventListener('click', hideOverlay);
+if (closeLink) closeLink.addEventListener('click', hideOverlay);
+if (overlay) {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) hideOverlay();
+  });
+}
+
+// 7. Logik Butang Install
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    // Jika isyarat asli Chrome sedia ada
+    if (deferredPrompt !== null) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        hideOverlay();
+      }
+      deferredPrompt = null;
+    } 
+    // Jika tiada isyarat asli (Contoh: Chrome menyekat, atau sudah dipasang)
+    else {
+      hideOverlay();
+      window.location.href = PWA_URL; // Terus ke pautan tanpa membuka tab baru
+    }
+  });
+}
+
+// 8. Buang overlay terus dari pandangan sebaik sahaja aplikasi siap dipasang
+window.addEventListener('appinstalled', () => {
+  hideOverlay();
+});
+
+
