@@ -1303,27 +1303,25 @@ if ('serviceWorker' in navigator) {
 // 📌 ==============================================
 
 // ==============================================
-// 🚀 KOD PENUH OVERLAY PWA (Muncul Kembali Jika Refresh)
+// 🚀 KOD PENUH OVERLAY PWA (Logik Butang Dibaiki)
 // ==============================================
 let deferredPrompt = null;
 const overlay = document.getElementById('install-overlay');
 const closeBtn = document.getElementById('close-overlay-btn');
 const closeLink = document.getElementById('close-overlay-link');
 const installBtn = document.getElementById('install-btn-overlay');
-const PWA_URL = 'https://sg-mobile-fix-setia-alam.pages.dev/';
 
 // 1. Fungsi Semak Status Aplikasi
-// (Hanya bernilai "true" jika pengguna membuka melalui ikon aplikasi di Home Screen)
+// (Hanya bernilai "true" jika pengguna sedang berada di dalam aplikasi PWA)
 function isAppInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
 // 2. Fungsi Papar Overlay
 function showOverlay() {
-  // Jika pengguna sedang menggunakan app sebenar (standalone), batalkan paparan
+  // Batalkan paparan jika pengguna sedang menggunakan app sebenar (standalone)
   if (isAppInstalled()) return;
   
-  // Tunjuk overlay dengan menukar gaya paparan
   if (overlay) {
     overlay.style.display = 'flex';
   }
@@ -1337,7 +1335,6 @@ function hideOverlay() {
 }
 
 // 4. KAWALAN REFRESH: Papar overlay selepas 1.5 saat halaman siap dimuatkan
-// (Kerana kita tidak guna sessionStorage, ia akan sentiasa muncul setiap kali di-refresh)
 window.addEventListener('load', () => {
   setTimeout(() => {
     showOverlay();
@@ -1351,7 +1348,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 // 6. Tutup Overlay Sementara (Butang X & Tidak Sekarang)
-// (Bila di-refresh, logik nombor 4 akan berjalan semula)
 if (closeBtn) closeBtn.addEventListener('click', hideOverlay);
 if (closeLink) closeLink.addEventListener('click', hideOverlay);
 if (overlay) {
@@ -1360,10 +1356,11 @@ if (overlay) {
   });
 }
 
-// 7. Logik Butang Install
+// 7. Logik Butang Install (DIBAIKI)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    // Jika isyarat asli Chrome sedia ada
+    
+    // SITUASI A: Jika isyarat asli Chrome sedia ada (Pengguna 100% belum install)
     if (deferredPrompt !== null) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -1372,10 +1369,13 @@ if (installBtn) {
       }
       deferredPrompt = null;
     } 
-    // Jika tiada isyarat asli (Contoh: Chrome menyekat, atau sudah dipasang)
+    // SITUASI B: Tiada isyarat asli (Aplikasi sudah dipasang ATAU Chrome menyekatnya)
     else {
+      // 1. Tutup overlay terlebih dahulu supaya skrin web jelas
       hideOverlay();
-      window.location.href = PWA_URL; // Terus ke pautan tanpa membuka tab baru
+      
+      // 2. Berikan maklumat yang betul kepada pengguna (Tanpa me-refresh halaman web)
+      alert("Jika aplikasi SG Mobile Fix sudah dipasang, sila buka terus menggunakan ikon di skrin utama (Home Screen) peranti anda.\n\nJika belum dipasang, tekan menu pelayar (ikon tiga titik ⋮) dan pilih 'Add to Home screen' atau 'Install app'.");
     }
   });
 }
@@ -1384,5 +1384,3 @@ if (installBtn) {
 window.addEventListener('appinstalled', () => {
   hideOverlay();
 });
-
-
