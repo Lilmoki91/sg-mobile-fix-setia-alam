@@ -117,10 +117,13 @@ const translations = {
     Appointment: "Buat Appointment",
     AppointmentDesc: "Tempah slot servis",
     EmailShop: "Email Kedai",
-    BusinessCard: "Business Card",
-    VsCard: "Vs Card",
-    ShareCard: "SHARE",
-    SaveCard: "SAVE CARD",
+    
+    // ===== KAD PERNIAGAAN BAHASA MELAYU =====
+    BusinessCard: "Kad Perniagaan",
+    VsCard: "Kad Vs",
+    ShareCard: "KONGSI",
+    SaveCard: "SIMPAN KAD",
+    
     ChatbotTitle: "AI Pembantu Servis",
     ChatbotBadge: "ELIZA Ai",
     ChatbotSubtitle: "✨ 24/7 Bantuan Pintar",
@@ -293,10 +296,13 @@ PwaLater: "Tidak sekarang",
     Appointment: "Make Appointment",
     AppointmentDesc: "Book service slot",
     EmailShop: "Shop Email",
+    
+    // ===== BUSINESS CARD BAHASA INGGERIS =====
     BusinessCard: "Business Card",
     VsCard: "Vs Card",
     ShareCard: "SHARE",
     SaveCard: "SAVE CARD",
+   
     ChatbotTitle: "AI Service Assistant",
     ChatbotBadge: "ELIZA Ai",
     ChatbotSubtitle: "✨ 24/7 Smart Assistance",
@@ -981,53 +987,112 @@ function initTestimonials() {
   });
 }
 
-/* ==================== BUSINESS CARD ==================== */
 
+// ==================== BUSINESS CARD ====================
+// ===== SHARE CARD =====
 window.shareCard = async function () {
-  const text = "SG Mobile Fix Setia Alam - Business Card";
+  const lang = document.documentElement.lang || 'ms';
+  const shareTexts = {
+    ms: {
+      title: "SG Mobile Fix Setia Alam - Kad Perniagaan",
+      text: "Kad perniagaan SG Mobile Fix Setia Alam. Servis telefon terbaik di Setia Alam."
+    },
+    en: {
+      title: "SG Mobile Fix Setia Alam - Business Card",
+      text: "SG Mobile Fix Setia Alam business card. Best phone repair in Setia Alam."
+    }
+  };
+
+  const t = shareTexts[lang] || shareTexts.ms;
+  const cardImageUrl = "https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-card/1769152996380.png";
 
   try {
     if (navigator.share) {
+      // 📱 Mobile native share — termasuk gambar
+      const response = await fetch(cardImageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "sg-mobile-fix-business-card.png", { type: "image/png" });
+
       await navigator.share({
-        title: text,
-        text,
-        url: window.location.href
+        title: t.title,
+        text: t.text,
+        url: window.location.href,
+        files: [file]
       });
     } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("Link business card telah disalin.");
+      // 💻 Desktop — copy link & teks
+      const shareText = `${t.title}\n${t.text}\n${window.location.href}`;
+      await navigator.clipboard.writeText(shareText);
+      
+      // Toast notification
+      showToast('✅ Kad perniagaan disalin!');
     }
-  } catch {
-    // Perkongsian dibatalkan.
+  } catch (error) {
+    console.log('Share dibatalkan:', error);
   }
 };
 
+// ===== SAVE CARD — SIMPAN KE LOCAL STORAGE =====
 window.saveCard = function () {
-  const image = document.querySelector('#Business-Card img[alt="Bisnes kad"]');
-  if (!image) return;
+  const imgElement = document.getElementById('business-card-img');
+  if (!imgElement) {
+    showToast('❌ Gambar tidak dijumpai');
+    return;
+  }
 
-  const link = document.createElement("a");
-  link.href = image.src;
-  link.download = "sg-mobile-fix-business-card.png";
-  link.click();
+  const imageUrl = imgElement.src;
+  const fileName = "sg-mobile-fix-business-card.png";
+
+  // 🔥 CARA 1: Download terus
+  fetch(imageUrl)
+    .then(response => response.blob())
+    .then(blob => {
+      // Simpan ke Local Storage (sebagai base64)
+      const reader = new FileReader();
+      reader.onload = function() {
+        try {
+          localStorage.setItem('savedBusinessCard', reader.result);
+          showToast('✅ Kad disimpan ke peranti!');
+        } catch (e) {
+          showToast('⚠️ Storage penuh, kad disimpan sebagai muat turun.');
+        }
+      };
+      reader.readAsDataURL(blob);
+
+      // Download terus ke peranti
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    })
+    .catch(() => {
+      // Fallback: guna image.src terus
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
 };
 
-/* ==================== STORAGE ==================== */
+// ===== TOAST NOTIFICATION =====
+function showToast(message) {
+  const oldToast = document.querySelector('.share-toast');
+  if (oldToast) oldToast.remove();
 
-function getStorage(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
+  const toast = document.createElement('div');
+  toast.className = 'share-toast fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 text-sm transition-all duration-300';
+  toast.textContent = message;
+  document.body.appendChild(toast);
 
-function setStorage(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // Storage mungkin disekat oleh browser.
-  }
+  setTimeout(() => {
+    toast.classList.add('opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
 }
 
 /* ==================== MEDIA SOCIAL SHARE  BUTTON ==================== */
