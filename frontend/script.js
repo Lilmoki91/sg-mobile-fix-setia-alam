@@ -1095,6 +1095,23 @@ function showToast(message) {
   }, 2000);
 }
 
+// ==================== STORAGE TUKAR BAHASA ====================
+function getStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage mungkin disekat oleh browser.
+  }
+}
+
 // ==================== MEDIA SOCIAL SHARE  BUTTON ==================== 
 function initShareButton() {
   const shareButton = document.getElementById("share-btn");
