@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* ==================== TRANSLATION SYSTEM ==================== */
+// ==================== TRANSLATION SYSTEM ====================
 // =====================
 // 📌 BAHASA MALAYSIA 📌
 // =====================
@@ -147,7 +147,7 @@ const translations = {
     NightMode: "Mod Gelap",
     LightMode: "Mod Cerah",
     
-    // ms
+    // 🇲🇾 ms
 WhatsAppBattery: "👋 hai saya ingin *TUKAR BATERI PHONE*",
 WhatsAppCamera: "👋 hai ingin *BAIKI KAMERA PHONE*",
 WhatsAppCasing: "👋 saya ingin *TUKAR CASING PHONE*",
@@ -326,7 +326,7 @@ PwaLater: "Tidak sekarang",
     NightMode: "Dark Mode",
     LightMode: "Light Mode",
     
-    // en
+    // 🇬🇧 en
 WhatsAppBattery: "👋 hi I want to *REPLACE PHONE BATTERY*",
 WhatsAppCamera: "👋 hi I want to *REPAIR PHONE CAMERA*",
 WhatsAppCasing: "👋 hi I want to *REPLACE PHONE CASING*",
@@ -464,7 +464,7 @@ function updateWhatsAppLinks() {
   });
 }
 
-/* ==================== EMAIL LINKS ==================== */
+// ==================== EMAIL LINKS ====================
 
 function updateEmailLink() {
   const lang = document.documentElement.lang || "ms";
@@ -482,7 +482,7 @@ function updateEmailLink() {
   emailElement.href = `mailto:sgmobile@yahoo.com?subject=${encodedSubject}&body=${encodedBody}`;
 }
 
-/* ==================== SYSTEM AUTO CLOSED SIDE MENU ==================== */
+// ==================== SYSTEM AUTO CLOSED SIDE MENU ====================
 
 function initMenu() {
   const menu = document.getElementById("mobile-menu");
@@ -526,7 +526,7 @@ function initMenu() {
   });
 }
 
-/* ==================== THEME ==================== */
+// ==================== THEME ====================
 
 function initTheme() {
   const toggle = document.getElementById("theme-toggle");
@@ -630,7 +630,7 @@ function injectDarkModeStyles() {
   document.head.appendChild(style);
 }
 
-/* ==================== LANGUAGE ==================== */
+// ==================== LANGUAGE ====================
 
 function initLanguage() {
   const toggle = document.getElementById("language-toggle");
@@ -704,7 +704,7 @@ function updateLanguageIndicator(language) {
   }
 }
 
-/* ==================== BOTTOM NAVIGATION ==================== */
+// ==================== BOTTOM NAVIGATION ====================
 
 function initBottomNavigation() {
   if (!document.querySelector(".mobile-bottom-nav")) {
@@ -757,7 +757,7 @@ function showTab(tabId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* ==================== SERVICE FILTER ==================== */
+// ==================== SERVICE FILTER ====================
 
 function initServiceFilters() {
   const buttons = document.querySelectorAll(".filter-btn");
@@ -787,7 +787,7 @@ function initServiceFilters() {
   });
 }
 
-/* ==================== CHATBOT ==================== */
+// ==================== CHATBOT ====================
 
 function initChatbot() {
   const toggle = document.getElementById("chatbot-toggle");
@@ -906,7 +906,7 @@ function initChatbot() {
   });
 }
 
-/* ==================== GALLERY ==================== */
+// ==================== GALLERY ====================
 
 function initGallery() {
   const container = document.getElementById("gambarScrollContainer");
@@ -942,7 +942,7 @@ function initGallery() {
   });
 }
 
-/* ==================== TESTIMONIALS ==================== */
+// ==================== TESTIMONIALS ====================
 
 function initTestimonials() {
   const container = document.getElementById("videoScrollContainer");
@@ -1095,7 +1095,7 @@ function showToast(message) {
   }, 2000);
 }
 
-/* ==================== MEDIA SOCIAL SHARE  BUTTON ==================== */
+// ==================== MEDIA SOCIAL SHARE  BUTTON ==================== 
 function initShareButton() {
   const shareButton = document.getElementById("share-btn");
   if (!shareButton) return;
@@ -1189,7 +1189,7 @@ function showToast(message) {
   }, 2000);
 }
 
-/* ==================== SHARE SOCIAL MEDIA ==================== */
+// ==================== SHARE SOCIAL MEDIA ====================
 
 function initShareSocial() {
   const shareButtons = document.querySelectorAll('.share-social');
@@ -1253,7 +1253,7 @@ function initShareSocial() {
   });
 }
 
-/* ==================== OVERLAY COPY FACEBOOK ==================== */
+// ==================== OVERLAY COPY FACEBOOK ====================
 
 function initFacebookOverlay() {
   const overlay = document.getElementById('fb-overlay');
