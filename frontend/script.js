@@ -28,7 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==================== TRANSLATION SYSTEM ==================== */
-
+// =====================
+// 📌 BAHASA MALAYSIA 📌
+// =====================
 const translations = {
   ms: {
     Share: "",
@@ -190,14 +192,22 @@ Sekian, terima kasih.
 Yang benar,
 [Nama Anda]`,
 
-// ===== BAHASA MELAYU =====
+// =====  FACEBOOK OVERLAY POPUP BAHASA MELAYU =====
 FacebookOverlayTitle: "📋 Salin Teks untuk Facebook",
 FacebookOverlayText: "Kedai servis telefon terbaik di Setia Alam. Servis iPhone, Android, Tablet & banyak lagi! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/",
 FacebookOverlayCopy: "Salin Teks",
 FacebookOverlayHint: "📋 Salin teks ini dan tampal di ruang status Facebook.",
+
+// ===== PWA INSTALL OVERLAY POPUP BAHASA MELAYU =====
+PwaTitle: "Pasang App SG Mobile Fix",
+PwaDesc: "Akses pantas, pengalaman lebih baik terus ke peranti anda.",
+PwaInstall: "Install App",
+PwaLater: "Tidak sekarang",
       },
 
-
+// =====================
+// 📌 BAHASA ENGLISH 📌
+// =====================
   en: {
     Share: "",
     Menu: "Menu",
@@ -368,11 +378,17 @@ Thank you.
 Yours sincerely,
 [Your Name]`,
 
-// ===== BAHASA INGGERIS =====
+// ===== FACEBOOK OVERLAY POPUP BAHASA INGGERIS =====
 FacebookOverlayTitle: "📋 Copy Text for Facebook",
 FacebookOverlayText: "Best phone repair shop in Setia Alam. iPhone, Android, Tablet & more! https://lilmoki91.github.io/sg-mobile-fix-setia-alam/",
 FacebookOverlayCopy: "Copy Text",
-FacebookOverlayHint: "📋 Copy this text and paste it in your Facebook status.",    
+FacebookOverlayHint: "📋 Copy this text and paste it in your Facebook status.",
+
+// ===== PWA INSTALL OVERLAY POPUP BAHASA INGGERIS =====
+PwaTitle: "Install SG Mobile Fix App",
+PwaDesc: "Quick access, better experience directly on your device.",
+PwaInstall: "Install App",
+PwaLater: "Not now",
   }
 };
 
@@ -1300,28 +1316,41 @@ if ('serviceWorker' in navigator) {
     window.location.reload();
   });
 }
-// 📌 ==============================================
+// 📌 ===============================================
 
-// ==============================================
-// 🚀 KOD PENUH OVERLAY PWA (Logik Butang Dibaiki)
-// ==============================================
+// ==================================================
+// 🚀 KOD PENUH POPUP OVERLAY PWA INSTALL (DWIBAHASA)
+// ==================================================
 let deferredPrompt = null;
 const overlay = document.getElementById('install-overlay');
 const closeBtn = document.getElementById('close-overlay-btn');
 const closeLink = document.getElementById('close-overlay-link');
 const installBtn = document.getElementById('install-btn-overlay');
 
+// ===== FUNGSI DAPATKAN TEKS IKUT BAHASA =====
+function getPwaText() {
+  const lang = document.documentElement.lang || 'ms';
+  const texts = {
+    ms: {
+      alertInstalled: "Jika aplikasi SG Mobile Fix sudah dipasang, sila buka terus menggunakan ikon di skrin utama (Home Screen) peranti anda.\n\nJika belum dipasang, tekan menu pelayar (ikon tiga titik ⋮) dan pilih 'Add to Home screen' atau 'Install app'.",
+      alertTitle: "Pasang App"
+    },
+    en: {
+      alertInstalled: "If SG Mobile Fix app is already installed, please open it using the icon on your device's Home Screen.\n\nIf not installed, tap the browser menu (three dots ⋮) and select 'Add to Home screen' or 'Install app'.",
+      alertTitle: "Install App"
+    }
+  };
+  return texts[lang] || texts.ms;
+}
+
 // 1. Fungsi Semak Status Aplikasi
-// (Hanya bernilai "true" jika pengguna sedang berada di dalam aplikasi PWA)
 function isAppInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
 // 2. Fungsi Papar Overlay
 function showOverlay() {
-  // Batalkan paparan jika pengguna sedang menggunakan app sebenar (standalone)
   if (isAppInstalled()) return;
-  
   if (overlay) {
     overlay.style.display = 'flex';
   }
@@ -1334,7 +1363,7 @@ function hideOverlay() {
   }
 }
 
-// 4. KAWALAN REFRESH: Papar overlay selepas 1.5 saat halaman siap dimuatkan
+// 4. KAWALAN REFRESH: Papar overlay selepas 1.5 saat
 window.addEventListener('load', () => {
   setTimeout(() => {
     showOverlay();
@@ -1347,7 +1376,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
 });
 
-// 6. Tutup Overlay Sementara (Butang X & Tidak Sekarang)
+// 6. Tutup Overlay Sementara
 if (closeBtn) closeBtn.addEventListener('click', hideOverlay);
 if (closeLink) closeLink.addEventListener('click', hideOverlay);
 if (overlay) {
@@ -1356,11 +1385,11 @@ if (overlay) {
   });
 }
 
-// 7. Logik Butang Install (DIBAIKI)
+// 7. Logik Butang Install (DWIBAHASA)
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
+    const pwaText = getPwaText();
     
-    // SITUASI A: Jika isyarat asli Chrome sedia ada (Pengguna 100% belum install)
     if (deferredPrompt !== null) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -1368,14 +1397,9 @@ if (installBtn) {
         hideOverlay();
       }
       deferredPrompt = null;
-    } 
-    // SITUASI B: Tiada isyarat asli (Aplikasi sudah dipasang ATAU Chrome menyekatnya)
-    else {
-      // 1. Tutup overlay terlebih dahulu supaya skrin web jelas
+    } else {
       hideOverlay();
-      
-      // 2. Berikan maklumat yang betul kepada pengguna (Tanpa me-refresh halaman web)
-      alert("Jika aplikasi SG Mobile Fix sudah dipasang, sila buka terus menggunakan ikon di skrin utama (Home Screen) peranti anda.\n\nJika belum dipasang, tekan menu pelayar (ikon tiga titik ⋮) dan pilih 'Add to Home screen' atau 'Install app'.");
+      alert(pwaText.alertInstalled);
     }
   });
 }
