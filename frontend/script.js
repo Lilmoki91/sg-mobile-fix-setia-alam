@@ -48,8 +48,8 @@ const translations = {
     TestimonialSwipe: "Swipe kiri / kanan untuk lihat testimoni lain",
     SocialTitle: "Ikuti Kami di Media Sosial",
     AboutTitle: "Tentang Kami",
-    AboutText1: "SG Mobile Setia Fix Alam telah berkhidmat dalam bidang pembaikan telefon pintar sejak 24 May 2025. Kami menawarkan servis profesional dengan menggunakan komponen berkualiti tinggi dan peralatan moden.",
-    AboutText2: "Pasukan kami terlatih dan pakar. kami telah membaiki ribuan peranti untuk pelanggan di seluruh Setia Alam dan sekitarnya. Setiap servis datang dengan jaminan kualiti sehingga 6 bulan.",
+    AboutText1: "SG Mobile Fix telah berkhidmat dalam bidang pembaikan telefon pintar sejak tahun 2018. Kami mempunyai cawangan di sekitar negeri perak dan selangor. Kami menawarkan servis berbagai model talipon pintar secara profesional dengan menggunakan komponen berkualiti tinggi dan peralatan moden.",
+    AboutText2: "Kami mempunyai pasukan technician yang terlatih serta pakar. kami telah membaiki ribuan peranti untuk pelanggan di seluruh Setia Alam dan sekitarnya. Setiap servis datang dengan jaminan kualiti sehingga 6 bulan.",
     AboutText3_Point1: '<span class="font-bold text-pink-500">✅ PENGALAMAN & KEPAKARAN:</span> <span class="text-gray-700">Juruteknik terlatih dan pakar iPhone & Android.</span>',
     AboutText3_Point2: '<span class="font-bold text-blue-500">💰 HARGA BERPATUTAN:</span> <span class="text-gray-700">Harga kompetitif untuk semua perkhidmatan.</span>',
     AboutText3_Point3: '<span class="font-bold text-green-500">🔧 KUALITI DIJAMIN:</span> <span class="text-gray-700">Alat ganti berkualiti tinggi.</span>',
@@ -209,7 +209,7 @@ PwaLater: "Tidak sekarang",
       },
 
 // =====================
-// 📌 BAHASA ENGLISH 📌
+// 📌 🇬🇧 BAHASA ENGLISH 
 // =====================
   en: {
     Share: "",
@@ -227,7 +227,7 @@ PwaLater: "Tidak sekarang",
     TestimonialSwipe: "Swipe left / right to see other testimonials",
     SocialTitle: "Follow Us on Social Media",
     AboutTitle: "About Us",
-    AboutText1: "SG Mobile Fix Setia Alam has been serving in the smartphone repair field since May 24, 2025. We offer professional services using high-quality components and modern equipment.",
+    AboutText1: "SG Mobile Fix has been serving in the smartphone repair field since 2018. We have branches around Perak and Selangor. We offer professional repair services for various smartphone models using high-quality components and modern equipment.",
     AboutText2: "Our team is trained and expert. We have repaired thousands of devices for customers throughout Setia Alam and surrounding areas. Each service comes with a quality warranty of up to 6 months.",
     AboutText3_Point1: '<span class="font-bold text-pink-500">✅ EXPERIENCE & EXPERTISE:</span> <span class="text-gray-700">Trained and expert technicians for iPhone & Android.</span>',
     AboutText3_Point2: '<span class="font-bold text-blue-500">💰 AFFORDABLE PRICES:</span> <span class="text-gray-700">Competitive pricing for all services.</span>',
