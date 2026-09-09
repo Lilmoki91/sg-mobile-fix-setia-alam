@@ -1517,12 +1517,9 @@ function initShareLocation() {
   const shareBtn = document.querySelector('[data-i18n-key="ShareLocation"]')?.closest('a');
   if (!shareBtn) return;
 
-  // Koordinat lokasi kedai
   const locationData = {
     name: "SG Mobile Fix Setia Alam",
     address: "55-G Jalan Setia Perdana BA U13/BA, Bandar Setia Alam, 40170, Selangor",
-    lat: 3.1253077,
-    lng: 101.4693732,
     googleMaps: "https://maps.app.goo.gl/ACMa62PiTNtAA1QH7?g_st=atm",
     waze: "https://ul.waze.com/ul?place=ChIJt-tIohRRzDERaLetgu7BbiM&ll=3.12530770%2C101.46937320&navigate=yes"
   };
@@ -1532,12 +1529,18 @@ function initShareLocation() {
     const texts = {
       ms: {
         title: "SG Mobile Fix Setia Alam - Lokasi Kedai",
+        labelAddress: "Alamat",
+        labelGoogle: "Google Maps",
+        labelWaze: "Waze",
         message: `📍 *SG Mobile Fix Setia Alam*\n\nAlamat: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
         toastCopied: "✅ Lokasi disalin!",
         toastError: "❌ Gagal menyalin lokasi."
       },
       en: {
         title: "SG Mobile Fix Setia Alam - Shop Location",
+        labelAddress: "Address",
+        labelGoogle: "Google Maps",
+        labelWaze: "Waze",
         message: `📍 *SG Mobile Fix Setia Alam*\n\nAddress: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
         toastCopied: "✅ Location copied!",
         toastError: "❌ Failed to copy location."
@@ -1550,27 +1553,34 @@ function initShareLocation() {
     e.preventDefault();
     const t = getLocationText();
 
+    const formattedText = `${t.labelAddress}: ${locationData.address}\n\n${t.labelGoogle}: ${locationData.googleMaps}\n${t.labelWaze}: ${locationData.waze}`;
+
     try {
       if (navigator.share) {
         // 📱 Mobile native share
         await navigator.share({
           title: t.title,
-          text: `SG Mobile Fix Setia Alam\n${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
+          text: formattedText,
           url: locationData.googleMaps
         });
       } else if (navigator.clipboard) {
         // 💻 Desktop — copy ke clipboard
-        const shareText = `${t.title}\n\nAlamat: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`;
+        const shareText = `${t.title}\n\n${formattedText}`;
         await navigator.clipboard.writeText(shareText);
         showToast(t.toastCopied);
       } else {
-        // 📲 Fallback — buka WhatsApp dengan lokasi
+        // 📲 Fallback — buka WhatsApp
         const message = encodeURIComponent(t.message);
         window.open(`https://wa.me/?text=${message}`, '_blank');
       }
     } catch (error) {
-      console.log('Share dibatalkan:', error);
-      showToast(t.toastError);
+      // Abaikan jika pengguna sendiri yang membatalkan share (AbortError)
+      if (error.name !== 'AbortError') {
+        console.error('Ralat ketika berkongsi:', error);
+        showToast(t.toastError);
+      } else {
+        console.log('Perkongsian dibatalkan oleh pengguna.');
+      }
     }
   });
 }
