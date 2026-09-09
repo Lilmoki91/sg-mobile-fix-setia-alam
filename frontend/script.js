@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initGallery();
   initTestimonials();
   initTranslation();
+  initShareLocation();
   
   // Init Facebook overlay
   window.facebookOverlay = initFacebookOverlay();
@@ -135,10 +136,6 @@ const translations = {
     FooterCopyright: "SG Mobile Fix Setia Alam. Hak Cipta Terpelihara.",
     FooterTrademark: "™ SG Mobile Fix Setia Alam - SmartPhone Services & Repairing",
     FooterPlatform: "Pembina Platform:",
-    BusinessCard: "Kad Perniagaan",
-    VsCard: "Kad Vs",
-    ShareCard: "KONGSI",
-    SaveCard: "SIMPAN KAD",
     NavHome: "Utama",
     NavServices: "Servis",
     NavLocation: "Lokasi",
@@ -206,6 +203,9 @@ PwaTitle: "Pasang App SG Mobile Fix",
 PwaDesc: "Akses pantas, pengalaman lebih baik terus ke peranti anda.",
 PwaInstall: "Install App",
 PwaLater: "Tidak sekarang",
+
+// ============ KONGSIKAN LOKASI ===========
+ShareLocation: "Kongsikan Lokasi",
       },
 
 // =====================
@@ -314,10 +314,6 @@ PwaLater: "Tidak sekarang",
     FooterCopyright: "SG Mobile Fix Setia Alam. All Rights Reserved.",
     FooterTrademark: "™ SG Mobile Fix Setia Alam - SmartPhone Services & Repairing",
     FooterPlatform: "Platform Builder:",
-    BusinessCard: "Business Card",
-    VsCard: "Vs Card",
-    ShareCard: "SHARE",
-    SaveCard: "SAVE CARD",
     NavHome: "Home",
     NavServices: "Services",
     NavLocation: "Location",
@@ -395,6 +391,9 @@ PwaTitle: "Install SG Mobile Fix App",
 PwaDesc: "Quick access, better experience directly on your device.",
 PwaInstall: "Install App",
 PwaLater: "Not now",
+
+// ============ SHARE LOKASI ===========
+ShareLocation: "Share Location",    
   }
 };
 
@@ -1511,3 +1510,67 @@ if (installBtn) {
 window.addEventListener('appinstalled', () => {
   hideOverlay();
 });
+
+/* ==================== SHARE LOCATION ==================== */
+
+function initShareLocation() {
+  const shareBtn = document.querySelector('[data-i18n-key="ShareLocation"]')?.closest('a');
+  if (!shareBtn) return;
+
+  // Koordinat lokasi kedai
+  const locationData = {
+    name: "SG Mobile Fix Setia Alam",
+    address: "55-G Jalan Setia Perdana BA U13/BA, Bandar Setia Alam, 40170, Selangor",
+    lat: 3.1253077,
+    lng: 101.4693732,
+    googleMaps: "https://maps.app.goo.gl/ACMa62PiTNtAA1QH7?g_st=atm",
+    waze: "https://ul.waze.com/ul?place=ChIJt-tIohRRzDERaLetgu7BbiM&ll=3.12530770%2C101.46937320&navigate=yes"
+  };
+
+  function getLocationText() {
+    const lang = document.documentElement.lang || 'ms';
+    const texts = {
+      ms: {
+        title: "SG Mobile Fix Setia Alam - Lokasi Kedai",
+        message: `📍 *SG Mobile Fix Setia Alam*\n\nAlamat: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
+        toastCopied: "✅ Lokasi disalin!",
+        toastError: "❌ Gagal menyalin lokasi."
+      },
+      en: {
+        title: "SG Mobile Fix Setia Alam - Shop Location",
+        message: `📍 *SG Mobile Fix Setia Alam*\n\nAddress: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
+        toastCopied: "✅ Location copied!",
+        toastError: "❌ Failed to copy location."
+      }
+    };
+    return texts[lang] || texts.ms;
+  }
+
+  shareBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const t = getLocationText();
+
+    try {
+      if (navigator.share) {
+        // 📱 Mobile native share
+        await navigator.share({
+          title: t.title,
+          text: `SG Mobile Fix Setia Alam\n${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
+          url: locationData.googleMaps
+        });
+      } else if (navigator.clipboard) {
+        // 💻 Desktop — copy ke clipboard
+        const shareText = `${t.title}\n\nAlamat: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`;
+        await navigator.clipboard.writeText(shareText);
+        showToast(t.toastCopied);
+      } else {
+        // 📲 Fallback — buka WhatsApp dengan lokasi
+        const message = encodeURIComponent(t.message);
+        window.open(`https://wa.me/?text=${message}`, '_blank');
+      }
+    } catch (error) {
+      console.log('Share dibatalkan:', error);
+      showToast(t.toastError);
+    }
+  });
+}
