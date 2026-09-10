@@ -1532,7 +1532,6 @@ function initShareLocation() {
         labelAddress: "Alamat",
         labelGoogle: "Google Maps",
         labelWaze: "Waze",
-        message: `📍 *SG Mobile Fix Setia Alam*\n\nAlamat: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
         toastCopied: "✅ Lokasi disalin!",
         toastError: "❌ Gagal menyalin lokasi."
       },
@@ -1541,7 +1540,6 @@ function initShareLocation() {
         labelAddress: "Address",
         labelGoogle: "Google Maps",
         labelWaze: "Waze",
-        message: `📍 *SG Mobile Fix Setia Alam*\n\nAddress: ${locationData.address}\n\nGoogle Maps: ${locationData.googleMaps}\nWaze: ${locationData.waze}`,
         toastCopied: "✅ Location copied!",
         toastError: "❌ Failed to copy location."
       }
@@ -1553,7 +1551,11 @@ function initShareLocation() {
     e.preventDefault();
     const t = getLocationText();
 
-    const formattedText = `${t.labelAddress}: ${locationData.address}\n\n${t.labelGoogle}: ${locationData.googleMaps}\n${t.labelWaze}: ${locationData.waze}`;
+    // Susunan teks yang bersih, teratur, dan tiada pertindihan URL
+    const formattedText = `📍 *${locationData.name}*\n\n` +
+                          `${t.labelAddress}: ${locationData.address}\n\n` +
+                          `${t.labelGoogle}: ${locationData.googleMaps}\n` +
+                          `${t.labelWaze}: ${locationData.waze}`;
 
     try {
       if (navigator.share) {
@@ -1565,16 +1567,14 @@ function initShareLocation() {
         });
       } else if (navigator.clipboard) {
         // 💻 Desktop — copy ke clipboard
-        const shareText = `${t.title}\n\n${formattedText}`;
-        await navigator.clipboard.writeText(shareText);
+        await navigator.clipboard.writeText(formattedText);
         showToast(t.toastCopied);
       } else {
         // 📲 Fallback — buka WhatsApp
-        const message = encodeURIComponent(t.message);
+        const message = encodeURIComponent(formattedText);
         window.open(`https://wa.me/?text=${message}`, '_blank');
       }
     } catch (error) {
-      // Abaikan jika pengguna sendiri yang membatalkan share (AbortError)
       if (error.name !== 'AbortError') {
         console.error('Ralat ketika berkongsi:', error);
         showToast(t.toastError);
