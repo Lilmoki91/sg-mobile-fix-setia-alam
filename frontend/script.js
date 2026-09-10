@@ -905,7 +905,7 @@ function initChatbot() {
   });
 }
 
-// ==================== GALLERY ====================
+// ==================== GALLERY WITH LIGHTBOX ==================== 
 
 function initGallery() {
   const container = document.getElementById("gambarScrollContainer");
@@ -922,22 +922,103 @@ function initGallery() {
   container.replaceChildren();
 
   images.forEach(([src, alt]) => {
+    // 1. Cipta pembungkus kad (Wrapper)
+    const wrapper = document.createElement("div");
+    wrapper.className = "relative snap-center flex-shrink-0 cursor-pointer group";
+    wrapper.style.cssText = "width: 250px;";
+
+    // 2. Cipta elemen gambar
     const image = document.createElement("img");
     image.src = src;
     image.alt = alt;
     image.loading = "lazy";
-    image.className = "snap-center";
-    image.style.cssText = `
-      flex-shrink: 0;
-      width: 250px;
-      height: auto;
-      object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-      background: #f3f4f6;
-      
+    image.className = "lightbox-trigger w-full h-auto object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-[1.02]";
+    image.style.cssText = "background: #f3f4f6;";
+
+    // 3. Cipta Butang Ikon ⛶ di penjuru kanan atas gambar
+    const fsIconBtn = document.createElement("button");
+    fsIconBtn.className = "absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-lg p-2 transition-all opacity-80 group-hover:opacity-100 shadow-md";
+    fsIconBtn.setAttribute("aria-label", "Buka Skrin Penuh");
+    fsIconBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+      </svg>
     `;
-    container.appendChild(image);
+
+    // 4. Masukkan elemen ke dalam DOM
+    wrapper.appendChild(image);
+    wrapper.appendChild(fsIconBtn);
+    container.appendChild(wrapper);
+
+    // 5. Pasang pemicu klik untuk membuka Lightbox Modal
+    wrapper.addEventListener("click", () => {
+      openLightbox(src);
+    });
+  });
+
+  // Inisialisasi kawalan modal
+  initLightboxControls();
+}
+
+/* ==================== LIGHTBOX MODAL LOGIC ==================== */
+
+let openLightbox = () => {};
+
+function initLightboxControls() {
+  const modal = document.getElementById('lightbox-modal');
+  const modalContainer = document.getElementById('lightbox-container');
+  const modalImg = document.getElementById('lightbox-img');
+  const closeBtn = document.getElementById('lightbox-close');
+  const fsBtn = document.getElementById('lightbox-fs');
+
+  if (!modal || !modalImg) return;
+
+  // Tetapkan fungsi buka
+  openLightbox = (src) => {
+    modalImg.src = src;
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  };
+
+  // Tutup Lightbox
+  function closeLightbox() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log(err));
+    }
+    modal.classList.add('hidden');
+    modalImg.src = '';
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  // Toggle Skrin Penuh Pelayar (Full Screen API)
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+      if (modalContainer.requestFullscreen) {
+        modalContainer.requestFullscreen();
+      } else if (modalContainer.webkitRequestFullscreen) {
+        modalContainer.webkitRequestFullscreen();
+      }
+      if (fsBtn) fsBtn.innerHTML = '<i class="fas fa-compress"></i>';
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+      if (fsBtn) fsBtn.innerHTML = '<i class="fas fa-expand"></i>';
+    }
+  }
+
+  // Event Listeners
+  if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+  if (fsBtn) fsBtn.addEventListener('click', toggleFullScreen);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeLightbox();
+    }
   });
 }
 
