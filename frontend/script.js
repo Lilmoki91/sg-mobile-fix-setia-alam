@@ -1299,9 +1299,6 @@ function initFacebookOverlay() {
   const copyBtn = document.getElementById('fb-copy-btn');
   const copyText = document.getElementById('fb-copy-text');
 
-  // Guard clause: Elak ralat jika elemen tiada dalam DOM
-  if (!overlay || !copyBtn || !copyText) return;
-
   // Text dwibahasa
   function getFacebookText() {
     const lang = document.documentElement.lang || 'ms';
@@ -1335,13 +1332,18 @@ function initFacebookOverlay() {
     return texts[lang] || texts.ms;
   }
 
+  // Event listener untuk butang tutup
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeOverlay);
+  }
+
   // Function Copy teks & url
   async function copyToClipboard() {
     const text = copyText.textContent;
     const url = encodeURIComponent(window.location.href);
     
-    // Parameter tetingkap pop-up yang selamat dan teratur
-    const windowFeatures = 'noopener,noreferrer,width=600,height=500';
+    // Parameter window.open yang dipertingkatkan keselamatan
+    const windowFeatures = 'width=600,height=500,noopener,noreferrer';
 
     try {
       await navigator.clipboard.writeText(text);
@@ -1350,7 +1352,7 @@ function initFacebookOverlay() {
       
       setTimeout(() => {
         closeOverlay();
-        // 🔥 Ditambah 'noopener,noreferrer'
+        // 🔥 TAMBAH noopener,noreferrer DI SINI
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
       }, 1000);
       
@@ -1365,13 +1367,12 @@ function initFacebookOverlay() {
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
-      
       const original = copyBtn.innerHTML;
       copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
       
       setTimeout(() => {
         closeOverlay();
-        // 🔥 Ditambah 'noopener,noreferrer'
+        // 🔥 TAMBAH noopener,noreferrer DI SINI
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
       }, 1000);
       
@@ -1381,14 +1382,12 @@ function initFacebookOverlay() {
     }
   }
 
-  // Event Listeners
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeOverlay);
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyToClipboard);
   }
-  copyBtn.addEventListener('click', copyToClipboard);
 
-  // Pulangkan fungsi openOverlay supaya boleh dipanggil secara global/luaran
-  return { openOverlay, closeOverlay };
+  // Pulangkan fungsi openOverlay supaya boleh dipanggil dari luar
+  return { openOverlay };
 }
 
 // ==============================================
