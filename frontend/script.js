@@ -1322,57 +1322,58 @@ function initFacebookOverlay() {
     document.body.classList.remove('overflow-hidden');
   }
 
- // function button teks confirm
+  // function button teks confirm
   function getCopiedText() {
-  const lang = document.documentElement.lang || 'ms';
-  const texts = {
-    ms: 'Disalin!',
-    en: 'Copied!'
-  };
-  return texts[lang] || texts.ms;
+    const lang = document.documentElement.lang || 'ms';
+    const texts = {
+      ms: 'Disalin!',
+      en: 'Copied!'
+    };
+    return texts[lang] || texts.ms;
   }
 
   // function Copy teks & url
   async function copyToClipboard() {
-  const text = copyText.textContent;
-  const url = encodeURIComponent(window.location.href);
-  
-  try {
-    await navigator.clipboard.writeText(text);
-    const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`; // 🔥 GUNA FUNCTION
+    const text = copyText.textContent;
+    const url = encodeURIComponent(window.location.href);
     
-    setTimeout(() => {
-      closeOverlay();
-      // 🔥 Ditambah noopener dan noreferrer
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500,noopener,noreferrer');
-    }, 1000);
-    
-    setTimeout(() => {
-      copyBtn.innerHTML = original;
-    }, 2000);
-  } catch (err) {
-    // Fallback
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
-    
-    setTimeout(() => {
-      closeOverlay();
-      // 🔥 Ditambah noopener dan noreferrer
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500,noopener,noreferrer');
-    }, 1000);
-    
-    setTimeout(() => {
-      copyBtn.innerHTML = original;
-    }, 2000);
+    // 🔥 Menggunakan 'noopener,noreferrer' TANPA width/height untuk paksa buka tab luaran PWA
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
+      
+      setTimeout(() => {
+        closeOverlay();
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      }, 1000);
+      
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    } catch (err) {
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
+      
+      setTimeout(() => {
+        closeOverlay();
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      }, 1000);
+      
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    }
   }
-}
 
   // Event listeners
   closeBtn.addEventListener('click', closeOverlay);
