@@ -1221,12 +1221,21 @@
 
 <!-- 📌 ==================== OVERLAY COPY FACEBOOK ==================== -->
 <div id="fb-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-  <div class="bg-lime-400 text-black rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+  
+  <!-- Tambah 'relative' pada kad utama ini -->
+  <div class="relative bg-lime-500 text-black rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
     
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-bold" data-i18n-key="FacebookOverlayTitle">📋 Salin Teks untuk Facebook</h3>
-      <button id="fb-overlay-close" class="text-black/70 hover:text-black text-2xl">&times;</button>
+    <!-- 📍 BUTANG (X) DENGAN ABSOLUTE POSITIONING -->
+    <!-- Pelarasan: top-3 (jarak dari atas), right-4 (jarak dari kanan) -->
+    <button id="fb-overlay-close" 
+            class="absolute top-2 right-2 text-black/70 hover:text-black text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/10 transition"
+            aria-label="Tutup">
+      &times;
+    </button>
+
+    <!-- Header (Tajuk) -->
+    <div class="mb-4 pr-6"> <!-- pr-6 ditambah supaya tajuk tidak bertindih dengan butang (X) -->
+      <h3 class="text-lg font-bold" data-i18n-key="FacebookOverlayTitle">📋 Salin Teks untuk Facebook</h3>
     </div>
     
     <!-- Teks Post (Hasil) -->
@@ -1241,13 +1250,14 @@
       <i class="fas fa-copy"></i> <span data-i18n-key="FacebookOverlayCopy">Salin Teks</span>
     </button>
     
-    <!-- Arahan (BUKAN status) -->
+    <!-- Arahan -->
     <p class="text-xs text-black/60 text-center mt-3" data-i18n-key="FacebookOverlayHint">
       📋 Salin teks ini dan tampal di ruang status Facebook.
     </p>
     
   </div>
-</div>  
+</div>
+  
 <!-- 📌 -->
   <script src="script.js" defer></script>
 
