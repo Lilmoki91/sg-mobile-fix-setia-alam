@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initServiceFilters();
   initChatbot();
   initGallery();
+  initLightboxControls();
   initTestimonials();
   initTranslation();
   initShareLocation();
