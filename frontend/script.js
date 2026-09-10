@@ -1285,7 +1285,8 @@ function initShareSocial() {
           return;
       }
       
-      window.open(shareUrl, '_blank', 'width=600,height=500');
+      window.open(shareUrl, '_blank', 'noopener,width=600,height=500');
+
     });
   });
 }
