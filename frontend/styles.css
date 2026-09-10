@@ -274,7 +274,7 @@ html[data-theme="dark"] #share-btn:hover{
 /* ===== BUSINESS CARD ===== */
 #Business-Card {
   scroll-margin-top: 100px;
-  padding-top: 60px;
+  padding-top: 20px;
 }
 
 .actions {
