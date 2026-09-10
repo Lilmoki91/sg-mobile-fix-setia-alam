@@ -1322,72 +1322,73 @@ function initFacebookOverlay() {
     document.body.classList.remove('overflow-hidden');
   }
 
-  // Function button teks confirm
+ // function button teks confirm
   function getCopiedText() {
-    const lang = document.documentElement.lang || 'ms';
-    const texts = {
-      ms: 'Disalin!',
-      en: 'Copied!'
-    };
-    return texts[lang] || texts.ms;
+  const lang = document.documentElement.lang || 'ms';
+  const texts = {
+    ms: 'Disalin!',
+    en: 'Copied!'
+  };
+  return texts[lang] || texts.ms;
   }
 
-  // Event listener untuk butang tutup
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeOverlay);
-  }
-
-  // Function Copy teks & url
+  // function Copy teks & url
   async function copyToClipboard() {
-    const text = copyText.textContent;
-    const url = encodeURIComponent(window.location.href);
+  const text = copyText.textContent;
+  const url = encodeURIComponent(window.location.href);
+  
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = copyBtn.innerHTML;
+    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`; // 🔥 GUNA FUNCTION
     
-    // Parameter window.open yang dipertingkatkan keselamatan
-    const windowFeatures = 'width=600,height=500,noopener,noreferrer';
+    setTimeout(() => {
+      closeOverlay();
+      // 🔥 Ditambah noopener dan noreferrer
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500,noopener,noreferrer');
+    }, 1000);
+    
+    setTimeout(() => {
+      copyBtn.innerHTML = original;
+    }, 2000);
+  } catch (err) {
+    // Fallback
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    const original = copyBtn.innerHTML;
+    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
+    
+    setTimeout(() => {
+      closeOverlay();
+      // 🔥 Ditambah noopener dan noreferrer
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500,noopener,noreferrer');
+    }, 1000);
+    
+    setTimeout(() => {
+      copyBtn.innerHTML = original;
+    }, 2000);
+  }
+}
 
-    try {
-      await navigator.clipboard.writeText(text);
-      const original = copyBtn.innerHTML;
-      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
-      
-      setTimeout(() => {
-        closeOverlay();
-        // 🔥 TAMBAH noopener,noreferrer DI SINI
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
-      }, 1000);
-      
-      setTimeout(() => {
-        copyBtn.innerHTML = original;
-      }, 2000);
-    } catch (err) {
-      // Fallback untuk pelayar lama
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      const original = copyBtn.innerHTML;
-      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
-      
-      setTimeout(() => {
-        closeOverlay();
-        // 🔥 TAMBAH noopener,noreferrer DI SINI
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
-      }, 1000);
-      
-      setTimeout(() => {
-        copyBtn.innerHTML = original;
-      }, 2000);
+  // Event listeners
+  closeBtn.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) closeOverlay();
+  });
+  copyBtn.addEventListener('click', copyToClipboard);
+
+  // Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+      closeOverlay();
     }
-  }
+  });
 
-  if (copyBtn) {
-    copyBtn.addEventListener('click', copyToClipboard);
-  }
-
-  // Pulangkan fungsi openOverlay supaya boleh dipanggil dari luar
-  return { openOverlay };
+  return { openOverlay, closeOverlay };
 }
 
 // ==============================================
