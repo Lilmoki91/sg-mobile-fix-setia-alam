@@ -212,7 +212,25 @@
   </div>
 </section>
 
+<!-- ==================== LIGHTBOX MODAL PICTURE SHOP ==================== -->
+<div id="lightbox-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+  <div id="lightbox-container" class="relative max-w-5xl w-full h-full flex items-center justify-center">
+    
+    <!-- Butang Skrin Penuh Pelayar -->
+    <button id="lightbox-fs" class="absolute top-4 right-16 text-white text-2xl hover:text-gray-300 transition p-2 z-10" aria-label="Skrin Penuh">
+      <i class="fas fa-expand"></i>
+    </button>
 
+    <!-- Butang Tutup (X) -->
+    <button id="lightbox-close" class="absolute top-4 right-4 text-white text-3xl font-bold hover:text-gray-300 transition p-2 z-10" aria-label="Tutup">
+      &times;
+    </button>
+
+    <!-- Imej Terpapar -->
+    <img id="lightbox-img" src="" alt="Zoomed Image" class="max-h-[90vh] max-w-full object-contain rounded-xl shadow-2xl">
+  </div>
+</div>
+      
     <!-- ==================== TESTIMONI ==================== -->
 <section id="testimoni" class="py-8 bg-white mt-16">
     <div class="container mx-auto px-0">
