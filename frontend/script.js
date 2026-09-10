@@ -1572,7 +1572,7 @@ function initShareLocation() {
       } else {
         // 📲 Fallback — buka WhatsApp
         const message = encodeURIComponent(formattedText);
-        window.open(`https://wa.me/?text=${message}`, '_blank');
+        window.open(`https://wa.me/?text=${message}`, '_blank', 'noopener');
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
