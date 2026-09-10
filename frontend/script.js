@@ -912,11 +912,11 @@ function initGallery() {
   if (!container) return;
 
   const images = [
-    ["https://i.postimg.cc/LsSCPDLY/sg-mobile(1).webp", "Gambar Kedai 1"],
-    ["https://i.postimg.cc/gJCYbPzK/sg-mobile-2.webp", "Gambar Kedai 2"],
-    ["https://i.postimg.cc/6pnndNfD/sg-mobile(3).webp", "Gambar Kedai 3"],
-    ["https://i.postimg.cc/0jWfFdgB/sg-mobile(4).webp", "Gambar Kedai 4"],
-    ["https://i.postimg.cc/4dXQ3FsS/sg-mobile(5).webp", "Gambar Kedai 5"]
+    ["https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-shop/sg-mobile(1).webp", "Gambar Kedai 1"],
+    ["https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-shop/sg-mobile-(2).webp", "Gambar Kedai 2"],
+    ["https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-shop/sg-mobile(3).webp", "Gambar Kedai 3"],
+    ["https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-shop/sg-mobile(4).webp", "Gambar Kedai 4"],
+    ["https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-shop/sg-mobile(5).webp", "Gambar Kedai 5"]
   ];
 
   container.replaceChildren();
