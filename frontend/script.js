@@ -1299,6 +1299,9 @@ function initFacebookOverlay() {
   const copyBtn = document.getElementById('fb-copy-btn');
   const copyText = document.getElementById('fb-copy-text');
 
+  // Guard clause: Elak ralat jika elemen tiada dalam DOM
+  if (!overlay || !copyBtn || !copyText) return;
+
   // Text dwibahasa
   function getFacebookText() {
     const lang = document.documentElement.lang || 'ms';
@@ -1322,70 +1325,69 @@ function initFacebookOverlay() {
     document.body.classList.remove('overflow-hidden');
   }
 
- // function button teks confirm
+  // Function button teks confirm
   function getCopiedText() {
-  const lang = document.documentElement.lang || 'ms';
-  const texts = {
-    ms: 'Disalin!',
-    en: 'Copied!'
-  };
-  return texts[lang] || texts.ms;
+    const lang = document.documentElement.lang || 'ms';
+    const texts = {
+      ms: 'Disalin!',
+      en: 'Copied!'
+    };
+    return texts[lang] || texts.ms;
   }
 
-  // function Copy teks & url
+  // Function Copy teks & url
   async function copyToClipboard() {
-  const text = copyText.textContent;
-  const url = encodeURIComponent(window.location.href);
-  
-  try {
-    await navigator.clipboard.writeText(text);
-    const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`; // 🔥 GUNA FUNCTION
+    const text = copyText.textContent;
+    const url = encodeURIComponent(window.location.href);
     
-    setTimeout(() => {
-      closeOverlay();
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500');
-    }, 1000);
-    
-    setTimeout(() => {
-      copyBtn.innerHTML = original;
-    }, 2000);
-  } catch (err) {
-    // Fallback
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    const original = copyBtn.innerHTML;
-    copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
-    
-    setTimeout(() => {
-      closeOverlay();
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=500');
-    }, 1000);
-    
-    setTimeout(() => {
-      copyBtn.innerHTML = original;
-    }, 2000);
-  }
-}
+    // Parameter tetingkap pop-up yang selamat dan teratur
+    const windowFeatures = 'noopener,noreferrer,width=600,height=500';
 
-  // Event listeners
-  closeBtn.addEventListener('click', closeOverlay);
-  overlay.addEventListener('click', function(e) {
-    if (e.target === this) closeOverlay();
-  });
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
+      
+      setTimeout(() => {
+        closeOverlay();
+        // 🔥 Ditambah 'noopener,noreferrer'
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
+      }, 1000);
+      
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    } catch (err) {
+      // Fallback untuk pelayar lama
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      const original = copyBtn.innerHTML;
+      copyBtn.innerHTML = `<i class="fas fa-check"></i> ${getCopiedText()}`;
+      
+      setTimeout(() => {
+        closeOverlay();
+        // 🔥 Ditambah 'noopener,noreferrer'
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', windowFeatures);
+      }, 1000);
+      
+      setTimeout(() => {
+        copyBtn.innerHTML = original;
+      }, 2000);
+    }
+  }
+
+  // Event Listeners
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeOverlay);
+  }
   copyBtn.addEventListener('click', copyToClipboard);
 
-  // Escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
-      closeOverlay();
-    }
-  });
-
+  // Pulangkan fungsi openOverlay supaya boleh dipanggil secara global/luaran
   return { openOverlay, closeOverlay };
 }
 
