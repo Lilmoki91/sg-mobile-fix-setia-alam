@@ -1594,19 +1594,13 @@ function initFacebookOverlay() {
 // ==============================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('js/sw.js')  // ✅ Path relative
       .then(reg => {
         console.log('✅ SW V9 registered');
-
-        // Paksa update
         reg.update();
-
-        // Jika ada waiting, activate
         if (reg.waiting) {
           reg.waiting.postMessage({type: 'SKIP_WAITING'});
         }
-
-        // Jika SW aktif, log
         if (reg.active) {
           console.log('✅ SW is active');
         }
@@ -1614,11 +1608,11 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('❌ SW failed:', err));
   });
 
-  // Reload bila SW baru active
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload();
   });
 }
+
 // 📌 ===============================================
 
 // ==================================================
