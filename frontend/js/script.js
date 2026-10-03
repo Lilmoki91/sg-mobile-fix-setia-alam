@@ -1594,7 +1594,7 @@ function initFacebookOverlay() {
 // ==============================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('js/sw.js')  // ✅ Path relative
+    navigator.serviceWorker.register('sw.js')  // ✅ Path relative
       .then(reg => {
         console.log('✅ SW V12 registered');
         reg.update();
