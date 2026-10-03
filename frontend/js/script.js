@@ -1596,7 +1596,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('js/sw.js')  // ✅ Path relative
       .then(reg => {
-        console.log('✅ SW V11 registered');
+        console.log('✅ SW V12 registered');
         reg.update();
         if (reg.waiting) {
           reg.waiting.postMessage({type: 'SKIP_WAITING'});
