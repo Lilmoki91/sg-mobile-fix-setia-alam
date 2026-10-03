@@ -1,13 +1,13 @@
-const CACHE_NAME = 'sg-mobile-fix-V10';
+const CACHE_NAME = 'sg-mobile-fix-V11';
 
 const urlsToCache = [
-  './',
-  './html/index.html',
-  './css/styles.css',
-  './js/script.js',
-  './json/manifest.json',
-  './assets/icon_apps/sg-mobile-fix-icon-192.png',
-  './assets/icon_apps/sg-mobile-fix-icon-512.png'
+  '/',
+  '/html/index.html',
+  '/css/styles.css',
+  '/js/script.js',
+  '/json/manifest.json',
+  '/assets/icon_apps/sg-mobile-fix-icon-192.png',
+  '/assets/icon_apps/sg-mobile-fix-icon-512.png'
 ];
 
 self.addEventListener('install', event => {
