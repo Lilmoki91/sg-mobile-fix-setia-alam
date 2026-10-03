@@ -1,8 +1,8 @@
-const CACHE_NAME = 'sg-mobile-fix-V11';
+const CACHE_NAME = 'sg-mobile-fix-V12';
 
 const urlsToCache = [
   '/',
-  '/html/index.html',
+  '/index.html',
   '/css/styles.css',
   '/js/script.js',
   '/json/manifest.json',
