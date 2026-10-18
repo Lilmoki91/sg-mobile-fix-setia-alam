@@ -8,15 +8,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- 📌 css acsess -->
+<!-- 📌 css acsess 📌 -->
   <link rel="stylesheet" href="css/styles.css">
-
-  <!-- Firebase Client SDK -->
-  <script type="module" src="firebase-config.js?v=2"></script>
-  <!-- Booking Firebase Helper -->
-  <script src="booking-firebase.js?v=2" defer></script>
-  <!-- Admin Dashboard -->
-  <script src="admin-dashboard.js?v=2" defer></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
@@ -29,10 +22,15 @@
     .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen">
 
   <!-- LOGIN SCREEN -->
-  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+  <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center px-4">
+    <div class="w-full max-w-sm mb-4">
+      <a href="index.html?menu=open" class="inline-flex items-center text-sm font-semibold text-gray-600 hover:text-blue-600 transition">
+        <i class="fas fa-arrow-left mr-2"></i> Kembali
+      </a>
+    </div>
     <div class="admin-card w-full max-w-sm p-8">
       <div class="text-center mb-6">
         <img src="https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/logo/logo-sg-mobile.webp"
@@ -65,7 +63,7 @@
           <img src="https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/logo/logo-sg-mobile.webp"
                alt="Logo" class="h-10 w-auto object-contain bg-white rounded-full p-1">
           <div>
-            <h1 class="font-bold text-lg">Admin Tempahan</h1>
+            <h1 class="font-bold text-lg">Admin Panel</h1>
             <p class="text-xs text-blue-200">SG Mobile Fix Setia Alam</p>
           </div>
         </div>
@@ -143,12 +141,11 @@
     </main>
   </div>
 
-<!-- 📌 java script acsess  -->
+  <!-- 📌 java script acsess 📌 -->
   <script src="js/script.js" defer></script>
   <script src="js/firebase-config.js" defer></script>
   <script src="js/booking-firebase.js" defer></script>
   <script src="js/booking-ui.js" defer></script>
-  <script src="js/admin-dashbord.js" defer></script>
-  
+  <script src="js/admin-dashboard.js" defer></script>
 </body>
 </html>
