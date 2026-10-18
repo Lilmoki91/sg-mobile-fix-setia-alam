@@ -6,9 +6,6 @@
 // Firebase Console → Project Settings → General → Your apps → Web app
 // firebase-config.js
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCC3dv0fQp66BaB0FFqFhlEL_ezwekJDCw",
   authDomain: "sg-mobile-fix.firebaseapp.com",
@@ -18,34 +15,31 @@ const firebaseConfig = {
   appId: "1:187964844141:web:23db22f4d8590ffa87f764"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Import Firebase modules dynamically inside module context
+let app, db;
 
-// 🔥 Sediakan fungsi Firestore secara global untuk skrip bukan modul
-(function setupGlobalFirestore() {
-  if (window.firebaseGlobalReady) return;
-  const script = document.createElement('script');
-  script.type = 'module';
-  script.textContent = `
-    import {
-      collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, where, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+async function initFirebase() {
+    const [{ initializeApp }, { getFirestore }, {
+    collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, where, serverTimestamp
+  }] = await Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"),
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
+  ]);
 
-    const config = ${JSON.stringify(firebaseConfig)};
-    const app = initializeApp(config);
-    const db = getFirestore(app);
-    window.db = db;
-    window.firestoreFns = {
-      collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, where, serverTimestamp
-    };
-    window.firebaseGlobalReady = true;
-  `;
-  document.head.appendChild(script);
-})();
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+
+  window.db = db;
+  window.firestoreFns = {
+    collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
+    onSnapshot, query, orderBy, where, serverTimestamp
+  };
+  window.firebaseGlobalReady = true;
+}
+
+initFirebase();
 
 // Helper: pastikan window.firestoreFns tersedia
 function ensureFirestoreFns() {
@@ -61,8 +55,5 @@ function ensureFirestoreFns() {
 }
 window.ensureFirestoreFns = ensureFirestoreFns;
 
-// Eksport untuk modul
-export { db };
-
-// Tetapkan global untuk skrip bukan modul (script.js)
-window.db = window.db || db;
+// db didedahkan melalui window.db supaya fail ini boleh dimuatkan sebagai skrip biasa
+// tanpa memerlukan type="module" di tag <script>.
