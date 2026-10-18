@@ -4,6 +4,7 @@
 // GUNAKAN Firebase Client SDK (bukan Admin SDK) untuk aplikasi web.
 // Dapatkan maklumat ini dari:
 // Firebase Console → Project Settings → General → Your apps → Web app
+// firebase-config.js
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
