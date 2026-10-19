@@ -4,22 +4,28 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend-admin-panel/**' # Hanya jalan jika fail dalam folder ni berubah
+      - 'backend-admin-panel/**'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install Dependencies
+        working-directory: backend-admin-panel
+        run: npm install
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: backend-admin-panel # <--- PENTING: Arahkan ke folder worker
+          workingDirectory: backend-admin-panel
