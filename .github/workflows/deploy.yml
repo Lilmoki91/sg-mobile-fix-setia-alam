@@ -4,18 +4,16 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend-admin-panel/**' # Hanya deploy jika fail dalam folder ni berubah
-  workflow_dispatch: # Membolehkan anda klik "Run workflow" secara manual
+      - 'backend-admin-panel/**' # Hanya jalan jika fail dalam folder ni berubah
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -24,4 +22,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: backend-admin-panel # Arahkan ke folder backend
+          workingDirectory: backend-admin-panel # <--- PENTING: Arahkan ke folder worker
