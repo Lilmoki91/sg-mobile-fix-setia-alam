@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend-admin-panel/**'
+      - 'sgmfix-admin/**'
   workflow_dispatch:
 
 jobs:
