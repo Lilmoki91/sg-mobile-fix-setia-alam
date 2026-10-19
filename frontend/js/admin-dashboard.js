@@ -8,7 +8,8 @@
 (function() {
   'use strict';
 
-  const ADMIN_PASSWORD = '#sgmobilefix2026';
+  // URL Backend Cloudflare Worker anda
+  const WORKER_URL = "https://sgmfix-admin.taihaulengcai.workers.dev";
   const SHOP_PHONE = '60122626434';
 
   const loginScreen = document.getElementById('login-screen');
@@ -172,20 +173,53 @@
   // ============================================================
   // EVENT LISTENERS
   // ============================================================
-  loginForm?.addEventListener('submit', (e) => {
+  
+  // LOGIN BAHARU (Guna Cloudflare Worker)
+  loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('admin-password').value.trim();
-    if (input === ADMIN_PASSWORD) {
-      sessionStorage.setItem('sgm_admin_logged_in', '1');
-      loginError.classList.add('hidden');
-      showDashboard();
-    } else {
-      loginError.classList.remove('hidden');
+    
+    // UI Loading state (Pilihan)
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Log Masuk';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyemak...';
+    }
+
+    try {
+      // Hantar password ke Cloudflare Worker untuk disemak
+      const response = await fetch(`${WORKER_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: input })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Simpan token keselamatan dari Worker
+        sessionStorage.setItem('sgm_admin_token', data.token); 
+        sessionStorage.setItem('sgm_admin_logged_in', '1');
+        loginError.classList.add('hidden');
+        showDashboard();
+      } else {
+        loginError.classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error("Ralat Login:", err);
+      alert("Ralat sambungan ke server. Sila cuba lagi.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+      }
     }
   });
 
   logoutBtn?.addEventListener('click', () => {
     sessionStorage.removeItem('sgm_admin_logged_in');
+    sessionStorage.removeItem('sgm_admin_token'); // Padam token bila logout
     location.reload();
   });
 
