@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend-admin-panel/**' # <--- Kena sama dengan nama folder
+      - 'backend-admin-panel/**' # Ikut nama folder dalam gambar
   workflow_dispatch:
 
 jobs:
