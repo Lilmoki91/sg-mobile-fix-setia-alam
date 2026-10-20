@@ -179,7 +179,7 @@
            `*${t.BookingService || 'Jenis Servis'}:* ${booking.service}\n` +
            `*${t.BookingDate || 'Tarikh'}:* ${booking.date}\n` +
            `*${t.BookingTime || 'Masa'}:* ${formatTime12Hour(booking.time)}\n` +
-           `📌 *${t.BookingCreatedAt || 'Waktu Pendaftaran'}:* ${formatCreatedAt(booking.createdAt)}\n` +
+           `*${t.BookingCreatedAt || 'Waktu Pendaftaran'}:* ${formatCreatedAt(booking.createdAt)}\n` +
            (booking.notes ? `\n*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
   }
 
