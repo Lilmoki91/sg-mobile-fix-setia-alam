@@ -191,7 +191,7 @@ window.translations = window.translations || {
     RejectBooking: "Tolak",
     NotifyBooking: "Maklumkan",
     BookingSaved: "✅ Tempahan berjaya disimpan!",
-    BookingCreatedAt: "Masa Pendaftaran",
+    BookingCreatedAt: "Waktu Pendaftaran",
     BookingAutoDeleted: "Tempahan {code} telah dipadam secara automatik (melebihi 12 jam).",
     BookingRequired: "Sila lengkapkan semua maklumat wajib.",
     WhatsAppBookingPending: "Hello 👋, saya ingin menanya status tempahan saya *{code}* yang masih menunggu pengesahan.",
