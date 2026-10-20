@@ -222,7 +222,7 @@
               <p class="text-lg font-bold text-blue-800">${booking.code}</p>
             </div>
             <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusClass(booking.status)}">
-              ${booking.status === 'pending' ? t.BookingStatusPending : (booking.status === 'confirmed' ? 'Disahkan' : 'Ditolak')}
+              ${booking.status === 'pending' ? t.BookingStatusPending : (booking.status === 'confirmed' ? t.BookingStatusConfirmed : t.BookingStatusRejected)}
             </span>
           </div>
           <div class="space-y-1 text-sm mb-3">
