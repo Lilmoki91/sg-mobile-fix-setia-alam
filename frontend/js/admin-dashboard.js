@@ -49,6 +49,36 @@
     }[status] || 'bg-gray-100 text-gray-800';
   }
 
+  function formatTime12Hour(timeStr) {
+    if (!timeStr) return '-';
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return timeStr;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
+  function formatCreatedAt(isoOrTimestamp) {
+    if (!isoOrTimestamp) return '-';
+    let date;
+    if (typeof isoOrTimestamp === 'object' && isoOrTimestamp.seconds) {
+      date = new Date(isoOrTimestamp.seconds * 1000);
+    } else if (isoOrTimestamp.toDate) {
+      date = isoOrTimestamp.toDate();
+    } else {
+      date = new Date(isoOrTimestamp);
+    }
+    if (isNaN(date.getTime())) return '-';
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const h24 = date.getHours();
+    const ampm = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = h24 % 12 || 12;
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy} ${h12}:${min} ${ampm}`;
+  }
+
   function formatWhatsAppMessage(booking) {
     const statusText = formatStatusLabel(booking.status);
     return encodeURIComponent(
@@ -56,8 +86,8 @@
       `Salam ${booking.name},\n\n` +
       `Status tempahan anda *${booking.code}* adalah: *${statusText}*\n\n` +
       `Servis: ${booking.service}\n` +
-      `Tarikh: ${booking.date}\n` +
-      `Masa: ${booking.time}\n\n` +
+      `Tarikh Tempahan: ${booking.date}\n` +
+      `Masa Tempahan: ${formatTime12Hour(booking.time)}\n\n` +
       (booking.status === 'confirmed'
         ? 'Terima kasih. Kami tunggu kedatangan anda.'
         : booking.status === 'rejected'
@@ -118,8 +148,9 @@
           <div><span class="text-gray-500">${getTranslation('BookingPhone') || 'Telefon'}:</span> <span class="font-semibold">${booking.phone}</span></div>
           <div><span class="text-gray-500">${getTranslation('BookingDevice') || 'Model'}:</span> <span class="font-semibold">${booking.device || '-'}</span></div>
           <div><span class="text-gray-500">${getTranslation('BookingService') || 'Servis'}:</span> <span class="font-semibold">${booking.service}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingDate') || 'Tarikh'}:</span> <span class="font-semibold">${booking.date}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingTime') || 'Masa'}:</span> <span class="font-semibold">${booking.time}</span></div>
+          <div><span class="text-gray-500">${getTranslation('BookingDate') || 'Tarikh Tempahan'}:</span> <span class="font-semibold">${booking.date}</span></div>
+          <div><span class="text-gray-500">${getTranslation('BookingTime') || 'Masa Tempahan'}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></div>
+          <div><span class="text-gray-500">${getTranslation('BookingCreatedAt') || 'Waktu Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></div>
         </div>
 
         ${booking.notes ? `
