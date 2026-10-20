@@ -178,7 +178,7 @@
            `*${t.BookingDevice || 'Model Peranti'}:* ${booking.device}\n` +
            `*${t.BookingService || 'Jenis Servis'}:* ${booking.service}\n` +
            `*${t.BookingDate || 'Tarikh'}:* ${booking.date}\n` +
-           `*${t.BookingTime || 'Masa'}:* ${booking.time}\n` +
+           `*${t.BookingTime || 'Masa'}:* ${formatTime12Hour(booking.time)}\n` +
            (booking.notes ? `*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
   }
 
