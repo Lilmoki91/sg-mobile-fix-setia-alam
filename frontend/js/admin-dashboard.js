@@ -32,13 +32,44 @@
   // ============================================================
   // FORMAT HELPERS
   // ============================================================
-  function formatStatusLabel(status) {
+  function formatStatusLabel(status, booking) {
+    const lang = booking?.lang || 'ms';
+    const t = window.translations?.[lang] || window.translations?.ms || {};
     const labels = {
-      pending: getTranslation('BookingStatusPending') || 'Menunggu Pengesahan',
-      confirmed: getTranslation('BookingStatusConfirmed') || 'Disahkan',
-      rejected: getTranslation('BookingStatusRejected') || 'Ditolak'
+      pending: t.BookingStatusPending || 'Menunggu Pengesahan',
+      confirmed: t.BookingStatusConfirmed || 'Disahkan',
+      rejected: t.BookingStatusRejected || 'Ditolak'
     };
     return labels[status] || status;
+  }
+
+  function getAdminTranslations(booking) {
+    const lang = booking?.lang || 'ms';
+    const t = window.translations?.[lang] || window.translations?.ms || {};
+    return {
+      BookingTitle: t.BookingTitle || (lang === 'en' ? 'Appointment Booking' : 'Tempahan Appointment'),
+      BookingCode: t.BookingCode || (lang === 'en' ? 'Booking Code' : 'Kod Tempahan'),
+      BookingName: t.BookingName || (lang === 'en' ? 'Name' : 'Nama'),
+      BookingPhone: t.BookingPhone || (lang === 'en' ? 'Phone Number' : 'No. Telefon'),
+      BookingDevice: t.BookingDevice || (lang === 'en' ? 'Device Model' : 'Model Peranti'),
+      BookingService: t.BookingService || (lang === 'en' ? 'Service Type' : 'Jenis Servis'),
+      BookingDate: t.BookingDate || (lang === 'en' ? 'Appointment Date' : 'Tarikh Tempahan'),
+      BookingTime: t.BookingTime || (lang === 'en' ? 'Appointment Time' : 'Masa Tempahan'),
+      BookingCreatedAt: t.BookingCreatedAt || (lang === 'en' ? 'Registration Time' : 'Waktu Pendaftaran'),
+      BookingNotes: t.BookingNotes || (lang === 'en' ? 'Additional Notes' : 'Nota Tambahan'),
+      WhatsAppBookingPending: t.WhatsAppBookingPending || (lang === 'en'
+        ? 'Hello 👋, I would like to check the status of my booking *{code}* which is still pending confirmation.'
+        : 'Hello 👋, saya ingin menanya status tempahan saya *{code}* yang masih menunggu pengesahan.'),
+      WhatsAppBookingConfirmed: t.WhatsAppBookingConfirmed || (lang === 'en'
+        ? 'Hello 👋, thank you for confirming my booking *{code}*. I will come according to the scheduled date and time.'
+        : 'Hello 👋, terima kasih mengesahkan tempahan saya *{code}*. Saya akan datang mengikut tarikh dan masa yang ditetapkan.'),
+      WhatsAppBookingRejected: t.WhatsAppBookingRejected || (lang === 'en'
+        ? 'Hello 👋, I would like to ask why my booking *{code}* was rejected.'
+        : 'Hello 👋, saya ingin menanya kenapa tempahan saya *{code}* telah ditolak.'),
+      BookingStatusPending: t.BookingStatusPending || (lang === 'en' ? 'Pending Confirmation' : 'Menunggu Pengesahan'),
+      BookingStatusConfirmed: t.BookingStatusConfirmed || (lang === 'en' ? 'Confirmed' : 'Disahkan'),
+      BookingStatusRejected: t.BookingStatusRejected || (lang === 'en' ? 'Rejected' : 'Ditolak')
+    };
   }
 
   function getStatusClass(status) {
@@ -80,20 +111,28 @@
   }
 
   function formatWhatsAppMessage(booking) {
-    const statusText = formatStatusLabel(booking.status);
+    const t = getAdminTranslations(booking);
+    const lang = booking?.lang || 'ms';
+    const statusLabel = formatStatusLabel(booking.status, booking);
+    const greeting = lang === 'en' ? 'Hi' : 'Salam';
+    const statusLine = lang === 'en'
+      ? `Your booking status *${booking.code}* is: *${statusLabel}*`
+      : `Status tempahan anda *${booking.code}* adalah: *${statusLabel}*`;
+    const serviceLabel = lang === 'en' ? 'Service' : 'Servis';
+    const statusMessage = booking.status === 'confirmed'
+      ? (lang === 'en' ? 'Thank you. We look forward to your visit.' : 'Terima kasih. Kami tunggu kedatangan anda.')
+      : booking.status === 'rejected'
+        ? (lang === 'en' ? 'Sorry, the slot is not available. Please choose another date/time.' : 'Maaf, slot tidak tersedia. Sila pilih tarikh/masa lain.')
+        : (lang === 'en' ? 'We will update the status soon.' : 'Kami akan memaklumkan status segera.');
+
     return encodeURIComponent(
       `*SG Mobile Fix Setia Alam*\n\n` +
-      `Salam ${booking.name},\n\n` +
-      `Status tempahan anda *${booking.code}* adalah: *${statusText}*\n\n` +
-      `Servis: ${booking.service}\n` +
-      `Tarikh Tempahan: ${booking.date}\n` +
-      `Masa Tempahan: ${formatTime12Hour(booking.time)}\n\n` +
-      (booking.status === 'confirmed'
-        ? 'Terima kasih. Kami tunggu kedatangan anda.'
-        : booking.status === 'rejected'
-          ? 'Maaf, slot tidak tersedia. Sila pilih tarikh/masa lain.'
-          : 'Kami akan memaklumkan status segera.'
-      )
+      `${greeting} ${booking.name},\n\n` +
+      `${statusLine}\n\n` +
+      `${serviceLabel}: ${booking.service}\n` +
+      `${t.BookingDate}: ${booking.date}\n` +
+      `${t.BookingTime}: ${formatTime12Hour(booking.time)}\n\n` +
+      statusMessage
     );
   }
 
@@ -139,39 +178,39 @@
             <p class="text-lg font-bold text-blue-800">${booking.code}</p>
           </div>
           <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusClass(booking.status)}">
-            ${formatStatusLabel(booking.status)}
+            ${formatStatusLabel(booking.status, booking)}
           </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-          <div><span class="text-gray-500">${getTranslation('BookingName') || 'Nama'}:</span> <span class="font-semibold">${booking.name}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingPhone') || 'Telefon'}:</span> <span class="font-semibold">${booking.phone}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingDevice') || 'Model'}:</span> <span class="font-semibold">${booking.device || '-'}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingService') || 'Servis'}:</span> <span class="font-semibold">${booking.service}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingDate') || 'Tarikh Tempahan'}:</span> <span class="font-semibold">${booking.date}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingTime') || 'Masa Tempahan'}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></div>
-          <div><span class="text-gray-500">${getTranslation('BookingCreatedAt') || 'Waktu Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingName}:</span> <span class="font-semibold">${booking.name}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingPhone}:</span> <span class="font-semibold">${booking.phone}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingDevice}:</span> <span class="font-semibold">${booking.device || '-'}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingService}:</span> <span class="font-semibold">${booking.service}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingDate}:</span> <span class="font-semibold">${booking.date}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingTime}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingCreatedAt}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></div>
         </div>
 
         ${booking.notes ? `
           <div class="bg-gray-50 rounded-lg p-3 mb-4 text-sm">
-            <span class="text-gray-500">${getTranslation('BookingNotes') || 'Nota'}:</span> ${booking.notes}
+            <span class="text-gray-500">${getAdminTranslations(booking).BookingNotes}:</span> ${booking.notes}
           </div>
         ` : ''}
 
         <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
           <button data-id="${booking.id}" data-status="confirmed"
                   class="btn-action flex-1 min-w-[110px] bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas fa-check mr-1"></i> ${getTranslation('ConfirmBooking') || 'Sahkan'}
+            <i class="fas fa-check mr-1"></i> ${getAdminTranslations(booking).BookingStatusConfirmed}
           </button>
           <button data-id="${booking.id}" data-status="rejected"
                   class="btn-action flex-1 min-w-[110px] bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas fa-times mr-1"></i> ${getTranslation('RejectBooking') || 'Tolak'}
+            <i class="fas fa-times mr-1"></i> ${getAdminTranslations(booking).BookingStatusRejected}
           </button>
           <a href="https://wa.me/${booking.phone.replace(/[^0-9]/g, '')}?text=${formatWhatsAppMessage(booking)}"
              target="_blank" rel="noopener noreferrer"
              class="btn-action flex-1 min-w-[110px] bg-[#25D366] hover:bg-[#128C7E] text-white text-sm font-bold py-2 px-3 rounded-lg text-center">
-            <i class="fab fa-whatsapp mr-1"></i> ${getTranslation('NotifyBooking') || 'Maklumkan'}
+            <i class="fab fa-whatsapp mr-1"></i> ${(booking?.lang || 'ms') === 'en' ? 'Notify' : 'Maklumkan'}
           </a>
           <button data-id="${booking.id}" data-action="delete"
                   class="btn-action min-w-[50px] bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold py-2 px-3 rounded-lg">
