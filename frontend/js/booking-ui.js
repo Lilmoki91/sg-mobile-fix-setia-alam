@@ -94,7 +94,19 @@
       return `SGM-${ts}${random}`;
     }
 
-      function formatBookingWhatsApp(booking) {
+  function getStatusWhatsAppMessage(booking) {
+    const lang = document.documentElement.lang || 'ms';
+    const t = window.translations[lang] || window.translations.ms;
+    const key = booking.status === 'confirmed'
+      ? 'WhatsAppBookingConfirmed'
+      : (booking.status === 'rejected'
+        ? 'WhatsAppBookingRejected'
+        : 'WhatsAppBookingPending');
+    const template = t[key] || t.WhatsAppBookingPending || '';
+    return template.replace(/\{code\}/g, booking.code);
+  }
+
+  function formatBookingWhatsApp(booking) {
     const lang = document.documentElement.lang || 'ms';
     const t = window.translations[lang] || window.translations.ms;
     const phoneLabel = lang === 'en' ? 'Phone Number' : 'No. Telefon';
@@ -152,9 +164,9 @@
           </div>
           ${booking.notes ? `<p class="text-sm text-gray-600 bg-white rounded-lg p-2 mb-3"><span class="text-gray-500">${t.BookingNotes}:</span> ${booking.notes}</p>` : ''}
           <div class="flex gap-2">
-            <a href="https://wa.me/60122626434?text=${encodeURIComponent(formatBookingWhatsApp(booking))}" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/60122626434?text=${encodeURIComponent(getStatusWhatsAppMessage(booking))}" target="_blank" rel="noopener noreferrer"
                class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg text-center transition">
-              <i class="fab fa-whatsapp mr-1"></i> ${t.BookingShareWhatsApp}
+              <i class="fab fa-whatsapp mr-1"></i> ${t.WhatsApp || 'WhatsApp'}
             </a>
             ${booking.status === 'confirmed' ? '' : `
             <button data-id="${booking.id}" class="delete-booking-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold py-2 px-3 rounded-lg transition">
