@@ -292,7 +292,8 @@
 
       const booking = {
         code: generateCode(),
-        name, phone, device, service, date, time, notes
+        name, phone, device, service, date, time, notes,
+        lang: document.documentElement.lang || 'ms'
       };
 
       const submitBtn = form.querySelector('button[type="submit"]');
