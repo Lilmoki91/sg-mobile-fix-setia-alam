@@ -37,7 +37,8 @@
       id: docId,
       ...data,
       status: data.status || 'pending',
-      code: data.code || docId
+      code: data.code || docId,
+      createdAt: data.createdAt || data.createdAtServer || null
     };
   }
 
@@ -96,10 +97,13 @@
     try {
       const fns = await getFirestoreFns();
       const db = getDb();
+      const now = new Date();
+      const localCreatedAt = now.toISOString();
       const bookingWithMeta = {
         ...bookingData,
         status: bookingData.status || 'pending',
-        createdAt: fns.serverTimestamp(),
+        createdAt: localCreatedAt,
+        createdAtServer: fns.serverTimestamp(),
         updatedAt: fns.serverTimestamp()
       };
       const docRef = await fns.addDoc(fns.collection(db, COLLECTION_NAME), bookingWithMeta);
@@ -155,9 +159,11 @@
 
       for (const booking of bookingsArray) {
         if (!booking.code) continue;
+        const now = new Date();
         const bookingData = {
           ...booking,
           status: booking.status || 'pending',
+          createdAt: booking.createdAt || now.toISOString(),
           importedAt: fns.serverTimestamp(),
           updatedAt: fns.serverTimestamp()
         };
