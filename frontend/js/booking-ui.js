@@ -94,19 +94,20 @@
       return `SGM-${ts}${random}`;
     }
 
-    function formatBookingWhatsApp(booking) {
-      const lang = document.documentElement.lang || 'ms';
-      const t = window.translations[lang] || window.translations.ms;
-      return `*${t.BookingTitle || 'Tempahan Appointment'}*\n\n` +
-             `*${t.BookingCode || 'Kod Tempahan'}:* ${booking.code}\n` +
-             `*${t.BookingName || 'Nama'}:* ${booking.name}\n` +
-             `*${t.BookingPhone || 'No. Telefon'}:* ${booking.phone}\n` +
-             `*${t.BookingDevice || 'Model Peranti'}:* ${booking.device}\n` +
-             `*${t.BookingService || 'Jenis Servis'}:* ${booking.service}\n` +
-             `*${t.BookingDate || 'Tarikh'}:* ${booking.date}\n` +
-             `*${t.BookingTime || 'Masa'}:* ${booking.time}\n` +
-             (booking.notes ? `*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
-    }
+      function formatBookingWhatsApp(booking) {
+    const lang = document.documentElement.lang || 'ms';
+    const t = window.translations[lang] || window.translations.ms;
+    const phoneLabel = lang === 'en' ? 'Phone Number' : 'No. Telefon';
+    return `*${t.BookingTitle || 'Tempahan Appointment'}*\n\n` +
+           `*${t.BookingCode || 'Kod Tempahan'}:* ${booking.code}\n` +
+           `*${t.BookingName || 'Nama'}:* ${booking.name}\n` +
+           `*${phoneLabel}:* ${booking.phone}\n` +
+           `*${t.BookingDevice || 'Model Peranti'}:* ${booking.device}\n` +
+           `*${t.BookingService || 'Jenis Servis'}:* ${booking.service}\n` +
+           `*${t.BookingDate || 'Tarikh'}:* ${booking.date}\n` +
+           `*${t.BookingTime || 'Masa'}:* ${booking.time}\n` +
+           (booking.notes ? `*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
+  }
 
     function getStatusClass(status) {
       return {
@@ -143,7 +144,7 @@
           </div>
           <div class="space-y-1 text-sm mb-3">
             <p><span class="text-gray-500">${t.BookingName}:</span> <span class="font-semibold">${booking.name}</span></p>
-            <p><span class="text-gray-500">${t.BookingPhone}:</span> <span class="font-semibold">${booking.phone}</span></p>
+            <p><span class="text-gray-500">${lang === 'en' ? 'Phone Number' : 'No. Telefon'}:</span> <span class="font-semibold">${booking.phone}</span></p>
             <p><span class="text-gray-500">${t.BookingDevice}:</span> <span class="font-semibold">${booking.device || '-'}</span></p>
             <p><span class="text-gray-500">${t.BookingService}:</span> <span class="font-semibold">${booking.service}</span></p>
             <p><span class="text-gray-500">${t.BookingDate}:</span> <span class="font-semibold">${booking.date}</span></p>
@@ -155,15 +156,17 @@
                class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg text-center transition">
               <i class="fab fa-whatsapp mr-1"></i> ${t.BookingShareWhatsApp}
             </a>
+            ${booking.status === 'confirmed' ? '' : `
             <button data-id="${booking.id}" class="delete-booking-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold py-2 px-3 rounded-lg transition">
               <i class="fas fa-trash"></i> ${t.BookingDelete}
             </button>
+            `}
           </div>
         `;
         listContainer.appendChild(card);
       });
 
-      // Event listener untuk delete
+      // Event listener untuk delete (hanya padam butang yang wujud)
       listContainer.querySelectorAll('.delete-booking-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id = btn.dataset.id;
