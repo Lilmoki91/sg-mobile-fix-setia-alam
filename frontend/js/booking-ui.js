@@ -73,7 +73,7 @@
       times.forEach(t => {
         const option = document.createElement('option');
         option.value = t;
-        option.textContent = t;
+        option.textContent = formatTime12Hour(t);
         timeSelect.appendChild(option);
       });
       if (currentTime) timeSelect.value = currentTime;
@@ -117,11 +117,25 @@
       date = new Date(isoOrTimestamp);
     }
     if (isNaN(date.getTime())) return '-';
+
     const lang = document.documentElement.lang || 'ms';
-    return date.toLocaleString(lang === 'en' ? 'en-GB' : 'ms-MY', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
+    const monthNames = {
+      ms: ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'],
+      en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    };
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = monthNames[lang === 'en' ? 'en' : 'ms'][date.getMonth()];
+    const year = date.getFullYear();
+
+    let h = date.getHours();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12;
+    const hh = String(h).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day} ${month} ${year}, ${hh}:${mm} ${ampm}`;
   }
 
   function isOlderThan12Hours(isoOrTimestamp) {
@@ -168,6 +182,15 @@
            (booking.notes ? `*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
   }
 
+  function formatTime12Hour(timeStr) {
+    if (!timeStr) return '-';
+    const [h, m] = timeStr.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return timeStr;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
     function getStatusClass(status) {
       return {
         pending: 'bg-amber-100 text-amber-800',
@@ -207,7 +230,7 @@
             <p><span class="text-gray-500">${t.BookingDevice}:</span> <span class="font-semibold">${booking.device || '-'}</span></p>
             <p><span class="text-gray-500">${t.BookingService}:</span> <span class="font-semibold">${booking.service}</span></p>
             <p><span class="text-gray-500">${t.BookingDate}:</span> <span class="font-semibold">${booking.date}</span></p>
-            <p><span class="text-gray-500">${t.BookingTime}:</span> <span class="font-semibold">${booking.time}</span></p>
+            <p><span class="text-gray-500">${t.BookingTime}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></p>
             <p><span class="text-gray-500">${t.BookingCreatedAt || 'Masa Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></p>
           </div>
           ${booking.notes ? `<p class="text-sm text-gray-600 bg-white rounded-lg p-2 mb-3"><span class="text-gray-500">${t.BookingNotes}:</span> ${booking.notes}</p>` : ''}
