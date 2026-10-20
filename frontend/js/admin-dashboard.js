@@ -24,27 +24,48 @@
   let currentFilter = 'all';
   let allBookings = [];
 
-  function getTranslation(key) {
+  function getTranslation(key, fallbackEn, fallbackMs) {
     const lang = document.documentElement.lang || 'ms';
-    return window.translations?.[lang]?.[key] || '';
+    const val = window.translations?.[lang]?.[key];
+    if (val) return val;
+    if (lang === 'en' && fallbackEn) return fallbackEn;
+    if (fallbackMs) return fallbackMs;
+    return '';
+  }
+
+  // Helper storage (reused from script.js)
+  function getStorage(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      // ignore storage errors
+    }
   }
 
   // ============================================================
   // FORMAT HELPERS
   // ============================================================
   function formatStatusLabel(status, booking) {
-    const lang = booking?.lang || 'ms';
+    const lang = booking?.lang || document.documentElement.lang || 'ms';
     const t = window.translations?.[lang] || window.translations?.ms || {};
     const labels = {
-      pending: t.BookingStatusPending || 'Menunggu Pengesahan',
-      confirmed: t.BookingStatusConfirmed || 'Disahkan',
-      rejected: t.BookingStatusRejected || 'Ditolak'
+      pending: t.BookingStatusPending || (lang === 'en' ? 'Pending Confirmation' : 'Menunggu Pengesahan'),
+      confirmed: t.BookingStatusConfirmed || (lang === 'en' ? 'Confirmed' : 'Disahkan'),
+      rejected: t.BookingStatusRejected || (lang === 'en' ? 'Rejected' : 'Ditolak')
     };
     return labels[status] || status;
   }
 
   function getAdminTranslations(booking) {
-    const lang = booking?.lang || 'ms';
+    const lang = booking?.lang || document.documentElement.lang || 'ms';
     const t = window.translations?.[lang] || window.translations?.ms || {};
     return {
       BookingTitle: t.BookingTitle || (lang === 'en' ? 'Appointment Booking' : 'Tempahan Appointment'),
@@ -136,6 +157,11 @@
     );
   }
 
+  function getNotifyButtonText(booking) {
+    const lang = booking?.lang || document.documentElement.lang || 'ms';
+    return lang === 'en' ? 'Notify' : 'Maklumkan';
+  }
+
   function renderStats(bookings) {
     document.getElementById('stat-total').textContent = bookings.length;
     document.getElementById('stat-pending').textContent = bookings.filter(b => b.status === 'pending').length;
@@ -174,7 +200,7 @@
       card.innerHTML = `
         <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
           <div>
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">${getTranslation('BookingCode') || 'Kod Tempahan'}</p>
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">${getAdminTranslations(booking).BookingCode}</p>
             <p class="text-lg font-bold text-blue-800">${booking.code}</p>
           </div>
           <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusClass(booking.status)}">
@@ -198,7 +224,7 @@
           </div>
         ` : ''}
 
-        <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+                  <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
           <button data-id="${booking.id}" data-status="confirmed"
                   class="btn-action flex-1 min-w-[110px] bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
             <i class="fas fa-check mr-1"></i> ${getAdminTranslations(booking).BookingStatusConfirmed}
@@ -210,7 +236,7 @@
           <a href="https://wa.me/${booking.phone.replace(/[^0-9]/g, '')}?text=${formatWhatsAppMessage(booking)}"
              target="_blank" rel="noopener noreferrer"
              class="btn-action flex-1 min-w-[110px] bg-[#25D366] hover:bg-[#128C7E] text-white text-sm font-bold py-2 px-3 rounded-lg text-center">
-            <i class="fab fa-whatsapp mr-1"></i> ${(booking?.lang || 'ms') === 'en' ? 'Notify' : 'Maklumkan'}
+            <i class="fab fa-whatsapp mr-1"></i> ${getNotifyButtonText(booking)}
           </a>
           <button data-id="${booking.id}" data-action="delete"
                   class="btn-action min-w-[50px] bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold py-2 px-3 rounded-lg">
@@ -233,7 +259,8 @@
   async function deleteBooking(id) {
     const booking = allBookings.find(b => b.id === id);
     if (!booking) return;
-    const msg = getTranslation('BookingConfirmDelete') || 'Padam tempahan ini?';
+    const lang = document.documentElement.lang || 'ms';
+    const msg = window.translations?.[lang]?.BookingConfirmDelete || (lang === 'en' ? 'Delete this booking?' : 'Padam tempahan ini?');
     if (!confirm(`${msg}\n${booking.code}`)) return;
 
     const result = await window.deleteBookingFromFirebase(id);
@@ -387,8 +414,34 @@
     showDashboard();
   }
 
-  // Ikat listener ke butang toggle bahasa (jika admin.html ada toggle)
+  // ============================================================
+  // ADMIN LANGUAGE TOGGLE
+  // ============================================================
+  const adminLangToggle = document.getElementById('admin-language-toggle');
+  const adminLangText = document.getElementById('admin-lang-text');
+
+  function applyAdminLanguage(lang) {
+    document.documentElement.lang = lang;
+    if (adminLangText) adminLangText.textContent = lang === 'en' ? 'MS' : 'EN';
+    if (typeof applyTranslations === 'function') applyTranslations(lang);
+    renderBookings(allBookings);
+  }
+
+  // Initialize language on admin page load
+  const initialAdminLang = getStorage('language') || 'ms';
+  applyAdminLanguage(initialAdminLang);
+
+  adminLangToggle?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const nextLang = document.documentElement.lang === 'ms' ? 'en' : 'ms';
+    setStorage('language', nextLang);
+    applyAdminLanguage(nextLang);
+  });
+
+  // Legacy listener (jika admin.html ada toggle lama)
   document.getElementById('language-toggle')?.addEventListener('click', () => {
-    setTimeout(() => renderBookings(allBookings), 150);
+    const nextLang = document.documentElement.lang === 'ms' ? 'en' : 'ms';
+    setStorage('language', nextLang);
+    applyAdminLanguage(nextLang);
   });
 })();
