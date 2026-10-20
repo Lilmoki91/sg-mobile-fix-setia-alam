@@ -232,7 +232,7 @@
             <p><span class="text-gray-500">${t.BookingService}:</span> <span class="font-semibold">${booking.service}</span></p>
             <p><span class="text-gray-500">${t.BookingDate}:</span> <span class="font-semibold">${booking.date}</span></p>
             <p><span class="text-gray-500">${t.BookingTime}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></p>
-            <p><span class="text-gray-500">${t.BookingCreatedAt || 'Masa Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></p>
+            <p><span class="text-gray-500">${t.BookingCreatedAt || 'Waktu Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></p>
           </div>
           ${booking.notes ? `<p class="text-sm text-gray-600 bg-white rounded-lg p-2 mb-3"><span class="text-gray-500">${t.BookingNotes}:</span> ${booking.notes}</p>` : ''}
           <div class="flex gap-2">
