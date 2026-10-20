@@ -102,6 +102,7 @@
       const bookingWithMeta = {
         ...bookingData,
         status: bookingData.status || 'pending',
+        lang: bookingData.lang || document.documentElement.lang || 'ms',
         createdAt: localCreatedAt,
         createdAtServer: fns.serverTimestamp(),
         updatedAt: fns.serverTimestamp()
