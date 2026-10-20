@@ -1,3 +1,4 @@
+ <!---  admin.html --->
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -67,9 +68,14 @@
             <p class="text-xs text-blue-200">SG Mobile Fix Setia Alam</p>
           </div>
         </div>
-        <button id="logout-btn" class="text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition">
-          <i class="fas fa-sign-out-alt mr-1"></i> Log Keluar
-        </button>
+        <div class="flex items-center gap-2">
+          <button id="admin-language-toggle" class="text-sm bg-white/20 hover:bg-white/30 px-3 py-2 rounded-full transition" title="Tukar Bahasa / Switch Language">
+            <i class="fas fa-globe-americas mr-1"></i> <span id="admin-lang-text">EN</span>
+          </button>
+          <button id="logout-btn" class="text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition">
+            <i class="fas fa-sign-out-alt mr-1"></i> <span data-i18n-key="Logout">Log Keluar</span>
+          </button>
+        </div>
       </div>
     </nav>
 
@@ -78,19 +84,19 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div class="admin-card p-4 text-center">
           <p class="text-2xl font-bold text-blue-600" id="stat-total">0</p>
-          <p class="text-xs text-gray-500">Jumlah</p>
+          <p class="text-xs text-gray-500" data-i18n-key="StatTotal">Jumlah</p>
         </div>
         <div class="admin-card p-4 text-center">
           <p class="text-2xl font-bold text-amber-500" id="stat-pending">0</p>
-          <p class="text-xs text-gray-500">Menunggu</p>
+          <p class="text-xs text-gray-500" data-i18n-key="StatPending">Menunggu</p>
         </div>
         <div class="admin-card p-4 text-center">
           <p class="text-2xl font-bold text-green-600" id="stat-confirmed">0</p>
-          <p class="text-xs text-gray-500">Disahkan</p>
+          <p class="text-xs text-gray-500" data-i18n-key="StatConfirmed">Disahkan</p>
         </div>
         <div class="admin-card p-4 text-center">
           <p class="text-2xl font-bold text-red-600" id="stat-rejected">0</p>
-          <p class="text-xs text-gray-500">Ditolak</p>
+          <p class="text-xs text-gray-500" data-i18n-key="StatRejected">Ditolak</p>
         </div>
       </div>
 
@@ -98,16 +104,16 @@
       <div class="admin-card p-4 mb-6">
         <div class="flex flex-wrap gap-2 justify-center">
           <button class="filter-admin-btn px-4 py-2 rounded-full text-sm font-bold bg-blue-600 text-white" data-filter="all">
-            Semua
+            <span data-i18n-key="FilterAll">Semua</span>
           </button>
           <button class="filter-admin-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-filter="pending">
-            Menunggu
+            <span data-i18n-key="BookingStatusPending">Menunggu</span>
           </button>
           <button class="filter-admin-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-filter="confirmed">
-            Disahkan
+            <span data-i18n-key="BookingStatusConfirmed">Disahkan</span>
           </button>
           <button class="filter-admin-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-filter="rejected">
-            Ditolak
+            <span data-i18n-key="BookingStatusRejected">Ditolak</span>
           </button>
         </div>
       </div>
@@ -116,14 +122,14 @@
       <div class="admin-card p-4 mb-6">
         <div class="flex flex-wrap gap-2 justify-center">
           <button id="export-json-btn" class="px-4 py-2 rounded-full text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition">
-            <i class="fas fa-download mr-1"></i> Eksport JSON
+            <i class="fas fa-download mr-1"></i> <span data-i18n-key="ExportJSON">Eksport JSON</span>
           </button>
           <button id="import-json-btn" class="px-4 py-2 rounded-full text-sm font-bold bg-amber-600 text-white hover:bg-amber-700 transition">
-            <i class="fas fa-upload mr-1"></i> Import JSON
+            <i class="fas fa-upload mr-1"></i> <span data-i18n-key="ImportJSON">Import JSON</span>
           </button>
           <input type="file" id="import-json-file" accept="application/json" class="hidden">
         </div>
-        <p class="text-xs text-gray-500 text-center mt-2">
+        <p class="text-xs text-gray-500 text-center mt-2" data-i18n-key="ImportExportNote">
           Import/Eksport boleh digunakan untuk backup atau sync antara peranti admin dan pelanggan.
         </p>
       </div>
@@ -136,7 +142,7 @@
       <!-- Empty state -->
       <div id="admin-empty" class="hidden text-center py-12">
         <i class="fas fa-calendar-times text-4xl text-gray-300 mb-3"></i>
-        <p class="text-gray-500">Tiada tempahan untuk ditunjukkan.</p>
+        <p class="text-gray-500" data-i18n-key="BookingNoAppointments">Tiada tempahan untuk ditunjukkan.</p>
       </div>
     </main>
   </div>
