@@ -179,7 +179,8 @@
            `*${t.BookingService || 'Jenis Servis'}:* ${booking.service}\n` +
            `*${t.BookingDate || 'Tarikh'}:* ${booking.date}\n` +
            `*${t.BookingTime || 'Masa'}:* ${formatTime12Hour(booking.time)}\n` +
-           (booking.notes ? `*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
+           `📌 *${t.BookingCreatedAt || 'Waktu Pendaftaran'}:* ${formatCreatedAt(booking.createdAt)}\n` +
+           (booking.notes ? `\n*${t.BookingNotes || 'Nota Tambahan'}:* ${booking.notes}\n` : '');
   }
 
   function formatTime12Hour(timeStr) {
@@ -309,6 +310,9 @@
         form.reset();
         populateOptions();
         setMinDate();
+
+        // Rekod masa pendaftaran untuk mesej WhatsApp
+        booking.createdAt = new Date().toISOString();
 
         // Buka WhatsApp dengan maklumat tempahan
         const whatsappUrl = `https://wa.me/60122626434?text=${encodeURIComponent(formatBookingWhatsApp(booking))}`;
