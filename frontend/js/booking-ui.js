@@ -19,7 +19,7 @@
 
     if (!form || !serviceSelect || !timeSelect || !dateInput || !listContainer) return;
 
-    const services = {
+    let services = {
       ms: [
         { value: "Penggantian Bateri", label: "Penggantian Bateri" },
         { value: "Pembaikan Skrin", label: "Pembaikan Skrin" },
@@ -47,6 +47,21 @@
         { value: "Others", label: "Others" }
       ]
     };
+
+    async function loadServicesFromFirebase() {
+      try {
+        if (typeof window.getServicesFromFirebase !== 'function') return;
+        const result = await window.getServicesFromFirebase();
+        if (!result.success) return;
+        const active = (result.services || []).filter(s => s.active !== false);
+        services.ms = active.map(s => ({ value: s.titleMs, label: s.titleMs })).concat([{ value: "Lain-lain", label: "Lain-lain" }]);
+        services.en = active.map(s => ({ value: s.titleEn || s.titleMs, label: s.titleEn || s.titleMs })).concat([{ value: "Others", label: "Others" }]);
+        populateOptions();
+      } catch (err) {
+        console.error('Gagal muat servis untuk tempahan:', err);
+      }
+    }
+    loadServicesFromFirebase();
 
     const times = [];
     for (let h = 10; h < 20; h++) {
@@ -352,6 +367,17 @@
 
     populateOptions();
     setMinDate();
+    loadServicesFromFirebase();
+
+    // Update options dynamically if services change in Firebase
+    if (typeof window.startServicesListener === 'function') {
+      window.startServicesListener((firebaseServices) => {
+        const active = (firebaseServices || []).filter(s => s.active !== false);
+        services.ms = active.map(s => ({ value: s.titleMs, label: s.titleMs })).concat([{ value: "Lain-lain", label: "Lain-lain" }]);
+        services.en = active.map(s => ({ value: s.titleEn || s.titleMs, label: s.titleEn || s.titleMs })).concat([{ value: "Others", label: "Others" }]);
+        populateOptions();
+      });
+    }
   }
 
   // Gantikan initBooking asal jika ada
