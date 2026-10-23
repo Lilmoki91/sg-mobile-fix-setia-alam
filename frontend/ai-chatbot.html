@@ -1,0 +1,135 @@
+<!-- ==================== AI CHATBOT ELIZA AI STAR SPARKLE  ==================== -->
+<div class="fixed bottom-24 right-5 z-50">
+  <button id="chatbot-toggle" 
+          class="relative w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 transition-all duration-300 transform hover:scale-110 group">
+    
+    <!-- Outer Glow -->
+    <span class="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-500"></span>
+    
+    <!-- Bintang Sparkle -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="28" 
+         height="28" 
+         viewBox="0 0 24 24" 
+         fill="currentColor" 
+         stroke="white" 
+         stroke-width="1.5" 
+         stroke-linecap="round" 
+         stroke-linejoin="round" 
+         class="relative z-10 group-hover:rotate-180 transition-transform duration-500"
+         style="filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.5));">
+      
+      <defs>
+        <linearGradient id="starFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#60A5FA" />
+          <stop offset="100%" style="stop-color:#C084FC" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Bintang -->
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z" 
+            fill="url(#starFill)"/>
+      
+      <!-- Sparkles -->
+      <path d="M5 3L6.5 5.5L9 6L6.5 7L5 9.5L3.5 7L1 6L3.5 5.5L5 3Z" opacity="0.6" fill="white"/>
+      <path d="M19 17L20 18.5L22 19L20 19.5L19 21L18 19.5L16 19L18 18.5L19 17Z" opacity="0.6" fill="white"/>
+    </svg>
+    
+    <!-- Sparkle Particles -->
+    <span class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.2s;"></span>
+    <span class="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping" style="animation-delay: 0.6s;"></span>
+    
+    <!-- Pulse Rings -->
+    <span class="absolute inset-0 rounded-full border-2 border-blue-400/30 animate-ping" style="animation-duration: 2s;"></span>
+    <span class="absolute inset-0 rounded-full border-2 border-purple-400/20 animate-ping" style="animation-duration: 3s; animation-delay: 0.5s;"></span>
+  </button>
+</div>
+
+    <!-- ==================== CHATBOT WINDOW ==================== -->
+<div id="chatbot-window" class="absolute bottom-20 right-0 w-80 bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 opacity-0 translate-y-5 invisible z-50">
+  
+  <!-- HEADER - Version Sparkle Badge -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 flex items-center">
+  
+  <!-- Avatar -->
+  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/30 relative">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="white" stroke-width="1.5">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z"/>
+    </svg>
+    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border-2 border-white"></span>
+  </div>
+  
+  <!-- Teks -->
+  <div>
+    <h3 class="font-bold text-sm flex items-center gap-1">
+      <span data-i18n-key="ChatbotTitle">AI Pembantu Servis</span>
+      <span class="bg-lime-300 text-indigo-900 text-[8px] font-bold px-1.5 py-0.5 rounded-full" data-i18n-key="ChatbotBadge">ELIZA Ai</span>
+    </h3>
+    <p class="text-xs opacity-90" data-i18n-key="ChatbotSubtitle">✨ 24/7 Bantuan Pintar</p>
+  </div>
+  
+  <!-- Close -->
+  <button id="chatbot-close" class="ml-auto text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full py-1.5 px-3 transition-colors">
+    <i class="fas fa-times text-sm"></i>
+  </button>
+</div>
+  
+  <!-- MESSAGES -->
+  <div class="chat-container p-4 h-80 overflow-y-auto space-y-3" id="chatbot-messages">
+    <div class="flex">
+      <div class="bg-gray-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-xs shadow">
+        <p class="text-sm" data-i18n-key="ChatbotGreeting">✨ Helo! Saya Eliza Ai Pembantu Servis 24/7 Sg Mobile Fix. Ada apa-apa yang saya boleh bantu?</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- INPUT -->
+  <div class="p-3 border-t flex">
+    <input type="text" id="chatbot-input" class="flex-1 border rounded-l-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder-gray-400" data-i18n-placeholder="ChatbotPlaceholder" placeholder="Taip soalan anda...">
+
+    <button id="chatbot-send" 
+        class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white w-12 h-12 rounded-full hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 flex items-center justify-center shadow-lg shadow-indigo-500/40 ">
+  
+  <!-- Container untuk Paper Plane + Sparkle -->
+  <span class="relative flex items-center justify-center">
+    
+    <!-- PAPER PLANE ARAH KANAN (→) -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="22" 
+         height="22" 
+         viewBox="0 0 24 24" 
+         fill="none" 
+         stroke="currentColor" 
+         stroke-width="2" 
+         stroke-linecap="round" 
+         stroke-linejoin="round"
+         class="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
+         style="transform: rotate(45deg);">
+      <path d="M22 2L11 13"/>
+      <path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+    </svg>
+    
+    <!-- SPARKLE - LINTASAN DI BELAKANG / BAWAH HUJUNG -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         width="16" 
+         height="16" 
+         viewBox="0 0 24 24" 
+         fill="currentColor" 
+         stroke="none"
+         class="absolute -top-2 -right-2 text-yellow-300 animate-pulse"
+         style="filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.7));">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L13.063 8.5A2 2 0 0 0 14.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L14.5 13.063A2 2 0 0 0 13.063 14.5l-1.582 6.135a.5.5 0 0 1-.962 0z"/>
+    </svg>
+    
+   
+  </span>
+</button>
+  </div>
+  
+  <!-- FOOTER -->
+  <div class="p-2 bg-gray-50 border-t text-center">
+    <button id="chatbot-speak" class="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center mx-auto gap-1">
+      <i class="fas fa-volume-up mr-1"></i> <span data-i18n-key="ChatbotSpeak">Baca Jawapan Terakhir</span>
+    </button>
+  </div>
+</div>
