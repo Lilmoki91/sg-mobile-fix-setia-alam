@@ -1,11 +1,8 @@
-name: deploy eliza ai
+name: Deploy Eliza AI
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'backend-ai-chatbot/**'
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
