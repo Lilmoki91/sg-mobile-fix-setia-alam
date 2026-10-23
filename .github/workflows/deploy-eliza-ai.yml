@@ -1,4 +1,4 @@
-name: Deploy Eliza AI
+name: deploy eliza ai
 
 on:
   push:
