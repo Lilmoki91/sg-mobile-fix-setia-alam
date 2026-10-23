@@ -1,1 +1,8 @@
 
+name = "eliza-ai-backend"
+main = "src/index.js"
+compatibility_date = "2026-10-22"
+
+# Kita akan letak API Key rahsia di sini nanti (melalui Cloudflare Dashboard, bukan dalam fail ini)
+# [vars]
+# AI_API_KEY = "your_api_key_here"
