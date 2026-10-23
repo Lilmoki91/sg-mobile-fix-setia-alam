@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: ./backend-ai-chatbot # Pindah working-directory ke sini
+        working-directory: './backend-ai-chatbot'
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
