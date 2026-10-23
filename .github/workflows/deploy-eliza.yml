@@ -1,4 +1,4 @@
-name: Deploy Eliza AI to Cloudflare Workers
+name: Deploy Eliza AI
 
 on:
   push:
@@ -10,10 +10,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend-ai-chatbot
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,10 +17,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # 🔥 Naikkan ke versi 22 supaya tak deprecated
+          node-version: '22'
 
       - name: Install Dependencies
         run: npm install
+        working-directory: ./backend-ai-chatbot # Pindah working-directory ke sini
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
