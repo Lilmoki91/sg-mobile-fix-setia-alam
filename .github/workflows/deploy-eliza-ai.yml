@@ -2,7 +2,8 @@ name: Deploy Eliza AI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - 'backend-ai-chatbot/**'
   workflow_dispatch:
@@ -11,7 +12,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -20,11 +21,11 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies
-        working-directory: backend-ai-chatbot
+        working-directory: ./backend-ai-chatbot
         run: npm install
 
       - name: Deploy Worker
-        working-directory: backend-ai-chatbot
+        working-directory: ./backend-ai-chatbot
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN_API }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
