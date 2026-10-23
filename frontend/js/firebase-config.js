@@ -7,12 +7,12 @@
 // firebase-config.js
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCC3dv0fQp66BaB0FFqFhlEL_ezwekJDCw",
-  authDomain: "sg-mobile-fix.firebaseapp.com",
-  projectId: "sg-mobile-fix",
-  storageBucket: "sg-mobile-fix.firebasestorage.app",
-  messagingSenderId: "187964844141",
-  appId: "1:187964844141:web:23db22f4d8590ffa87f764"
+  apiKey: "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM",
+  authDomain: "sgmfix-services.firebaseapp.com",
+  projectId: "sgmfix-services",
+  storageBucket: "sgmfix-services.firebasestorage.app",
+  messagingSenderId: "2218139375",
+  appId: "1:2218139375:web:9c8cef28ee25130c6a851a"
 };
 
 // Import Firebase modules dynamically inside module context
