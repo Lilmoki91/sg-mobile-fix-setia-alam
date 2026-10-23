@@ -1,28 +1,32 @@
-name: Deploy Worker
+name: Deploy Eliza AI
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'backend-ai-chatbot/**'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '22' # 🔥 Guna Node 22 sebab Node 20 dah deprecated
+          node-version: 20
 
-      - name: Install Wrangler
-        run: npm install -g wrangler
-        working-directory: ./backend-ai-chatbot # 🔥 Paksa install dalam folder backend
+      - name: Install Dependencies
+        working-directory: backend-ai-chatbot
+        run: npm install
 
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN_API }}
-          accountId: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
-          workingDirectory: 'backend-ai-chatbot'
-          command: deploy
+      - name: Deploy Worker
+        working-directory: backend-ai-chatbot
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN_API }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
+        # 🔥 Arahan manual macam Admin Panel kau
+        run: npx wrangler deploy src/index.js --name eliza-ai-backend
