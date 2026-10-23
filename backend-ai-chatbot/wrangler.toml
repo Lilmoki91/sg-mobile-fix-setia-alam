@@ -1,8 +1,6 @@
-
 name = "eliza-ai-backend"
 main = "src/index.js"
-compatibility_date = "2026-10-22"
+compatibility_date = "2026-10-20"
+compatibility_flags = ["nodejs_compat"]
 
-# Kita akan letak API Key rahsia di sini nanti (melalui Cloudflare Dashboard, bukan dalam fail ini)
-# [vars]
-# AI_API_KEY = "your_api_key_here"
+# API Key GEMINI_API_KEY akan diambil dari Cloudflare Dashboard (Environment Variables)
