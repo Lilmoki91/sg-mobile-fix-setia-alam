@@ -1,8 +1,37 @@
-
 // ==================== AI CHATBOT ====================
 "use strict";
 
-function initChatbot() {
+async function initChatbot() {
+  const container = document.getElementById("ai-chatbot-container");
+  if (container && !document.getElementById("chatbot-toggle")) {
+    if (container.dataset.loading === "true") return;
+    container.dataset.loading = "true";
+
+    try {
+      const response = await fetch("ai-chatbot.html");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      container.innerHTML = await response.text();
+
+      const lang = document.documentElement.lang || "ms";
+      const translation = window.translations?.[lang] || window.translations?.ms;
+      if (translation) {
+        container.querySelectorAll("[data-i18n-key]").forEach((element) => {
+          const text = translation[element.dataset.i18nKey];
+          if (text) element.innerHTML = text;
+        });
+        container.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+          const text = translation[element.dataset.i18nPlaceholder];
+          if (text) element.placeholder = text;
+        });
+      }
+    } catch (error) {
+      console.error("Gagal memuatkan AI chatbot:", error);
+      return;
+    } finally {
+      delete container.dataset.loading;
+    }
+  }
+
   const toggle = document.getElementById("chatbot-toggle");
   const windowElement = document.getElementById("chatbot-window");
   const closeButton = document.getElementById("chatbot-close");
