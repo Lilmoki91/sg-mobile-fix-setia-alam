@@ -1,1 +1,177 @@
 
+/* ==========================================
+   ADMIN PANEL CSS - SG Mobile Fix Setia Alam
+   ========================================== */
+
+/* ===== ADMIN PANEL - NO BOTTOM NAV ===== */
+body:has(#admin-dashboard) .mobile-bottom-nav,
+body:has(#admin-dashboard) #mobile-menu-overlay,
+body:has(#admin-dashboard) #mobile-menu,
+body:has(#admin-dashboard) .floating {
+  display: none !important;
+}
+
+/* ===== ADMIN PANEL BASE ===== */
+.admin-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== STATUS BADGES ===== */
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-confirmed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.btn-action {
+  transition: all 0.2s;
+}
+
+.btn-action:active {
+  transform: scale(0.95);
+}
+
+.btn-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== ADMIN TAB BUTTONS ===== */
+.admin-tab-btn {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.admin-tab-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ===== ADMIN FILTER BUTTONS ===== */
+.filter-admin-btn {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.filter-admin-btn.active {
+  background: #2563eb !important;
+  color: white !important;
+}
+
+.filter-admin-btn:hover:not(.active) {
+  background: #e5e7eb !important;
+}
+
+/* ===== BOOKING CARD IN ADMIN ===== */
+.admin-booking-card {
+  transition: all 0.3s ease;
+}
+
+.admin-booking-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== SERVICE CARD IN ADMIN ===== */
+.admin-service-card {
+  transition: all 0.3s ease;
+}
+
+.admin-service-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== BOOKING DELETE BUTTON (DARK MODE) ===== */
+html[data-theme="dark"] .delete-booking-btn {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .delete-booking-btn:hover {
+  background-color: #b91c1c !important;
+}
+
+html[data-theme="dark"] .delete-booking-btn i {
+  color: #ffffff !important;
+}
+
+/* ===== DARK MODE - ADMIN PANEL ===== */
+html[data-theme="dark"] body:has(#admin-dashboard) {
+  background-color: #111827 !important;
+}
+
+html[data-theme="dark"] .admin-card {
+  background: #1f2937 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .admin-card h2,
+html[data-theme="dark"] .admin-card h3,
+html[data-theme="dark"] .admin-card label {
+  color: #f9fafb !important;
+}
+
+html[data-theme="dark"] .admin-card p {
+  color: #d1d5db !important;
+}
+
+html[data-theme="dark"] .admin-card input,
+html[data-theme="dark"] .admin-card textarea,
+html[data-theme="dark"] .admin-card select {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+html[data-theme="dark"] .admin-card input::placeholder,
+html[data-theme="dark"] .admin-card textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+html[data-theme="dark"] .admin-tab-btn {
+  background: #374151 !important;
+  color: #d1d5db !important;
+}
+
+html[data-theme="dark"] .admin-tab-btn.active,
+html[data-theme="dark"] .admin-tab-btn[class*="bg-blue"] {
+  background: #2563eb !important;
+  color: white !important;
+}
+
+html[data-theme="dark"] .filter-admin-btn {
+  background: #374151 !important;
+  color: #d1d5db !important;
+}
+
+html[data-theme="dark"] .filter-admin-btn.active {
+  background: #2563eb !important;
+  color: white !important;
+}
+
+html[data-theme="dark"] .status-pending {
+  background: rgba(251, 191, 36, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] .status-confirmed {
+  background: rgba(52, 211, 153, 0.2) !important;
+  color: #34d399 !important;
+}
+
+html[data-theme="dark"] .status-rejected {
+  background: rgba(248, 113, 113, 0.2) !important;
+  color: #f87171 !important;
+}
