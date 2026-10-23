@@ -32,6 +32,6 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
           workingDirectory: 'backend-ai-chatbot'
           command: deploy
