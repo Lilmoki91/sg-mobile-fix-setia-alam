@@ -13,12 +13,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22' # 🔥 Guna Node 22 sebab Node 20 dah deprecated
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+        working-directory: ./backend-ai-chatbot # 🔥 Paksa install dalam folder backend
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN_API }}
           accountId: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
-          workingDirectory: 'backend-ai-chatbot' 
+          workingDirectory: 'backend-ai-chatbot'
           command: deploy
