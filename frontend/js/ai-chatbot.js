@@ -44,24 +44,8 @@ async function initChatbot() {
 
   let lastResponse = "";
 
-  const responses = {
-    ms: {
-      harga: "Harga servis bermula daripada RM80 bergantung kepada model dan kerosakan.",
-      tempoh: "Kebanyakan pembaikan boleh siap dalam masa 1 hingga 2 jam.",
-      model: "Kami membaiki iPhone, Samsung, Xiaomi, Huawei, OPPO dan pelbagai model Android.",
-      waktu: "Waktu operasi kami ialah setiap hari dari 10 pagi hingga 8 malam.",
-      lokasi: "Kedai kami berada di 55-G Jalan Setia Perdana BA U13/BA, Setia Alam, Selangor.",
-      default: "Sila tanya tentang harga, tempoh, model telefon, waktu operasi atau lokasi."
-    },
-    en: {
-      harga: "Service prices start from RM80 depending on model and damage.",
-      tempoh: "Most repairs can be completed within 1 to 2 hours.",
-      model: "We repair iPhone, Samsung, Xiaomi, Huawei, OPPO and various Android models.",
-      waktu: "Our operating hours are daily from 10 AM to 8 PM.",
-      lokasi: "Our shop is located at 55-G Jalan Setia Perdana BA U13/BA, Setia Alam, Selangor.",
-      default: "Please ask about price, duration, phone models, operating hours, or location."
-    }
-  };
+  // 🔥 URL CLOUDFLARE WORKER KAU
+  const WORKER_URL = "https://eliza-ai-backend.taihaulengcai.workers.dev/chat";
 
   const showChat = () => {
     windowElement.classList.remove("opacity-0", "translate-y-5", "invisible");
@@ -88,39 +72,74 @@ async function initChatbot() {
     messages.scrollTop = messages.scrollHeight;
   };
 
-  const getResponse = (question) => {
-    const lang = document.documentElement.lang || "ms";
-    const resp = responses[lang] || responses.ms;
-    const value = question.toLowerCase();
-
-    if (value.includes("harga") || value.includes("kos") || value.includes("price") || value.includes("cost")) return resp.harga;
-    if (value.includes("lama") || value.includes("tempoh") || value.includes("siap") || value.includes("long") || value.includes("duration")) {
-      return resp.tempoh;
-    }
-    if (value.includes("model") || value.includes("iphone") || value.includes("android") || value.includes("samsung")) {
-      return resp.model;
-    }
-    if (value.includes("waktu") || value.includes("buka") || value.includes("jam") || value.includes("hour") || value.includes("time")) {
-      return resp.waktu;
-    }
-    if (value.includes("lokasi") || value.includes("alamat") || value.includes("mana") || value.includes("location") || value.includes("address") || value.includes("where")) {
-      return resp.lokasi;
-    }
-
-    return resp.default;
+  // Fungsi tunjuk animasi menaip
+  const showLoading = () => {
+    const wrapper = document.createElement("div");
+    wrapper.id = "loading-bubble";
+    wrapper.className = "flex justify-start";
+    wrapper.innerHTML = `
+      <div class="bg-gray-100 text-gray-500 rounded-2xl rounded-tl-none px-4 py-3 max-w-xs shadow text-sm italic flex items-center gap-2">
+        <i class="fas fa-circle-notch fa-spin"></i> Eliza sedang menaip...
+      </div>
+    `;
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
   };
 
-  const sendMessage = () => {
+  // Fungsi buang animasi menaip
+  const removeLoading = () => {
+    const loader = document.getElementById("loading-bubble");
+    if (loader) loader.remove();
+  };
+
+  // 🔥 Fungsi hantar mesej ke Cloudflare Worker
+  const sendMessage = async () => {
     const question = input.value.trim();
     if (!question) return;
 
+    // 1. Papar mesej user
     addMessage(question, true);
     input.value = "";
 
-    setTimeout(() => {
-      lastResponse = getResponse(question);
-      addMessage(lastResponse, false);
-    }, 400);
+    // 2. Papar animasi loading & matikan butang sementara
+    showLoading();
+    sendButton.disabled = true;
+
+    try {
+      const lang = document.documentElement.lang || "ms";
+
+      // 3. Hantar ke Backend Eliza AI
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: question,
+          language: lang 
+        })
+      });
+
+      const data = await response.json();
+      removeLoading();
+
+      // 4. Papar jawapan
+      if (data.reply) {
+        lastResponse = data.reply;
+        addMessage(lastResponse, false);
+      } else {
+        throw new Error("Tiada jawapan dari AI");
+      }
+
+    } catch (error) {
+      removeLoading();
+      console.error("Chat error:", error);
+      const errorMsg = document.documentElement.lang === "en" 
+        ? "Sorry, my system is busy right now. Please try again later." 
+        : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
+      addMessage(errorMsg, false);
+    } finally {
+      // 5. Hidupkan semula butang hantar
+      sendButton.disabled = false;
+    }
   };
 
   toggle.addEventListener("click", () => {
