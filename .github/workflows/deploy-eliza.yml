@@ -28,5 +28,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_ELIZA_TOKEN_API }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ELIZA_ACCOUNT_ID }}
-        # 🔥 Arahan manual macam Admin Panel kau
         run: npx wrangler deploy src/index.js --name eliza-ai-backend
