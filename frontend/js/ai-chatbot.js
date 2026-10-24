@@ -157,12 +157,22 @@ async function initChatbot() {
   });
 
   speakButton?.addEventListener("click", () => {
-    if (!lastResponse || !window.speechSynthesis) return;
+  if (!lastResponse || !window.speechSynthesis) return;
 
-    const speech = new SpeechSynthesisUtterance(lastResponse);
-    const lang = document.documentElement.lang || "ms";
-    speech.lang = lang === "en" ? "en-US" : "ms-MY";
-    speech.rate = 0.9;
-    window.speechSynthesis.speak(speech);
-  });
+  // 🔥 1. Bersihkan teks daripada emoji, icon, dan simbol
+  // Regex ini akan buang semua emoji unicode, bintang, dan simbol pelik
+  const cleanText = lastResponse
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[*_#`~]/g, '') // Buang simbol markdown
+    .replace(/\s+/g, ' ')    // Tukar multiple spaces jadi satu space
+    .trim();
+
+  if (!cleanText) return;
+
+  const speech = new SpeechSynthesisUtterance(cleanText);
+  const lang = document.documentElement.lang || "ms";
+  speech.lang = lang === "en" ? "en-US" : "ms-MY";
+  speech.rate = 0.9;
+  window.speechSynthesis.speak(speech);
+});
 }
