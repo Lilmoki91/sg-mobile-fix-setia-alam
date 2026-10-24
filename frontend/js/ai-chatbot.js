@@ -46,6 +46,9 @@ async function initChatbot() {
   windowElement.dataset.initialized = "true";
 
   let lastResponse = "";
+  
+  // 🧠 INGATAN ELIZA (Simpan 20 mesej terakhir)
+  let chatHistory = [];
 
   // 🔥 URL CLOUDFLARE WORKER KAU
   const WORKER_URL = "https://eliza-ai-backend.taihaulengcai.workers.dev/chat";
@@ -106,18 +109,12 @@ async function initChatbot() {
     bubble.className = "chatbot-bubble";
 
     if (isUser) {
-      // Mesej user kekal sebagai teks biasa
       bubble.textContent = text;
     } else {
-      // Mesej AI: Tukar format Markdown ke HTML
       let formattedText = text
-        // 1. Tukar Link [Teks](URL) jadi <a href="URL">Teks</a>
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline hover:text-blue-300 font-semibold">$1</a>')
-        // 2. Tukar Bold **Teks** jadi <strong>
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        // 3. Tukar Italic *Teks* jadi <em>
         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        // 4. Tukar baris baru (Enter) jadi <br>
         .replace(/\n/g, '<br>');
       
       bubble.innerHTML = formattedText;
@@ -128,31 +125,24 @@ async function initChatbot() {
     messages.scrollTop = messages.scrollHeight;
   };
 
-  // 🔥 Fungsi tunjuk animasi loading (Guna class CSS kau & Dwibahasa)
-const showLoading = () => {
-  const wrapper = document.createElement("div");
-  wrapper.id = "loading-bubble";
-  wrapper.className = "chatbot-message chatbot-message--assistant";
-  
-  // Semak bahasa semasa
-  const lang = document.documentElement.lang || "ms";
-  
-  // Tentukan teks ikut bahasa
-  const typingText = lang === "en" 
-    ? "Eliza is typing..." 
-    : "Eliza sedang menaip...";
+  const showLoading = () => {
+    const wrapper = document.createElement("div");
+    wrapper.id = "loading-bubble";
+    wrapper.className = "chatbot-message chatbot-message--assistant";
+    
+    const lang = document.documentElement.lang || "ms";
+    const typingText = lang === "en" ? "Eliza is typing..." : "Eliza sedang menaip...";
 
-  const bubble = document.createElement("div");
-  bubble.className = "chatbot-bubble";
-  bubble.style.opacity = "0.7";
-  bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${typingText}`;
-  
-  wrapper.appendChild(bubble);
-  messages.appendChild(wrapper);
-  messages.scrollTop = messages.scrollHeight;
-};
+    const bubble = document.createElement("div");
+    bubble.className = "chatbot-bubble";
+    bubble.style.opacity = "0.7";
+    bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${typingText}`;
+    
+    wrapper.appendChild(bubble);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+  };
 
-  // 🔥 Fungsi buang animasi loading
   const removeLoading = () => {
     const loader = document.getElementById("loading-bubble");
     if (loader) loader.remove();
@@ -164,77 +154,75 @@ const showLoading = () => {
   };
   input.addEventListener("input", resizeInput);
 
-  // 🔥 Fungsi Hantar Mesej ke Cloudflare Worker
-const sendMessage = async () => {
-  const question = input.value.trim();
-  if (!question) return;
+  const sendMessage = async () => {
+    const question = input.value.trim();
+    if (!question) return;
 
-  const lang = document.documentElement.lang || "ms";
+    const lang = document.documentElement.lang || "ms";
 
-  // ==========================================
-  // 🛡️ SISTEM KESELAMATAN (Had 500 Perkataan / 20 Baris)
-  // ==========================================
-  const wordCount = question.split(/\s+/).filter(Boolean).length;
-  const lineCount = question.split('\n').length;
+    // 🛡️ SISTEM KESELAMATAN (Had 500 Perkataan / 20 Baris)
+    const wordCount = question.split(/\s+/).filter(Boolean).length;
+    const lineCount = question.split('\n').length;
 
-  if (wordCount > 500 || lineCount > 20) {
-    const warnMsg = lang === "en" 
-      ? "⚠️ Your message is too long. Please limit to 500 words or 20 lines only."
-      : "⚠️ Mesej anda terlalu panjang. Sila hadkan kepada 500 perkataan atau 20 baris sahaja.";
-    
-    // Papar amaran dari Eliza
-    addMessage(warnMsg, false);
-    
-    // (Optional) Buang teks dari kotak input supaya user tak pening
-    // input.value = ""; 
-    // resizeInput();
-    
-    return; // Hentikan proses, jangan hantar ke Cloudflare
-  }
-  // ==========================================
-
-  // 1. Papar mesej user
-  addMessage(question, true);
-  input.value = "";
-  resizeInput();
-  
-  // 2. Tunjuk animasi menaip
-  showLoading();
-  sendButton.disabled = true;
-
-  try {
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        message: question,
-        language: lang 
-      })
-    });
-
-    const data = await response.json();
-    removeLoading();
-
-    if (data.reply) {
-      lastResponse = data.reply;
-      addMessage(lastResponse, false);
-    } else {
-      throw new Error("Tiada jawapan dari AI");
+    if (wordCount > 500 || lineCount > 20) {
+      const warnMsg = lang === "en" 
+        ? "⚠️ Your message is too long. Please limit to 500 words or 20 lines only."
+        : "⚠️ Mesej anda terlalu panjang. Sila hadkan kepada 500 perkataan atau 20 baris sahaja.";
+      addMessage(warnMsg, false);
+      return;
     }
 
-  } catch (error) {
-    removeLoading();
-    console.error("Chat error:", error);
-    const errorMsg = lang === "en" 
-      ? "Sorry, my system is busy right now. Please try again later." 
-      : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
-    addMessage(errorMsg, false);
-  } finally {
-    sendButton.disabled = false;
-  }
-};
+    addMessage(question, true);
+    input.value = "";
+    resizeInput();
+    
+    showLoading();
+    sendButton.disabled = true;
 
-// sistem butang send mesej
+    try {
+      // 🧠 Simpan mesej user ke dalam memori
+      chatHistory.push({ role: "user", text: question });
+      // Hadkan memori kepada 20 mesej terakhir sahaja
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+      const response = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // 🧠 Hantar sekali dengan sejarah perbualan
+        body: JSON.stringify({ 
+          message: question,
+          language: lang,
+          history: chatHistory 
+        })
+      });
+
+      const data = await response.json();
+      removeLoading();
+
+      if (data.reply) {
+        lastResponse = data.reply;
+        addMessage(lastResponse, false);
+        
+        // 🧠 Simpan jawapan Eliza ke dalam memori
+        chatHistory.push({ role: "model", text: data.reply });
+        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+      } else {
+        throw new Error("Tiada jawapan dari AI");
+      }
+
+    } catch (error) {
+      removeLoading();
+      console.error("Chat error:", error);
+      const errorMsg = lang === "en" 
+        ? "Sorry, my system is busy right now. Please try again later." 
+        : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
+      addMessage(errorMsg, false);
+    } finally {
+      sendButton.disabled = false;
+    }
+  };
+
   toggle.addEventListener("click", showChat);
   closeButton?.addEventListener("click", () => hideChat());
   document.addEventListener("keydown", (event) => {
@@ -256,17 +244,12 @@ const sendMessage = async () => {
     }
   });
 
-  // 🔥 Fungsi TTS dengan pembersih emoji
   speakButton?.addEventListener("click", () => {
     if (!lastResponse || !window.speechSynthesis) return;
 
-    // 🔥 Bersihkan Markdown & Emoji sebelum bacaan TTS
     const cleanText = lastResponse
-      // 1. Buang URL dalam Markdown (Tinggalkan teks je)
       .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
-      // 2. Buang emoji
       .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      // 3. Buang simbol Markdown lain
       .replace(/[*_#`~]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
@@ -274,9 +257,8 @@ const sendMessage = async () => {
     if (!cleanText) return;
 
     const speech = new SpeechSynthesisUtterance(cleanText);
-    const lang = document.documentElement.lang || "ms";
     speech.lang = lang === "en" ? "en-US" : "ms-MY";
     speech.rate = 0.9;
     window.speechSynthesis.speak(speech);
   });
-} 
+}
