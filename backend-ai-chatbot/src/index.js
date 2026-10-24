@@ -20,17 +20,15 @@ export default {
     if (request.method !== "POST") return json({ error: "Method Not Allowed" }, 405, cors);
 
     try {
-      const { message, language } = await request.json();
+      // 🧠 Ambil history dari frontend
+      const { message, language, history = [] } = await request.json();
       if (!message) throw new Error("Mesej kosong");
 
-      // 1. Ambil data dari Firebase
       const servicesData = await getServicesFromFirebase();
-      
-      // 2. Bina prompt (gabungkan persona & rules)
       const systemPrompt = buildSystemPrompt(servicesData, language);
 
-      // 3. Panggil AI (Double Duo)
-      const aiReply = await askAI(systemPrompt, message, env);
+      // 🧠 Hantar history ke fungsi AI
+      const aiReply = await askAI(systemPrompt, message, history, env);
 
       return json({ reply: aiReply }, 200, cors);
 
@@ -83,9 +81,18 @@ Waktu Operasi: 10AM - 8PM.
   `.trim();
 }
 
-async function askAI(systemPrompt, userMessage, env) {
+async function askAI(systemPrompt, userMessage, history, env) {
   const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  const fullPrompt = `${systemPrompt}\n\nPelanggan: ${userMessage}\nEliza:`;
+  
+  // 🧠 Bina teks sejarah perbualan
+  let historyText = "";
+  if (history.length > 0) {
+    historyText = "SEJARAH PERBUALAN SEBELUM INI:\n" + history.map(msg => 
+      `${msg.role === 'user' ? 'Pelanggan' : 'Eliza'}: ${msg.text}`
+    ).join('\n') + "\n\n";
+  }
+
+  const fullPrompt = `${systemPrompt}\n\n${historyText}Pelanggan: ${userMessage}\nEliza:`;
 
   try {
     // 1. Primary (Gemini)
