@@ -128,21 +128,29 @@ async function initChatbot() {
     messages.scrollTop = messages.scrollHeight;
   };
 
-  // 🔥 Fungsi tunjuk animasi loading (Guna class CSS kau)
-  const showLoading = () => {
-    const wrapper = document.createElement("div");
-    wrapper.id = "loading-bubble";
-    wrapper.className = "chatbot-message chatbot-message--assistant";
-    
-    const bubble = document.createElement("div");
-    bubble.className = "chatbot-bubble";
-    bubble.style.opacity = "0.7"; // Optional: nampak sedikit pudar
-    bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Eliza sedang menaip...`;
-    
-    wrapper.appendChild(bubble);
-    messages.appendChild(wrapper);
-    messages.scrollTop = messages.scrollHeight;
-  };
+  // 🔥 Fungsi tunjuk animasi loading (Guna class CSS kau & Dwibahasa)
+const showLoading = () => {
+  const wrapper = document.createElement("div");
+  wrapper.id = "loading-bubble";
+  wrapper.className = "chatbot-message chatbot-message--assistant";
+  
+  // Semak bahasa semasa
+  const lang = document.documentElement.lang || "ms";
+  
+  // Tentukan teks ikut bahasa
+  const typingText = lang === "en" 
+    ? "Eliza is typing..." 
+    : "Eliza sedang menaip...";
+
+  const bubble = document.createElement("div");
+  bubble.className = "chatbot-bubble";
+  bubble.style.opacity = "0.7";
+  bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${typingText}`;
+  
+  wrapper.appendChild(bubble);
+  messages.appendChild(wrapper);
+  messages.scrollTop = messages.scrollHeight;
+};
 
   // 🔥 Fungsi buang animasi loading
   const removeLoading = () => {
@@ -157,51 +165,76 @@ async function initChatbot() {
   input.addEventListener("input", resizeInput);
 
   // 🔥 Fungsi Hantar Mesej ke Cloudflare Worker
-  const sendMessage = async () => {
-    const question = input.value.trim();
-    if (!question) return;
+const sendMessage = async () => {
+  const question = input.value.trim();
+  if (!question) return;
 
-    addMessage(question, true);
-    input.value = "";
-    resizeInput();
+  const lang = document.documentElement.lang || "ms";
+
+  // ==========================================
+  // 🛡️ SISTEM KESELAMATAN (Had 500 Perkataan / 20 Baris)
+  // ==========================================
+  const wordCount = question.split(/\s+/).filter(Boolean).length;
+  const lineCount = question.split('\n').length;
+
+  if (wordCount > 500 || lineCount > 20) {
+    const warnMsg = lang === "en" 
+      ? "⚠️ Your message is too long. Please limit to 500 words or 20 lines only."
+      : "⚠️ Mesej anda terlalu panjang. Sila hadkan kepada 500 perkataan atau 20 baris sahaja.";
     
-    showLoading();
-    sendButton.disabled = true;
+    // Papar amaran dari Eliza
+    addMessage(warnMsg, false);
+    
+    // (Optional) Buang teks dari kotak input supaya user tak pening
+    // input.value = ""; 
+    // resizeInput();
+    
+    return; // Hentikan proses, jangan hantar ke Cloudflare
+  }
+  // ==========================================
 
-    try {
-      const lang = document.documentElement.lang || "ms";
+  // 1. Papar mesej user
+  addMessage(question, true);
+  input.value = "";
+  resizeInput();
+  
+  // 2. Tunjuk animasi menaip
+  showLoading();
+  sendButton.disabled = true;
 
-      const response = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          message: question,
-          language: lang 
-        })
-      });
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        message: question,
+        language: lang 
+      })
+    });
 
-      const data = await response.json();
-      removeLoading();
+    const data = await response.json();
+    removeLoading();
 
-      if (data.reply) {
-        lastResponse = data.reply;
-        addMessage(lastResponse, false);
-      } else {
-        throw new Error("Tiada jawapan dari AI");
-      }
-
-    } catch (error) {
-      removeLoading();
-      console.error("Chat error:", error);
-      const errorMsg = document.documentElement.lang === "en" 
-        ? "Sorry, my system is busy right now. Please try again later." 
-        : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
-      addMessage(errorMsg, false);
-    } finally {
-      sendButton.disabled = false;
+    if (data.reply) {
+      lastResponse = data.reply;
+      addMessage(lastResponse, false);
+    } else {
+      throw new Error("Tiada jawapan dari AI");
     }
-  };
 
+  } catch (error) {
+    removeLoading();
+    console.error("Chat error:", error);
+    const errorMsg = lang === "en" 
+      ? "Sorry, my system is busy right now. Please try again later." 
+      : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
+    addMessage(errorMsg, false);
+  } finally {
+    sendButton.disabled = false;
+  }
+};
+
+// sistem butang send mesej
   toggle.addEventListener("click", showChat);
   closeButton?.addEventListener("click", () => hideChat());
   document.addEventListener("keydown", (event) => {
