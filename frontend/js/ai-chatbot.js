@@ -246,3 +246,4 @@ async function initChatbot() {
   speech.rate = 0.9;
   window.speechSynthesis.speak(speech);
 });
+}
