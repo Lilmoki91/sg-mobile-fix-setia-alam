@@ -1,5 +1,5 @@
 // ============================================================
-// 🧠 ELIZA AI - CLOUDFLARE WORKER BACKEND (FETCH VERSION)
+// 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -79,43 +79,55 @@ Waktu Operasi: 10AM - 8PM.
 }
 
 async function askAI(systemPrompt, userMessage, history, env) {
-  // 🔥 FORMAT CONTENTS UNTUK GEMINI
-  const contents = [
-    { role: "user", parts: [{ text: systemPrompt }] },
-    ...history.map(msg => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.text }]
-    })),
-    { role: "user", parts: [{ text: userMessage }] }
-  ];
-
-  // 🔥 KITA GUNA MODEL ASAL KAU (GEMINI FLASH LITE LATEST)
-  let text = await callGemini("gemini-flash-lite-latest", contents, env.GEMINI_API_KEY);
+  // 🔥 KITA HANTAR SYSTEM PROMPT & HISTORY SECARA BERASINGAN (IKUT PIAWAIAN GEMINI 2026)
+  // Cuba Primary (Gemini)
+  let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, env.GEMINI_API_KEY);
   if (text) return text;
 
-  // 🔥 FALLBACK MODEL ASAL KAU (GEMMA)
-  text = await callGemini("gemma-4-26b-a4b-it", contents, env.GEMINI_API_KEY);
+  // Cuba Fallback (Gemma)
+  text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, env.GEMINI_API_KEY);
   if (text) return text;
 
   return "Maaf, otak saya sedang rehat. Sila WhatsApp 012-262 6434.";
 }
 
-// 🔥 Fungsi panggil guna fetch (Ringan & Stabil, tak crash)
-async function callGemini(model, contents, apiKey) {
+async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
+  // 🔥 FORMAT HISTORY YANG BETUL (Hanya user & model)
+  const formattedHistory = history.map(msg => ({
+    role: msg.role === "user" ? "user" : "model",
+    parts: [{ text: msg.text }]
+  }));
+
+  // 🔥 PAYLOAD YANG SAH UNTUK GEMINI
+  const payload = {
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    contents: [
+      ...formattedHistory,
+      { role: "user", parts: [{ text: userMessage }] }
+    ],
+    generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
+  };
+
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: contents,
-        generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    
+    // Log ralat jika API tolak
+    if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
+      console.error("API Reject:", JSON.stringify(data));
+      return null;
+    }
+
+    return data.candidates[0].content.parts[0].text;
   } catch (e) {
     console.error("Gemini Error:", e);
     return null;
