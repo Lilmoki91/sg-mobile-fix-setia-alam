@@ -1,7 +1,6 @@
 // ============================================================
-// 🧠 ELIZA AI - CLOUDFLARE WORKER BACKEND
+// 🧠 ELIZA AI - CLOUDFLARE WORKER BACKEND (FETCH VERSION)
 // ============================================================
-import { GoogleGenAI } from '@google/genai';
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
 
@@ -20,14 +19,12 @@ export default {
     if (request.method !== "POST") return json({ error: "Method Not Allowed" }, 405, cors);
 
     try {
-      // 🧠 Ambil history dari frontend
       const { message, language, history = [] } = await request.json();
       if (!message) throw new Error("Mesej kosong");
 
       const servicesData = await getServicesFromFirebase();
       const systemPrompt = buildSystemPrompt(servicesData, language);
 
-      // 🧠 Hantar history ke fungsi AI
       const aiReply = await askAI(systemPrompt, message, history, env);
 
       return json({ reply: aiReply }, 200, cors);
@@ -82,37 +79,47 @@ Waktu Operasi: 10AM - 8PM.
 }
 
 async function askAI(systemPrompt, userMessage, history, env) {
-  const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  
-  // 🧠 Bina teks sejarah perbualan
-  let historyText = "";
-  if (history.length > 0) {
-    historyText = "SEJARAH PERBUALAN SEBELUM INI:\n" + history.map(msg => 
-      `${msg.role === 'user' ? 'Pelanggan' : 'Eliza'}: ${msg.text}`
-    ).join('\n') + "\n\n";
-  }
+  // 🔥 FORMAT CONTENTS UNTUK GEMINI
+  const contents = [
+    { role: "user", parts: [{ text: systemPrompt }] },
+    ...history.map(msg => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.text }]
+    })),
+    { role: "user", parts: [{ text: userMessage }] }
+  ];
 
-  const fullPrompt = `${systemPrompt}\n\n${historyText}Pelanggan: ${userMessage}\nEliza:`;
+  // 🔥 KITA GUNA MODEL ASAL KAU (GEMINI FLASH LITE LATEST)
+  let text = await callGemini("gemini-flash-lite-latest", contents, env.GEMINI_API_KEY);
+  if (text) return text;
 
-  try {
-    // 1. Primary (Gemini)
-    const primary = await ai.models.generateContent({
-      model: 'gemini-flash-lite-latest',
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-    });
-    if (primary.text) return primary.text;
-  } catch (e) { console.warn("Primary gagal:", e); }
-
-  try {
-    // 2. Fallback (Gemma)
-    const fallback = await ai.models.generateContent({
-      model: 'gemma-4-26b-a4b-it',
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-    });
-    if (fallback.text) return fallback.text;
-  } catch (e) { console.error("Fallback gagal:", e); }
+  // 🔥 FALLBACK MODEL ASAL KAU (GEMMA)
+  text = await callGemini("gemma-4-26b-a4b-it", contents, env.GEMINI_API_KEY);
+  if (text) return text;
 
   return "Maaf, otak saya sedang rehat. Sila WhatsApp 012-262 6434.";
+}
+
+// 🔥 Fungsi panggil guna fetch (Ringan & Stabil, tak crash)
+async function callGemini(model, contents, apiKey) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: contents,
+        generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
+      })
+    });
+
+    const data = await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch (e) {
+    console.error("Gemini Error:", e);
+    return null;
+  }
 }
 
 function json(obj, status, extra) {
