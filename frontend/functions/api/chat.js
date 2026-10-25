@@ -1,5 +1,5 @@
 // ============================================================
-// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (MUKTAMAD)
+// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (DENGAN IMPORT JSON)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -24,7 +24,7 @@ export async function onRequest(context) {
     const { message, language, history = [] } = await request.json();
     if (!message) throw new Error("Mesej kosong");
 
-    // 🔥 Semak API Key dulu sebelum buat apa-apa
+    // Semak API Key
     if (!env.GEMINI_API_KEY) {
       return json({ reply: "❌ RALAT: API Key GEMINI_API_KEY tiada dalam Cloudflare Pages Settings!" }, 500, cors);
     }
@@ -32,13 +32,14 @@ export async function onRequest(context) {
     const servicesData = await getServicesFromFirebase();
     const systemPrompt = buildSystemPrompt(servicesData, language);
 
+    // Panggil AI
     const aiReply = await askAI(systemPrompt, message, history, env.GEMINI_API_KEY);
 
     return json({ reply: aiReply }, 200, cors);
 
   } catch (error) {
     console.error("System Error:", error);
-    return json({ reply: "Maaf, sistem saya sibuk. Sila cuba lagi." }, 500, cors);
+    return json({ reply: `❌ SYSTEM ERROR: ${error.message}` }, 500, cors);
   }
 }
 
@@ -65,7 +66,6 @@ function buildSystemPrompt(services, lang) {
   const serviceList = services.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
-  // DAPATKAN MASA TERKINI SECARA MANUAL (Waktu Malaysia UTC+8)
   const now = new Date();
   const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); 
   
@@ -93,7 +93,6 @@ ${languageInstruction}
 
 🔥 MAKLUMAT MASA SEMASA (PENTING):
 Hari ini adalah: ${currentTime}
-(Gunakan maklumat ini jika pelanggan bertanya tentang hari ini, tarikh, atau masa).
 
 Peraturan Ketat:
 ${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
@@ -107,11 +106,9 @@ Waktu Operasi: 10AM - 8PM.
 }
 
 async function askAI(systemPrompt, userMessage, history, apiKey) {
-  // Cuba Primary (Gemini)
   let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
-  // Cuba Fallback (Gemma)
   text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
@@ -121,7 +118,6 @@ async function askAI(systemPrompt, userMessage, history, apiKey) {
 async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
-  // 1. BINA CONTENTS YANG BERSIH & SELANG-SELI
   let contents = [];
   
   history.forEach(msg => {
@@ -158,7 +154,6 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
   }
 
-  // MASUKKAN SYSTEM PROMPT KE DALAM MESEJ USER PERTAMA
   finalContents[0].parts[0].text = `${systemPrompt}\n\n[Mesej Pelanggan]: ${finalContents[0].parts[0].text}`;
 
   const payload = {
@@ -166,7 +161,6 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
   };
 
-  // 🔥 ABORT CONTROLLER (TIMEOUT 15 SAAT)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -182,16 +176,15 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
 
     const data = await res.json();
     
-    // Log ralat jika API tolak
     if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
       console.error("API Reject:", JSON.stringify(data));
-      return null;
+      return `❌ API REJECT: ${JSON.stringify(data.error?.message || data)}`;
     }
 
     return data.candidates[0].content.parts[0].text;
   } catch (e) {
     console.error("Gemini Error:", e);
-    return null;
+    return `❌ FETCH ERROR: ${e.message}`;
   }
 }
 
