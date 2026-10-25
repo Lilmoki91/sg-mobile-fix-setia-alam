@@ -1,5 +1,5 @@
 // ============================================================
-// 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED)
+// 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED ALTERNATION)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -79,7 +79,6 @@ Waktu Operasi: 10AM - 8PM.
 }
 
 async function askAI(systemPrompt, userMessage, history, env) {
-  // 🔥 KITA HANTAR SYSTEM PROMPT & HISTORY SECARA BERASINGAN (IKUT PIAWAIAN GEMINI 2026)
   // Cuba Primary (Gemini)
   let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, env.GEMINI_API_KEY);
   if (text) return text;
@@ -94,21 +93,56 @@ async function askAI(systemPrompt, userMessage, history, env) {
 async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
-  // 🔥 FORMAT HISTORY YANG BETUL (Hanya user & model)
-  const formattedHistory = history.map(msg => ({
-    role: msg.role === "user" ? "user" : "model",
-    parts: [{ text: msg.text }]
-  }));
+  // 🔥 1. BINA CONTENTS YANG BERSIH & SELANG-SELI
+  let contents = [];
+  
+  // Masukkan history (buang yang kosong)
+  history.forEach(msg => {
+    if (msg.text && msg.text.trim() !== "") {
+      contents.push({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.text.trim() }]
+      });
+    }
+  });
 
-  // 🔥 PAYLOAD YANG SAH UNTUK GEMINI
+  // Masukkan mesej baru
+  if (userMessage && userMessage.trim() !== "") {
+    contents.push({
+      role: "user",
+      parts: [{ text: userMessage.trim() }]
+    });
+  }
+
+  // 🔥 2. PASTIKAN IA MULAKAN DENGAN 'user' DAN BERSELANG-SELI
+  const finalContents = [];
+  for (const item of contents) {
+    if (finalContents.length === 0) {
+      // Mesti mula dengan user
+      if (item.role === "user") finalContents.push(item);
+    } else {
+      const prev = finalContents[finalContents.length - 1];
+      if (prev.role === item.role) {
+        // Kalau sama role, gabungkan teks (elak error API)
+        prev.parts[0].text += "\n" + item.parts[0].text;
+      } else {
+        finalContents.push(item);
+      }
+    }
+  }
+
+  // Kalau kosong (fallback), paksa masuk user message
+  if (finalContents.length === 0) {
+    finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
+  }
+
+  // 🔥 3. MASUKKAN SYSTEM PROMPT KE DALAM MESEJ USER PERTAMA
+  // (Cara ini paling selamat, berfungsi untuk Gemini & Gemma)
+  finalContents[0].parts[0].text = `${systemPrompt}\n\n[Mesej Pelanggan]: ${finalContents[0].parts[0].text}`;
+
+  // 🔥 4. PAYLOAD
   const payload = {
-    systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    },
-    contents: [
-      ...formattedHistory,
-      { role: "user", parts: [{ text: userMessage }] }
-    ],
+    contents: finalContents,
     generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
   };
 
