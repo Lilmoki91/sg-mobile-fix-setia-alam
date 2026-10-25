@@ -47,11 +47,11 @@ async function initChatbot() {
 
   let lastResponse = "";
   
-  // 🧠 INGATAN ELIZA (Simpan 20 mesej terakhir)
+  // 🧠 INGATAN ELIZA (Simpan 10 mesej terakhir = 5 perbualan)
   let chatHistory = [];
 
-  // 🔥 URL CLOUDFLARE WORKER KAU
-  const WORKER_URL = "https://eliza-ai-backend.taihaulengcai.workers.dev/chat";
+  // 🔥 URL CLOUDFLARE PAGES FUNCTION KAU (Dah tukar ke relatif path)
+  const WORKER_URL = "/api/chat";
 
   // Measure the actual navigation bars, including safe-area padding.
   const topNav = document.querySelector("body > nav:not(.mobile-bottom-nav)");
@@ -113,6 +113,7 @@ async function initChatbot() {
     } else {
       let formattedText = text
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline hover:text-blue-300 font-semibold">$1</a>')
+        .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline hover:text-blue-300 font-semibold break-all">$2</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
         .replace(/\n/g, '<br>');
@@ -180,15 +181,10 @@ async function initChatbot() {
     sendButton.disabled = true;
 
     try {
-      // 🧠 Simpan mesej user ke dalam memori
-      chatHistory.push({ role: "user", text: question });
-      // Hadkan memori kepada 20 mesej terakhir sahaja
-      if (chatHistory.length > 15) chatHistory = chatHistory.slice(-15);
-
+      // 🔥 Hantar history LAMA (tanpa soalan baru ni)
       const response = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // 🧠 Hantar sekali dengan sejarah perbualan
         body: JSON.stringify({ 
           message: question,
           language: lang,
@@ -203,10 +199,14 @@ async function initChatbot() {
         lastResponse = data.reply;
         addMessage(lastResponse, false);
         
-        // 🧠 Simpan jawapan Eliza ke dalam memori
+        // 🔥 SIMPAN DALAM MEMORI SELEPAS DAPAT JAWAPAN
+        chatHistory.push({ role: "user", text: question });
         chatHistory.push({ role: "model", text: data.reply });
-        if (chatHistory.length > 15) chatHistory = chatHistory.slice(-15);
-
+        
+        // Hadkan kepada 10 mesej terakhir (5 pasang perbualan)
+        if (chatHistory.length > 10) {
+          chatHistory = chatHistory.slice(-10);
+        }
       } else {
         throw new Error("Tiada jawapan dari AI");
       }
@@ -245,28 +245,23 @@ async function initChatbot() {
   });
 
   // 🔥 Fungsi TTS dengan pembersih emoji
-speakButton?.addEventListener("click", () => {
-  if (!lastResponse || !window.speechSynthesis) return;
+  speakButton?.addEventListener("click", () => {
+    if (!lastResponse || !window.speechSynthesis) return;
 
-  // 🔥 KITA KENA LETAK SEMULA 'lang' DI SINI
-  const lang = document.documentElement.lang || "ms";
+    const lang = document.documentElement.lang || "ms";
 
-  // Bersihkan Markdown & Emoji sebelum bacaan TTS
-  const cleanText = lastResponse
-    // 1. Buang URL dalam Markdown (Tinggalkan teks je)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
-    // 2. Buang emoji
-    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-    // 3. Buang simbol Markdown lain
-    .replace(/[*_#`~]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+    const cleanText = lastResponse
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[*_#`~]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-  if (!cleanText) return;
+    if (!cleanText) return;
 
-  const speech = new SpeechSynthesisUtterance(cleanText);
-  speech.lang = lang === "en" ? "en-US" : "ms-MY"; // Sekarang 'lang' dah wujud
-  speech.rate = 0.9;
-  window.speechSynthesis.speak(speech);
-});
+    const speech = new SpeechSynthesisUtterance(cleanText);
+    speech.lang = lang === "en" ? "en-US" : "ms-MY";
+    speech.rate = 0.9;
+    window.speechSynthesis.speak(speech);
+  });
 }
