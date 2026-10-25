@@ -59,6 +59,22 @@ function buildSystemPrompt(services, lang) {
   const serviceList = services.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
+  // 🔥 DAPATKAN MASA TERKINI (Waktu Malaysia)
+  const now = new Date();
+  const options = { 
+    timeZone: 'Asia/Kuala_Lumpur', 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  const dateBM = now.toLocaleDateString('ms-MY', options);
+  const dateEN = now.toLocaleDateString('en-MY', options);
+  const currentTime = lang === "en" ? dateEN : dateBM;
+
   return `
 Anda adalah ${personaData.name}, ${personaData.role}.
 Sifat anda: ${personaData.traits.join(", ")}.
@@ -66,6 +82,10 @@ Nada: ${personaData.tone}.
 Latar belakang: ${personaData.background}.
 
 ${languageInstruction}
+
+🔥 MAKLUMAT MASA SEMASA (PENTING):
+Hari ini adalah: ${currentTime}
+(Gunakan maklumat ini jika pelanggan bertanya tentang hari ini, tarikh, atau masa).
 
 Peraturan Ketat:
 ${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
