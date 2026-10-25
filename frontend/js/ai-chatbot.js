@@ -47,7 +47,7 @@ async function initChatbot() {
 
   let lastResponse = "";
   
-  // 🧠 INGATAN ELIZA (Simpan 10 mesej terakhir = 5 perbualan)
+  // 🧠 INGATAN ELIZA (Simpan mesej terakhir = perbualan)
   let chatHistory = [];
 
   // 🔥 URL CLOUDFLARE PAGES FUNCTION KAU (BUKAN WORKER)
@@ -182,6 +182,7 @@ async function initChatbot() {
 
     let timeoutId = null;
 
+// abort control ---------------------------
     try {
       // 🔥 TIMEOUT 20 SAAT
       const controller = new AbortController();
@@ -200,6 +201,7 @@ async function initChatbot() {
 
       const data = await response.json();
 
+// ------------------------------------------
       if (data.reply) {
         lastResponse = data.reply;
         addMessage(lastResponse, false);
@@ -208,9 +210,9 @@ async function initChatbot() {
         chatHistory.push({ role: "user", text: question });
         chatHistory.push({ role: "model", text: data.reply });
         
-        // Hadkan kepada 10 mesej terakhir
-        if (chatHistory.length > 10) {
-          chatHistory = chatHistory.slice(-10);
+        // sistem memory ai model
+        if (chatHistory.length > 20) {
+          chatHistory = chatHistory.slice(-20);
         }
       } else {
         throw new Error("Tiada jawapan dari AI");
