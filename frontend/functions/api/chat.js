@@ -78,10 +78,34 @@ function buildSystemPrompt(services, lang) {
   const monthName = lang === "en" ? monthsEN[mytTime.getUTCMonth()] : monthsBM[mytTime.getUTCMonth()];
   const date = mytTime.getUTCDate();
   const year = mytTime.getUTCFullYear();
-  const hours = mytTime.getUTCHours().toString().padStart(2, '0');
+  
+  // 🔥 KIRA MASA (12 JAM)
+  const hours24 = mytTime.getUTCHours();
+  const ampm = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 || 12; 
   const minutes = mytTime.getUTCMinutes().toString().padStart(2, '0');
   
-  const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours}:${minutes} (MYT)`;
+  const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
+
+  // 🔥 TENTUKAN UCAPAN MASA
+  let greetingBM = "";
+  let greetingEN = "";
+
+  if (hours24 >= 5 && hours24 < 12) {
+    greetingBM = "Pagi";
+    greetingEN = "Morning";
+  } else if (hours24 >= 12 && hours24 < 15) {
+    greetingBM = "Tengah Hari";
+    greetingEN = "Afternoon";
+  } else if (hours24 >= 15 && hours24 < 19) {
+    greetingBM = "Petang";
+    greetingEN = "Evening";
+  } else {
+    greetingBM = "Malam";
+    greetingEN = "Night";
+  }
+
+  const timeGreeting = lang === "en" ? greetingEN : greetingBM;
 
   return `
 Anda adalah ${personaData.name}, ${personaData.role}.
@@ -93,6 +117,7 @@ ${languageInstruction}
 
 🔥 MAKLUMAT MASA SEMASA (PENTING):
 Hari ini adalah: ${currentTime}
+Waktu sekarang ialah: ${timeGreeting}
 
 Peraturan Ketat:
 ${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
