@@ -50,8 +50,8 @@ async function initChatbot() {
   // 🧠 INGATAN ELIZA (Simpan 10 mesej terakhir = 5 perbualan)
   let chatHistory = [];
 
-  // 🔥 URL CLOUDFLARE PAGES FUNCTION KAU (Dah tukar ke relatif path)
-  const WORKER_URL = "/api/chat";
+  // 🔥 URL CLOUDFLARE PAGES FUNCTION KAU (BUKAN WORKER)
+  const API_ENDPOINT = "/api/chat";
 
   // Measure the actual navigation bars, including safe-area padding.
   const topNav = document.querySelector("body > nav:not(.mobile-bottom-nav)");
@@ -180,27 +180,25 @@ async function initChatbot() {
     showLoading();
     sendButton.disabled = true;
 
-// kod abortcontrol -------------------------
+    let timeoutId = null;
+
     try {
-  // 🔥 TAMBAH TIMEOUT 20 SAAT
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saat
+      // 🔥 TIMEOUT 20 SAAT
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 20000);
 
-  const response = await fetch(WORKER_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ 
-      message: question,
-      language: lang,
-      history: chatHistory 
-    }),
-    signal: controller.signal // 🔥 Masukkan signal ni
-  });
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: question,
+          language: lang,
+          history: chatHistory 
+        }),
+        signal: controller.signal
+      });
 
-  clearTimeout(timeoutId); // 🔥 Padam timeout kalau berjaya
-
-  const data = await response.json();
-// -----------------------------------------  
+      const data = await response.json();
 
       if (data.reply) {
         lastResponse = data.reply;
@@ -210,7 +208,7 @@ async function initChatbot() {
         chatHistory.push({ role: "user", text: question });
         chatHistory.push({ role: "model", text: data.reply });
         
-        // Hadkan kepada 10 mesej terakhir (5 pasang perbualan)
+        // Hadkan kepada 10 mesej terakhir
         if (chatHistory.length > 10) {
           chatHistory = chatHistory.slice(-10);
         }
@@ -219,13 +217,15 @@ async function initChatbot() {
       }
 
     } catch (error) {
-      removeLoading();
       console.error("Chat error:", error);
       const errorMsg = lang === "en" 
         ? "Sorry, my system is busy right now. Please try again later." 
         : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
       addMessage(errorMsg, false);
     } finally {
+      // 🔥 KEMASKINI FINALLY UNTUK BERSIHKAN TIMEOUT & UI
+      if (timeoutId) clearTimeout(timeoutId);
+      removeLoading();
       sendButton.disabled = false;
     }
   };
