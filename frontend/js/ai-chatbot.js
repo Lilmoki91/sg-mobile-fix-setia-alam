@@ -180,20 +180,27 @@ async function initChatbot() {
     showLoading();
     sendButton.disabled = true;
 
+// kod abortcontrol -------------------------
     try {
-      // 🔥 Hantar history LAMA (tanpa soalan baru ni)
-      const response = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          message: question,
-          language: lang,
-          history: chatHistory 
-        })
-      });
+  // 🔥 TAMBAH TIMEOUT 20 SAAT
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saat
 
-      const data = await response.json();
-      removeLoading();
+  const response = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      message: question,
+      language: lang,
+      history: chatHistory 
+    }),
+    signal: controller.signal // 🔥 Masukkan signal ni
+  });
+
+  clearTimeout(timeoutId); // 🔥 Padam timeout kalau berjaya
+
+  const data = await response.json();
+// -----------------------------------------  
 
       if (data.reply) {
         lastResponse = data.reply;
