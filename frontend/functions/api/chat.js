@@ -1,5 +1,5 @@
 // ============================================================
-//  chat.js 🧠 ELIZA AI - BACKEND CLOUDFLARE PAGES (MUKTAMAD - FIXED ALTERNATION)
+// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (MUKTAMAD)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -7,34 +7,40 @@ import promptData from './prompt-eliza-ai.json';
 const FIREBASE_PROJECT_ID = "sgmfix-services";
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
 
-export default {
-  async fetch(request, env, ctx) {
-    const cors = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+// 🔥 WAJIB GUNA FORMAT INI UNTUK CLOUDFLARE PAGES
+export async function onRequest(context) {
+  const { request, env } = context;
+  
+  const cors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
 
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    if (request.method !== "POST") return json({ error: "Method Not Allowed" }, 405, cors);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+  if (request.method !== "POST") return json({ error: "Method Not Allowed" }, 405, cors);
 
-    try {
-      const { message, language, history = [] } = await request.json();
-      if (!message) throw new Error("Mesej kosong");
+  try {
+    const { message, language, history = [] } = await request.json();
+    if (!message) throw new Error("Mesej kosong");
 
-      const servicesData = await getServicesFromFirebase();
-      const systemPrompt = buildSystemPrompt(servicesData, language);
-
-      const aiReply = await askAI(systemPrompt, message, history, env);
-
-      return json({ reply: aiReply }, 200, cors);
-
-    } catch (error) {
-      console.error("Error:", error);
-      return json({ reply: "Maaf, sistem saya sibuk. Sila cuba lagi." }, 500, cors);
+    // 🔥 Semak API Key dulu sebelum buat apa-apa
+    if (!env.GEMINI_API_KEY) {
+      return json({ reply: "❌ RALAT: API Key GEMINI_API_KEY tiada dalam Cloudflare Pages Settings!" }, 500, cors);
     }
-  },
-};
+
+    const servicesData = await getServicesFromFirebase();
+    const systemPrompt = buildSystemPrompt(servicesData, language);
+
+    const aiReply = await askAI(systemPrompt, message, history, env.GEMINI_API_KEY);
+
+    return json({ reply: aiReply }, 200, cors);
+
+  } catch (error) {
+    console.error("System Error:", error);
+    return json({ reply: "Maaf, sistem saya sibuk. Sila cuba lagi." }, 500, cors);
+  }
+}
 
 async function getServicesFromFirebase() {
   try {
@@ -59,9 +65,9 @@ function buildSystemPrompt(services, lang) {
   const serviceList = services.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
-  // 🔥 DAPATKAN MASA TERKINI SECARA MANUAL (Waktu Malaysia UTC+8)
+  // DAPATKAN MASA TERKINI SECARA MANUAL (Waktu Malaysia UTC+8)
   const now = new Date();
-  const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // Tambah 8 jam
+  const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); 
   
   const daysBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
   const daysEN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -100,13 +106,13 @@ Waktu Operasi: 10AM - 8PM.
   `.trim();
 }
 
-async function askAI(systemPrompt, userMessage, history, env) {
+async function askAI(systemPrompt, userMessage, history, apiKey) {
   // Cuba Primary (Gemini)
-  let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, env.GEMINI_API_KEY);
+  let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
   // Cuba Fallback (Gemma)
-  text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, env.GEMINI_API_KEY);
+  text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
   return "Maaf, otak saya sedang rehat. Sila WhatsApp 012-262 6434.";
@@ -115,10 +121,9 @@ async function askAI(systemPrompt, userMessage, history, env) {
 async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
-  // 🔥 1. BINA CONTENTS YANG BERSIH & SELANG-SELI
+  // 1. BINA CONTENTS YANG BERSIH & SELANG-SELI
   let contents = [];
   
-  // Masukkan history (buang yang kosong)
   history.forEach(msg => {
     if (msg.text && msg.text.trim() !== "") {
       contents.push({
@@ -128,7 +133,6 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     }
   });
 
-  // Masukkan mesej baru
   if (userMessage && userMessage.trim() !== "") {
     contents.push({
       role: "user",
@@ -136,16 +140,13 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     });
   }
 
-  // 🔥 2. PASTIKAN IA MULAKAN DENGAN 'user' DAN BERSELANG-SELI
   const finalContents = [];
   for (const item of contents) {
     if (finalContents.length === 0) {
-      // Mesti mula dengan user
       if (item.role === "user") finalContents.push(item);
     } else {
       const prev = finalContents[finalContents.length - 1];
       if (prev.role === item.role) {
-        // Kalau sama role, gabungkan teks (elak error API)
         prev.parts[0].text += "\n" + item.parts[0].text;
       } else {
         finalContents.push(item);
@@ -153,40 +154,34 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     }
   }
 
-  // Kalau kosong (fallback), paksa masuk user message
   if (finalContents.length === 0) {
     finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
   }
 
-  // 🔥 3. MASUKKAN SYSTEM PROMPT KE DALAM MESEJ USER PERTAMA
-  // (Cara ini paling selamat, berfungsi untuk Gemini & Gemma)
+  // MASUKKAN SYSTEM PROMPT KE DALAM MESEJ USER PERTAMA
   finalContents[0].parts[0].text = `${systemPrompt}\n\n[Mesej Pelanggan]: ${finalContents[0].parts[0].text}`;
 
-  // 🔥 4. PAYLOAD
   const payload = {
     contents: finalContents,
     generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
   };
 
-// abort error ------------------------------
+  // 🔥 ABORT CONTROLLER (TIMEOUT 15 SAAT)
   try {
-  // 🔥 TAMBAH TIMEOUT 15 SAAT UNTUK GOOGLE API
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    signal: controller.signal // 🔥 Masukkan signal
-  });
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal 
+    });
 
-  clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
 
-  const data = await res.json();
- 
-// ------------------------------------------    
-
+    const data = await res.json();
+    
     // Log ralat jika API tolak
     if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
       console.error("API Reject:", JSON.stringify(data));
