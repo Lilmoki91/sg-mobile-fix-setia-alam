@@ -183,7 +183,7 @@ async function initChatbot() {
       // 🧠 Simpan mesej user ke dalam memori
       chatHistory.push({ role: "user", text: question });
       // Hadkan memori kepada 20 mesej terakhir sahaja
-      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+      if (chatHistory.length > 15) chatHistory = chatHistory.slice(-15);
 
       const response = await fetch(WORKER_URL, {
         method: "POST",
@@ -205,7 +205,7 @@ async function initChatbot() {
         
         // 🧠 Simpan jawapan Eliza ke dalam memori
         chatHistory.push({ role: "model", text: data.reply });
-        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+        if (chatHistory.length > 15) chatHistory = chatHistory.slice(-15);
 
       } else {
         throw new Error("Tiada jawapan dari AI");
