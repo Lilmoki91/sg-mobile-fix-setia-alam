@@ -1,5 +1,5 @@
 // ============================================================
-//  chat.js 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED ALTERNATION)
+//  chat.js 🧠 ELIZA AI - BACKEND CLOUDFLARE PAGES (MUKTAMAD - FIXED ALTERNATION)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -59,21 +59,23 @@ function buildSystemPrompt(services, lang) {
   const serviceList = services.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
-  // 🔥 DAPATKAN MASA TERKINI (Waktu Malaysia)
+  // 🔥 DAPATKAN MASA TERKINI SECARA MANUAL (Waktu Malaysia UTC+8)
   const now = new Date();
-  const options = { 
-    timeZone: 'Asia/Kuala_Lumpur', 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  };
+  const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // Tambah 8 jam
   
-  const dateBM = now.toLocaleDateString('ms-MY', options);
-  const dateEN = now.toLocaleDateString('en-MY', options);
-  const currentTime = lang === "en" ? dateEN : dateBM;
+  const daysBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
+  const daysEN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const monthsBM = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
+  const monthsEN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const dayName = lang === "en" ? daysEN[mytTime.getUTCDay()] : daysBM[mytTime.getUTCDay()];
+  const monthName = lang === "en" ? monthsEN[mytTime.getUTCMonth()] : monthsBM[mytTime.getUTCMonth()];
+  const date = mytTime.getUTCDate();
+  const year = mytTime.getUTCFullYear();
+  const hours = mytTime.getUTCHours().toString().padStart(2, '0');
+  const minutes = mytTime.getUTCMinutes().toString().padStart(2, '0');
+  
+  const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours}:${minutes} (MYT)`;
 
   return `
 Anda adalah ${personaData.name}, ${personaData.role}.
