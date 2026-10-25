@@ -1,5 +1,5 @@
 // ============================================================
-// 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED ALTERNATION)
+//  chat.js 🧠 ELIZA AI - CLOUDFLARE WORKER (MUKTAMAD - FIXED ALTERNATION)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -146,15 +146,25 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
     generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
   };
 
+// abort error ------------------------------
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+  // 🔥 TAMBAH TIMEOUT 15 SAAT UNTUK GOOGLE API
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const data = await res.json();
-    
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: controller.signal // 🔥 Masukkan signal
+  });
+
+  clearTimeout(timeoutId);
+
+  const data = await res.json();
+ 
+// ------------------------------------------    
+
     // Log ralat jika API tolak
     if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
       console.error("API Reject:", JSON.stringify(data));
