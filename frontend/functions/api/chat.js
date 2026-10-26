@@ -1,11 +1,11 @@
 // ============================================================
-// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (PRIMARY: GEMINI, FALLBACK: GEMMA 4)
+// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (DENGAN IMPORT JSON)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
 
 // URL DATA SERVICES SHOP
-const FIREBASE_PROJECT_ID = "sgmfix-services"; 
+const FIREBASE_PROJECT_ID = "sgmfix-services"; // SAMA UNTUK KEDUA-DUA
 
 // 1. URL untuk ambil SERVIS
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
@@ -36,12 +36,14 @@ export async function onRequest(context) {
     }
 
     const servicesData = await getServicesFromFirebase();
-    const bookingsData = await getBookingsFromFirebase();
 
-    // Hantar data ke system prompt
-    const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
+// 🔥 AMBIL DATA BOOKING
+const bookingsData = await getBookingsFromFirebase();
 
-    // Panggil AI (Primary: Gemini, Fallback: Gemma 4)
+// Hantar kedua-dua data ke prompt
+const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
+
+    // Panggil AI
     const aiReply = await askAI(systemPrompt, message, history, env.GEMINI_API_KEY);
 
     return json({ reply: aiReply }, 200, cors);
@@ -52,7 +54,7 @@ export async function onRequest(context) {
   }
 }
 
-// SYSTEM BACA DATA SERVICES KEDAI
+// SYSTEM BACA DATA DATA SERVICES KEDAI
 async function getServicesFromFirebase() {
   try {
     const response = await fetch(FIREBASE_URL);
@@ -72,13 +74,14 @@ async function getServicesFromFirebase() {
   }
 }
 
-// SYSTEM BACA DATA BOOKING KEDAI
+// SYSTEM BACA DATA BOOKING APPOITMEN KEDAI
 async function getBookingsFromFirebase() {
   try {
     const response = await fetch(BOOKING_URL);
     const data = await response.json();
     if (!data.documents) return [];
     
+    // Kita ambil 10 booking terakhir sahaja supaya AI tak pening
     return data.documents.slice(0, 10).map(doc => {
       const fields = doc.fields;
       return {
@@ -99,11 +102,13 @@ async function getBookingsFromFirebase() {
 
 // SYSTEM PROMPT AI MODEL
 function buildSystemPrompt(services, bookings, lang) {
+  // 🔥 Pastikan services & bookings adalah array (elak crash kalau undefined)
   const safeServices = services || [];
   const safeBookings = bookings || [];
 
   const serviceList = safeServices.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   
+  // 🔥 FORMAT DATA BOOKING (Kita sembunyikan no telefon sikit untuk privasi)
   const bookingList = safeBookings.length > 0 
     ? safeBookings.map(b => `- Kod: ${b.code} | Nama: ${b.name} | Tel: ${b.phone} | Tarikh: ${b.date} | Masa: ${b.time} | Status: ${b.status} | Servis: ${b.service}`).join("\n")
     : "Tiada tempahan terkini.";
@@ -123,6 +128,7 @@ function buildSystemPrompt(services, bookings, lang) {
   const date = mytTime.getUTCDate();
   const year = mytTime.getUTCFullYear();
   
+  // 🔥 KIRA MASA (12 JAM)
   const hours24 = mytTime.getUTCHours();
   const ampm = hours24 >= 12 ? 'PM' : 'AM';
   const hours12 = hours24 % 12 || 12; 
@@ -130,6 +136,7 @@ function buildSystemPrompt(services, bookings, lang) {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
+  // 🔥 TENTUKAN UCAPAN MASA
   let greetingBM = "";
   let greetingEN = "";
 
@@ -177,26 +184,48 @@ Waktu Operasi: 10AM - 8PM.
   `.trim();
 }
 
-// =============================================
-// 🔥 FUNGSI UTAMA PANGGIL AI 
-// PRIMARY: GEMINI MODEL | FALLBACK: GEMMA 4 MODEL
-// ============================================
+// ==========================================
+// 🧠 SYSTEM PANGGIL AI DUAL MODEL (PRIMARY & FALLBACK)
+// ==========================================
 async function askAI(systemPrompt, userMessage, history, apiKey) {
-  // 1. PRIMARY CALL: Cuba model GEMINI terlebih dahulu
-  let text = await callAIModel("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
-  if (text && !text.startsWith("❌")) return text;
+  // 1. Cuba panggil Primary Model (Gemini)
+  console.log("Mencuba Primary Model: gemini-flash-lite-latest");
+  let text = await callPrimary(systemPrompt, userMessage, history, apiKey);
+  if (text) {
+    return text; // Berjaya guna Gemini
+  }
 
-  console.warn("Gemini primary gagal, beralih ke model fallback Gemma 4...");
+  // 2. Jika Gemini gagal, panggil Fallback Model (Gemma)
+  console.log("Primary gagal. Mencuba Fallback Model: gemma-4-26b-a4b-it");
+  text = await callFallback(systemPrompt, userMessage, history, apiKey);
+  if (text) {
+    return text; // Berjaya guna Gemma
+  }
 
-  // 2. FALLBACK CALL: Jika Gemini gagal, guna model GEMMA 4
-  text = await callAIModel("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
-  if (text && !text.startsWith("❌")) return text;
-
-  return "Maaf, system saya sedang rehat. Sila WhatsApp 012-262 6434.";
+  // 3. Jika kedua-dua gagal
+  return "Maaf, sistem saya sedang rehat. Sila WhatsApp 012-262 6434.";
 }
 
-// FUNGSI PENGHANTARAN API REQUEST KE GOOGLE
-async function callAIModel(model, systemPrompt, userMessage, history, apiKey) {
+// ==========================================
+// 🟢 FUNGSI CALL PRIMARY (GEMINI)
+// ==========================================
+async function callPrimary(systemPrompt, userMessage, history, apiKey) {
+  const model = "gemini-flash-lite-latest";
+  return await callGoogleAI(model, systemPrompt, userMessage, history, apiKey);
+}
+
+// ==========================================
+// 🔴 FUNGSI CALL FALLBACK (GEMMA 4)
+// ==========================================
+async function callFallback(systemPrompt, userMessage, history, apiKey) {
+  const model = "gemma-4-26b-a4b-it";
+  return await callGoogleAI(model, systemPrompt, userMessage, history, apiKey);
+}
+
+// ==========================================
+// ⚙️ ENJIN UTAMA (HANTAR REQUEST KE GOOGLE API)
+// ==========================================
+async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   let contents = [];
@@ -224,6 +253,7 @@ async function callAIModel(model, systemPrompt, userMessage, history, apiKey) {
     } else {
       const prev = finalContents[finalContents.length - 1];
       if (prev.role === item.role) {
+        // Gabungkan jika peranan sama
         prev.parts[0].text += "\n" + item.parts[0].text;
       } else {
         finalContents.push(item);
@@ -235,14 +265,16 @@ async function callAIModel(model, systemPrompt, userMessage, history, apiKey) {
     finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
   }
 
-  finalContents[0].parts[0].text = `${systemPrompt}\n\n[Mesej Pelanggan]: ${finalContents[0].parts[0].text}`;
-
+  // 🔥 GUNA SYSTEM INSTRUCTION (Cara rasmi Google)
   const payload = {
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
     contents: finalContents,
     generationConfig: { 
-      temperature: 0.4,  // Kawal kreativiti supaya jawapan lebih fokus
-      topP: 0.9,         // Fokus pada ketepatan perkataan
-      topK: 30,          // Pilihan token sederhana
+      temperature: 0.4,
+      topP: 0.9,
+      topK: 30,
       maxOutputTokens: 1024
     }
   };
@@ -262,18 +294,24 @@ async function callAIModel(model, systemPrompt, userMessage, history, apiKey) {
 
     const data = await res.json();
     
+    // ❌ JIKA GAGAL: Pulangkan `null` (BUKAN teks) supaya fallback berfungsi
     if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
-      console.error(`API Reject (${model}):`, JSON.stringify(data));
-      return `❌ API REJECT: ${JSON.stringify(data.error?.message || data)}`;
+      console.error(`API Reject [${model}]:`, JSON.stringify(data));
+      return null; 
     }
 
+    // ✅ JIKA BERJAYA
     return data.candidates[0].content.parts[0].text;
+    
   } catch (e) {
-    console.error(`Fetch Error (${model}):`, e);
-    return `❌ FETCH ERROR: ${e.message}`;
+    console.error(`Fetch Error [${model}]:`, e);
+    return null; // Pulangkan null jika network error/timeout
   }
 }
 
+// ==========================================
+// UTILITY JSON RESPONSE
+// ==========================================
 function json(obj, status, extra) {
   return new Response(JSON.stringify(obj), {
     status,
