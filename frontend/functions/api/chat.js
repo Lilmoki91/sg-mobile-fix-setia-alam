@@ -253,7 +253,6 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
     } else {
       const prev = finalContents[finalContents.length - 1];
       if (prev.role === item.role) {
-        // Gabungkan jika peranan sama
         prev.parts[0].text += "\n" + item.parts[0].text;
       } else {
         finalContents.push(item);
@@ -265,48 +264,55 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
     finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
   }
 
-  // 🔥 GUNA SYSTEM INSTRUCTION (Cara rasmi Google)
   const payload = {
-    systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    },
+    systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: finalContents,
-    generationConfig: { 
-      temperature: 0.4,
-      topP: 0.9,
-      topK: 30,
-      maxOutputTokens: 1024
-    }
+    generationConfig: { temperature: 0.4, topP: 0.9, topK: 30, maxOutputTokens: 1024 }
   };
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+  // 🔥 RETRY LOGIC: Cuba 2 kali jika rangkaian terputus
+  const MAX_RETRIES = 2;
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      // Naikkan timeout ke 25 saat untuk AI (Pages Function had masa sekitar 30 saat)
+      const timeoutId = setTimeout(() => controller.abort(), 25000); 
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal 
-    });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+        keepalive: true // 🔥 Pastikan sambungan kekal hidup
+      });
 
-    clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-    const data = await res.json();
-    
-    // ❌ JIKA GAGAL: Pulangkan `null` (BUKAN teks) supaya fallback berfungsi
-    if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
-      console.error(`API Reject [${model}]:`, JSON.stringify(data));
-      return null; 
+      const data = await res.json();
+      
+      if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
+        console.error(`API Reject [${model}] Attempt ${attempt}:`, JSON.stringify(data));
+        // Jika API reject (contoh: 400 Bad Request), tak perlu retry, terus gagal
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+           return null; 
+        }
+        continue; // Cuba lagi jika 500 (Server Error) atau 429 (Rate Limit)
+      }
+
+      return data.candidates[0].content.parts[0].text;
+      
+    } catch (e) {
+      console.error(`Fetch Error [${model}] Attempt ${attempt}:`, e.message);
+      if (attempt === MAX_RETRIES) {
+        return null; // Habis cubaan, pulangkan null
+      }
+      // Tunggu 1 saat sebelum cuba lagi (backoff)
+      await new Promise(r => setTimeout(r, 1000));
     }
-
-    // ✅ JIKA BERJAYA
-    return data.candidates[0].content.parts[0].text;
-    
-  } catch (e) {
-    console.error(`Fetch Error [${model}]:`, e);
-    return null; // Pulangkan null jika network error/timeout
   }
+  
+  return null;
 }
 
 // ==========================================
