@@ -55,54 +55,58 @@ async function initChatbot() {
   let activeFetchController = null; 
 
   // ==================== AUDIO NOTIFICATION (WHATSAPP STYLE) ====================
-  let audioCtx = null;
-  const playTone = (type) => {
-    try {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      if (type === 'send') {
-        // Bunyi hantar (Upward swoosh)
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.1);
-      } else if (type === 'receive') {
-        // Bunyi terima (Double ding)
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.1);
-
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(800, audioCtx.currentTime + 0.15);
-        gain2.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.15);
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-        osc2.start(audioCtx.currentTime + 0.15);
-        osc2.stop(audioCtx.currentTime + 0.25);
-      }
-    } catch (e) {
-      console.warn("Audio disekat oleh browser:", e);
+let audioCtx = null;
+const playTone = (type) => {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-  };
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // 🔥 VOLUME LEBIH KUAT (0.8 = 80%)
+    const volume = 0.8; 
+
+    if (type === 'send') {
+      // Bunyi hantar (Upward swoosh)
+      oscillator.type = 'triangle'; // Triangle lagi kuat dari sine
+      oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.15);
+    } else if (type === 'receive') {
+      // Bunyi terima (Double ding)
+      oscillator.type = 'triangle'; 
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.15);
+
+      // Ding kedua
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.15); // Frekuensi lebih tinggi
+      gain2.gain.setValueAtTime(volume, audioCtx.currentTime + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc2.start(audioCtx.currentTime + 0.15);
+      osc2.stop(audioCtx.currentTime + 0.3);
+    }
+  } catch (e) {
+    console.warn("Audio disekat oleh browser:", e);
+  }
+};
 
   // ==================== TTS ====================
   const setSpeaking = (active) => {
