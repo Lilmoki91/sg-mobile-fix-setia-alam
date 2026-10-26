@@ -1,5 +1,5 @@
 // ============================================================
-// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (DENGAN IMPORT JSON)
+// chat.js 🧠 ELIZA AI - CLOUDFLARE PAGES (DUAL MODEL & STABLE)
 // ============================================================
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
@@ -35,13 +35,10 @@ export async function onRequest(context) {
       return json({ reply: "❌ RALAT: API Key GEMINI_API_KEY tiada dalam Cloudflare Pages Settings!" }, 500, cors);
     }
 
+    // Ambil data dari Firebase
     const servicesData = await getServicesFromFirebase();
-
-// 🔥 AMBIL DATA BOOKING
-const bookingsData = await getBookingsFromFirebase();
-
-// Hantar kedua-dua data ke prompt
-const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
+    const bookingsData = await getBookingsFromFirebase();
+    const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
 
     // Panggil AI
     const aiReply = await askAI(systemPrompt, message, history, env.GEMINI_API_KEY);
@@ -54,7 +51,9 @@ const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
   }
 }
 
-// SYSTEM BACA DATA DATA SERVICES KEDAI
+// ============================================================
+// 📋 SYSTEM BACA DATA
+// ============================================================
 async function getServicesFromFirebase() {
   try {
     const response = await fetch(FIREBASE_URL);
@@ -74,14 +73,12 @@ async function getServicesFromFirebase() {
   }
 }
 
-// SYSTEM BACA DATA BOOKING APPOITMEN KEDAI
 async function getBookingsFromFirebase() {
   try {
     const response = await fetch(BOOKING_URL);
     const data = await response.json();
     if (!data.documents) return [];
     
-    // Kita ambil 10 booking terakhir sahaja supaya AI tak pening
     return data.documents.slice(0, 10).map(doc => {
       const fields = doc.fields;
       return {
@@ -100,15 +97,15 @@ async function getBookingsFromFirebase() {
   }
 }
 
-// SYSTEM PROMPT AI MODEL
+// ============================================================
+// 📝 SYSTEM PROMPT AI MODEL
+// ============================================================
 function buildSystemPrompt(services, bookings, lang) {
-  // 🔥 Pastikan services & bookings adalah array (elak crash kalau undefined)
   const safeServices = services || [];
   const safeBookings = bookings || [];
 
   const serviceList = safeServices.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   
-  // 🔥 FORMAT DATA BOOKING (Kita sembunyikan no telefon sikit untuk privasi)
   const bookingList = safeBookings.length > 0 
     ? safeBookings.map(b => `- Kod: ${b.code} | Nama: ${b.name} | Tel: ${b.phone} | Tarikh: ${b.date} | Masa: ${b.time} | Status: ${b.status} | Servis: ${b.service}`).join("\n")
     : "Tiada tempahan terkini.";
@@ -128,7 +125,6 @@ function buildSystemPrompt(services, bookings, lang) {
   const date = mytTime.getUTCDate();
   const year = mytTime.getUTCFullYear();
   
-  // 🔥 KIRA MASA (12 JAM)
   const hours24 = mytTime.getUTCHours();
   const ampm = hours24 >= 12 ? 'PM' : 'AM';
   const hours12 = hours24 % 12 || 12; 
@@ -136,7 +132,6 @@ function buildSystemPrompt(services, bookings, lang) {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
-  // 🔥 TENTUKAN UCAPAN MASA
   let greetingBM = "";
   let greetingEN = "";
 
@@ -203,27 +198,25 @@ async function askAI(systemPrompt, userMessage, history, apiKey) {
   }
 
   // 3. Jika kedua-dua gagal
-  return "Maaf, sistem saya sedang rehat. Sila WhatsApp 012-262 6434.";
+  return "Maaf, sistem saya sedang sibuk. Sila WhatsApp 012-262 6434.";
 }
 
 // ==========================================
 // 🟢 FUNGSI CALL PRIMARY (GEMINI)
 // ==========================================
 async function callPrimary(systemPrompt, userMessage, history, apiKey) {
-  const model = "gemini-flash-lite-latest";
-  return await callGoogleAI(model, systemPrompt, userMessage, history, apiKey);
+  return await callGoogleAI("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
 }
 
 // ==========================================
 // 🔴 FUNGSI CALL FALLBACK (GEMMA 4)
 // ==========================================
 async function callFallback(systemPrompt, userMessage, history, apiKey) {
-  const model = "gemma-4-26b-a4b-it";
-  return await callGoogleAI(model, systemPrompt, userMessage, history, apiKey);
+  return await callGoogleAI("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
 }
 
 // ==========================================
-// ⚙️ ENJIN UTAMA (HANTAR REQUEST KE GOOGLE API)
+// ⚙️ ENJIN UTAMA (RETRY & TIMEOUT LEBIH STABIL)
 // ==========================================
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -264,19 +257,26 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
     finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
   }
 
+  // 🔥 GUNA SYSTEM INSTRUCTION (Cara rasmi Google - lebih bersih)
   const payload = {
-    systemInstruction: { parts: [{ text: systemPrompt }] },
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
     contents: finalContents,
-    generationConfig: { temperature: 0.4, topP: 0.9, topK: 30, maxOutputTokens: 1024 }
+    generationConfig: { 
+      temperature: 0.4,
+      topP: 0.9,
+      topK: 30,
+      maxOutputTokens: 1024
+    }
   };
 
-  // 🔥 RETRY LOGIC: Cuba 2 kali jika rangkaian terputus
   const MAX_RETRIES = 2;
-  
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
-      // Naikkan timeout ke 25 saat untuk AI (Pages Function had masa sekitar 30 saat)
+      // 🔥 Naikkan timeout ke 25 saat untuk elak terputus
       const timeoutId = setTimeout(() => controller.abort(), 25000); 
 
       const res = await fetch(url, {
@@ -284,22 +284,25 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         signal: controller.signal,
-        keepalive: true // 🔥 Pastikan sambungan kekal hidup
+        keepalive: true // 🔥 Pastikan sambungan kekal
       });
 
       clearTimeout(timeoutId);
 
       const data = await res.json();
       
+      // ❌ JIKA GAGAL: Pulangkan `null` supaya fallback berfungsi
       if (!res.ok || !data.candidates || !data.candidates[0].content.parts[0].text) {
         console.error(`API Reject [${model}] Attempt ${attempt}:`, JSON.stringify(data));
-        // Jika API reject (contoh: 400 Bad Request), tak perlu retry, terus gagal
+        
+        // Jika ralat client (400/401/403), tak perlu retry, terus gagal
         if (res.status === 400 || res.status === 401 || res.status === 403) {
            return null; 
         }
         continue; // Cuba lagi jika 500 (Server Error) atau 429 (Rate Limit)
       }
 
+      // ✅ JIKA BERJAYA
       return data.candidates[0].content.parts[0].text;
       
     } catch (e) {
@@ -307,7 +310,7 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
       if (attempt === MAX_RETRIES) {
         return null; // Habis cubaan, pulangkan null
       }
-      // Tunggu 1 saat sebelum cuba lagi (backoff)
+      // Tunggu 1 saat sebelum cuba lagi
       await new Promise(r => setTimeout(r, 1000));
     }
   }
