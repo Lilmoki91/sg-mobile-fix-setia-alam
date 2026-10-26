@@ -5,12 +5,13 @@ import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
 
 // URL DATA SERVICES SHOP
-const FIREBASE_PROJECT_ID = "sgmfix-services";
+const FIREBASE_PROJECT_ID = "sgmfix-services"; // SAMA UNTUK KEDUA-DUA
+
+// 1. URL untuk ambil SERVIS
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
 
-//  URL BOOKING APPOITMEN 
-const BOOKING_PROJECT_ID = "sg-mobile-fix";
-const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${BOOKING_PROJECT_ID}/databases/(default)/documents/bookings`;
+// 2. URL untuk ambil BOOKING
+const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings`;
 
 // 🔥 WAJIB GUNA FORMAT INI UNTUK CLOUDFLARE PAGES
 export async function onRequest(context) {
