@@ -54,6 +54,56 @@ async function initChatbot() {
   let editingWrapper = null;
   let activeFetchController = null; 
 
+  // ==================== AUDIO NOTIFICATION (WHATSAPP STYLE) ====================
+  let audioCtx = null;
+  const playTone = (type) => {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      if (type === 'send') {
+        // Bunyi hantar (Upward swoosh)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'receive') {
+        // Bunyi terima (Double ding)
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(800, audioCtx.currentTime + 0.15);
+        gain2.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc2.start(audioCtx.currentTime + 0.15);
+        osc2.stop(audioCtx.currentTime + 0.25);
+      }
+    } catch (e) {
+      console.warn("Audio disekat oleh browser:", e);
+    }
+  };
+
   // ==================== TTS ====================
   const setSpeaking = (active) => {
     activeSpeakButton?.classList.toggle("is-speaking", active);
@@ -163,7 +213,7 @@ async function initChatbot() {
       statusTimer = setTimeout(() => { status.textContent = ""; }, 2500);
     });
 
-    // 2. EDIT (User) / RESEND (Assistant)
+    // 2. EDIT / RESEND
     if (wrapper.classList.contains("chatbot-message--user")) {
       const edit = createButton("chatbot-message-edit", "Edit mesej", 
         '<path d="m16 3 5 5M4 20l4-1L21 6a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/>');
@@ -186,7 +236,7 @@ async function initChatbot() {
       resend.addEventListener("click", () => {
         stopSpeaking();
         if (question) {
-          // 🔥 PANGGIL FUNGSI HANTAR KE API
+          playTone('send'); // Bunyi hantar
           addMessage(question, true);
           sendToAPI(question);
         }
@@ -279,11 +329,10 @@ async function initChatbot() {
   };
   input.addEventListener("input", resizeInput);
 
-  // ==================== FUNGSI HANTAR KE API (DIGUNAKAN OLEH SEND, EDIT, RESEND) ====================
+  // ==================== HANTAR KE API ====================
   const sendToAPI = async (question) => {
     const lang = document.documentElement.lang || "ms";
 
-    // 🛡️ KESELAMATAN
     const wordCount = question.split(/\s+/).filter(Boolean).length;
     const lineCount = question.split('\n').length;
     if (wordCount > 500 || lineCount > 20) {
@@ -315,6 +364,9 @@ async function initChatbot() {
       if (data.reply) {
         lastResponse = data.reply;
         addMessage(lastResponse, false, question);
+        
+        playTone('receive'); // 🔥 Bunyi terima dari Eliza
+        
         chatHistory.push({ role: "user", text: question });
         chatHistory.push({ role: "model", text: data.reply });
         if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
@@ -336,13 +388,14 @@ async function initChatbot() {
     }
   };
 
-  // ==================== SEND MESSAGE (DARI BUTANG / KEYBOARD) ====================
+  // ==================== BUTANG SEND ====================
   const sendMessage = () => {
     const question = input.value.trim();
     if (!question) return;
 
+    playTone('send'); // 🔥 Bunyi hantar dari user
+
     if (editingWrapper) {
-      // Jika edit mesej lama
       const oldText = editingWrapper.querySelector(".chatbot-bubble").textContent;
       editingWrapper.querySelector(".chatbot-bubble").textContent = question;
       editingWrapper.querySelector(".chatbot-message-edit").setAttribute("aria-pressed", "false");
@@ -351,11 +404,10 @@ async function initChatbot() {
       if (index !== -1) chatHistory = chatHistory.slice(0, index); 
       editingWrapper = null;
       
-      sendToAPI(question); // Hantar API tanpa tambah bubble user baru
+      sendToAPI(question);
     } else {
-      // Mesej baru
       addMessage(question, true);
-      sendToAPI(question); // Hantar API dan tambah bubble user
+      sendToAPI(question);
     }
 
     input.value = "";
@@ -374,7 +426,7 @@ async function initChatbot() {
     input.focus({ preventScroll: true });
   };
 
-  // ==================== EVENT LISTENERS ====================
+  // ==================== LISTENER ====================
   toggle.addEventListener("click", showChat);
   closeButton?.addEventListener("click", () => hideChat());
   resetButton?.addEventListener("click", resetChat);
@@ -393,7 +445,6 @@ async function initChatbot() {
   updateChatBounds();
   sendButton.addEventListener("click", sendMessage);
 
-  // 🔥 LOGIK ASAL KAU: Ctrl+Enter untuk hantar
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) {
       event.preventDefault();
