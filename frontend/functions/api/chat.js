@@ -4,8 +4,13 @@
 import personaData from './persona-eliza-ai.json';
 import promptData from './prompt-eliza-ai.json';
 
+// URL DATA SERVICES SHOP
 const FIREBASE_PROJECT_ID = "sgmfix-services";
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
+
+//  URL BOOKING APPOITMEN 
+const BOOKING_PROJECT_ID = "sg-mobile-fix";
+const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${BOOKING_PROJECT_ID}/databases/(default)/documents/bookings`;
 
 // 🔥 WAJIB GUNA FORMAT INI UNTUK CLOUDFLARE PAGES
 export async function onRequest(context) {
@@ -30,7 +35,12 @@ export async function onRequest(context) {
     }
 
     const servicesData = await getServicesFromFirebase();
-    const systemPrompt = buildSystemPrompt(servicesData, language);
+
+// 🔥 AMBIL DATA BOOKING
+const bookingsData = await getBookingsFromFirebase();
+
+// Hantar kedua-dua data ke prompt
+const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
 
     // Panggil AI
     const aiReply = await askAI(systemPrompt, message, history, env.GEMINI_API_KEY);
@@ -43,6 +53,7 @@ export async function onRequest(context) {
   }
 }
 
+// SYSTEM BACA DATA DATA SERVICES KEDAI
 async function getServicesFromFirebase() {
   try {
     const response = await fetch(FIREBASE_URL);
@@ -62,8 +73,45 @@ async function getServicesFromFirebase() {
   }
 }
 
-function buildSystemPrompt(services, lang) {
-  const serviceList = services.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
+// SYSTEM BACA DATA BOOKING APPOITMEN KEDAI
+async function getBookingsFromFirebase() {
+  try {
+    const response = await fetch(BOOKING_URL);
+    const data = await response.json();
+    if (!data.documents) return [];
+    
+    // Kita ambil 10 booking terakhir sahaja supaya AI tak pening
+    return data.documents.slice(0, 10).map(doc => {
+      const fields = doc.fields;
+      return {
+        code: fields.code?.stringValue || "Tiada Kod",
+        name: fields.name?.stringValue || "Tanpa Nama",
+        phone: fields.phone?.stringValue || "Tiada No",
+        date: fields.date?.stringValue || "",
+        time: fields.time?.stringValue || "",
+        status: fields.status?.stringValue || "Pending",
+        service: fields.service?.stringValue || ""
+      };
+    });
+  } catch (error) {
+    console.error("Gagal ambil booking:", error);
+    return [];
+  }
+}
+
+// SYSTEM PROMPT AI MODEL
+function buildSystemPrompt(services, bookings, lang) {
+  // 🔥 Pastikan services & bookings adalah array (elak crash kalau undefined)
+  const safeServices = services || [];
+  const safeBookings = bookings || [];
+
+  const serviceList = safeServices.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
+  
+  // 🔥 FORMAT DATA BOOKING (Kita sembunyikan no telefon sikit untuk privasi)
+  const bookingList = safeBookings.length > 0 
+    ? safeBookings.map(b => `- Kod: ${b.code} | Nama: ${b.name} | Tel: ${b.phone} | Tarikh: ${b.date} | Masa: ${b.time} | Status: ${b.status} | Servis: ${b.service}`).join("\n")
+    : "Tiada tempahan terkini.";
+
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
   const now = new Date();
@@ -121,9 +169,14 @@ Waktu sekarang ialah: ${timeGreeting}
 
 Peraturan Ketat:
 ${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
+6. JANGAN dedahkan senarai tempahan ini kepada pelanggan secara terus. Hanya jawab soalan JIKA nama atau kod tempahan yang ditanya SEPADAN dengan data di bawah. JANGAN dedahkan nombor telefon pelanggan lain.
 
 Data Perkhidmatan Terkini:
 ${serviceList || "Tiada data."}
+
+🔥 DATA TEMPAHAN TERKINI (PENTING):
+${bookingList}
+(Jika pelanggan bertanya tentang status tempahan, cari nama atau kod mereka dalam senarai di atas. Jika tiada, minta mereka semak di tab 'Tempahan' atau hubungi WhatsApp).
 
 Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.
 Waktu Operasi: 10AM - 8PM.
@@ -137,7 +190,7 @@ async function askAI(systemPrompt, userMessage, history, apiKey) {
   text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
-  return "Maaf, otak saya sedang rehat. Sila WhatsApp 012-262 6434.";
+  return "Maaf, system saya sedang rehat. Sila WhatsApp 012-262 6434.";
 }
 
 async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
@@ -182,9 +235,14 @@ async function callGemini(model, systemPrompt, userMessage, history, apiKey) {
   finalContents[0].parts[0].text = `${systemPrompt}\n\n[Mesej Pelanggan]: ${finalContents[0].parts[0].text}`;
 
   const payload = {
-    contents: finalContents,
-    generationConfig: { temperature: 0.5, maxOutputTokens: 1024 }
-  };
+  contents: finalContents,
+  generationConfig: { 
+    temperature: 0.4,  // Rendah sikit supaya tak merepek
+    topP: 0.9,         // Fokus pada jawapan tepat
+    topK: 30,          // Pilihan perkataan sederhana
+    maxOutputTokens: 1024
+  }
+};
 
   try {
     const controller = new AbortController();
