@@ -439,6 +439,28 @@ html[data-theme="dark"] #booking-tab p.text-gray-500 {
   color: #9ca3af !important;
 }
 
+/* Butang padam kad tempahan — kontras jelas dalam mod gelap */
+html[data-theme="dark"] #booking-list .delete-booking-btn {
+  background-color: #7f1d1d !important;
+  color: #ffffff !important;
+  border: 1px solid #f87171;
+}
+
+html[data-theme="dark"] #booking-list .delete-booking-btn:hover:not(:disabled),
+html[data-theme="dark"] #booking-list .delete-booking-btn:active:not(:disabled) {
+  background-color: #991b1b !important;
+}
+
+html[data-theme="dark"] #booking-list .delete-booking-btn:focus-visible {
+  outline: 2px solid #fca5a5;
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] #booking-list .delete-booking-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 #icon-linktree-link{
   color: turquoise;
 }
