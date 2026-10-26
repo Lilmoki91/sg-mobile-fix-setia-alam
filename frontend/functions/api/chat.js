@@ -185,7 +185,7 @@ Waktu Operasi: 10AM - 8PM.
 }
 
 async function askAI(systemPrompt, userMessage, history, apiKey) {
-  let text = await callGemini("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
+ let text = await callGemini(" ", systemPrompt, userMessage, history, apiKey);
   if (text) return text;
 
   text = await callGemini("gemma-4-26b-a4b-it", systemPrompt, userMessage, history, apiKey);
