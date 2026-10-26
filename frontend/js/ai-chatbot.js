@@ -182,7 +182,6 @@ async function initChatbot() {
 
     let timeoutId = null;
 
-// abort control ---------------------------
     try {
       // 🔥 TIMEOUT 20 SAAT
       const controller = new AbortController();
@@ -199,9 +198,13 @@ async function initChatbot() {
         signal: controller.signal
       });
 
+      // 🔥 KEMASKINI: Check response.ok dulu sebelum parse JSON
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`);
+      }
+
       const data = await response.json();
 
-// ------------------------------------------
       if (data.reply) {
         lastResponse = data.reply;
         addMessage(lastResponse, false);
@@ -247,7 +250,8 @@ async function initChatbot() {
   sendButton.addEventListener("click", sendMessage);
 
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) {
+    // Enter untuk hantar, Shift+Enter untuk baris baru
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       sendMessage();
     }
