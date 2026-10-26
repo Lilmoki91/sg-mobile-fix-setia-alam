@@ -71,7 +71,7 @@ const playTone = (type) => {
     gainNode.connect(audioCtx.destination);
 
     // 🔥 VOLUME LEBIH KUAT (0.8 = 80%)
-    const volume = 0.8; 
+    const volume = 1.0; 
 
     if (type === 'send') {
       // Bunyi hantar (Upward swoosh)
