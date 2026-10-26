@@ -205,7 +205,7 @@ async function askAI(systemPrompt, userMessage, history, apiKey) {
 // 🟢 FUNGSI CALL PRIMARY (GEMINI)
 // ==========================================
 async function callPrimary(systemPrompt, userMessage, history, apiKey) {
-  return await callGoogleAI("gemini-flash-lite-latest", systemPrompt, userMessage, history, apiKey);
+  return await callGoogleAI("", systemPrompt, userMessage, history, apiKey);
 }
 
 // ==========================================
