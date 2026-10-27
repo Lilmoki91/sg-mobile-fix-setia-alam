@@ -20,10 +20,32 @@ const ELIZA_CONFIG = {
 let API_KEY = null;
 let apiKeyLoaded = false;
 let initError = "Sedang memulakan...";
+let personaData = null;
+let promptData = null;
 
 // ==========================================
 // 📦 2. FUNGSI SOKONGAN AI
 // ==========================================
+async function loadLocalJSON() {
+    try {
+        // Path ./ bermaksud cari dalam folder yang sama dengan ai-chatbot.js
+        const [personaRes, promptRes] = await Promise.all([
+            fetch('./persona-eliza-ai.json'),
+            fetch('./prompt-eliza-ai.json')
+        ]);
+        if (!personaRes.ok || !promptRes.ok) throw new Error("Fail JSON tak jumpa");
+        
+        personaData = await personaRes.json();
+        promptData = await promptRes.json();
+        console.log('✅ JSON Persona & Prompt berjaya dimuatkan');
+    } catch (error) {
+        console.warn('⚠️ Gagal load JSON, guna default:', error.message);
+        // Fallback jika fail JSON tak jumpa
+        personaData = { name: "ELIZA AI", role: "Pembantu Servis SG Mobile Fix" };
+        promptData = { rules: ["Jawab dalam Bahasa Melayu.", "Bantu pelanggan dengan sopan."] };
+    }
+}
+
 async function decryptAESGCM(combined, keyBase64) {
     const keyBuffer = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
@@ -78,7 +100,6 @@ async function getBookingsFromFirebase() {
     } catch (error) { return []; }
 }
 
-// 🔥 PROMPT DIMASUKKAN TERUS (TAK PERLU JSON LAGI)
 function buildSystemPrompt(services, bookings, lang = 'ms') {
     const safeServices = Array.isArray(services) ? services : [];
     const safeBookings = Array.isArray(bookings) ? bookings : [];
@@ -91,26 +112,30 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
     }
 
     const bookingList = safeBookings.length > 0 ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
-    const langInst = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
+    const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
-    return `Anda adalah ELIZA AI, pembantu peribadi untuk kedai SG Mobile Fix.
-Tugas anda adalah untuk membantu pelanggan berkenaan servis baiki telefon, harga, dan status tempahan.
-${langInst}
+    // Bina prompt berdasarkan data dari fail JSON
+    return `
+Anda adalah ${personaData?.name || "ELIZA AI"}, ${personaData?.role || "Pembantu Servis"}.
+Sifat anda: ${personaData?.traits?.join(", ") || "Mesra"}.
+Nada: ${personaData?.tone || "Profesional"}.
+Latar belakang: ${personaData?.background || "Bekerja di SG Mobile Fix"}.
+
+${languageInstruction}
 
 Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.
 Waktu Operasi: 10AM - 8PM.
 
-Peraturan:
-1. Jawab dengan mesra dan profesional.
-2. JANGAN beri nasihat perubatan atau kewangan.
-3. Jika pelanggan tanya status tempahan, rujuk senarai di bawah. Jika tiada, minta mereka semak di tab 'Tempahan'.
-4. JANGAN dedahkan nombor telefon pelanggan lain.
+Peraturan Ketat:
+${promptData?.rules?.map((rule, i) => `${i + 1}. ${rule}`).join("\n") || "1. Jawab dengan sopan."}
 
-Senarai Servis:
+Data Perkhidmatan Terkini:
 ${serviceList}
 
-Senarai Tempahan:
-${bookingList}`.trim();
+Data Tempahan Terkini:
+${bookingList}
+(Jika pelanggan bertanya tentang status tempahan, cari nama atau kod mereka dalam senarai di atas. Jika tiada, minta mereka semak di tab 'Tempahan' atau hubungi WhatsApp).
+  `.trim();
 }
 
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
@@ -198,6 +223,7 @@ async function askAI(systemPrompt, userMessage, history) {
 
 async function initElizaAI() {
     try {
+        await loadLocalJSON(); // Load fail JSON dari folder js/
         API_KEY = await getApiKeyFromIPFS();
         apiKeyLoaded = true;
         initError = "";
