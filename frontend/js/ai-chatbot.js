@@ -374,27 +374,60 @@ async function initChatbot() {
     if (activeSpeech) { activeSpeech = null; window.speechSynthesis?.cancel(); }
     setSpeaking(false);
   };
+
+// ==========================================
+// TTS SKIP SEBUT EMOJI ICON 
+
   const addSpeakButton = (wrapper) => {
-    const bubble = wrapper.querySelector(".chatbot-bubble");
-    if (!bubble || wrapper.querySelector(".chatbot-message-speak")) return;
-    const button = document.createElement("button");
-    button.type = "button"; button.className = "chatbot-message-speak"; button.setAttribute("aria-pressed", "false");
-    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg>`;
-    button.disabled = !window.speechSynthesis || !window.SpeechSynthesisUtterance;
-    button.addEventListener("click", () => {
-      if (activeSpeakButton === button) { stopSpeaking(); return; }
+  const bubble = wrapper.querySelector(".chatbot-bubble");
+  if (!bubble || wrapper.querySelector(".chatbot-message-speak")) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "chatbot-message-speak";
+  button.setAttribute("aria-pressed", "false");
+  
+  button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg>`;
+  button.disabled = !window.speechSynthesis || !window.SpeechSynthesisUtterance;
+  
+  button.addEventListener("click", () => {
+    if (activeSpeakButton === button) {
       stopSpeaking();
-      const text = bubble.textContent.trim().replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1').replace(/[*_#`~]/g, '').replace(/\s+/g, ' ').trim();
-      if (!text) return;
-      const speech = new SpeechSynthesisUtterance(text);
-      speech.lang = document.documentElement.lang === "en" ? "en-US" : "ms-MY";
-      speech.rate = 0.9;
-      const finish = () => { if (activeSpeech !== speech) return; activeSpeech = null; setSpeaking(false); };
-      speech.onend = finish; speech.onerror = finish; activeSpeech = speech; activeSpeakButton = button; setSpeaking(true);
-      try { window.speechSynthesis.speak(speech); } catch (error) { finish(); }
-    });
-    (wrapper.querySelector(".chatbot-message-actions") || wrapper).appendChild(button);
-  };
+      return;
+    }
+    stopSpeaking();
+    
+    const text = bubble.textContent.trim()
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1') // Tukar markdown link ke teks
+      // 🔥 KUNCI UTAMA: HANYA KEKALKAN HURUF (A-Z), NOMBOR (0-9), RUANG, & TANDA BACA ASAS. BUANG SEMUA EMOJI & SIMBOL.
+      .replace(/[^\p{L}\p{N}\s.,!?;:\-\(\)]/gu, '')
+      .replace(/\s+/g, ' ').trim();
+      
+    if (!text) return;
+    
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = document.documentElement.lang === "en" ? "en-US" : "ms-MY";
+    speech.rate = 0.9;
+    const finish = () => {
+      if (activeSpeech !== speech) return;
+      activeSpeech = null;
+      setSpeaking(false);
+    };
+    speech.onend = finish;
+    speech.onerror = finish;
+    activeSpeech = speech;
+    activeSpeakButton = button;
+    setSpeaking(true);
+    try {
+      window.speechSynthesis.speak(speech);
+    } catch (error) {
+      finish();
+    }
+  });
+  (wrapper.querySelector(".chatbot-message-actions") || wrapper).appendChild(button);
+};
+
+// ==========================================
 
   const addMessageActions = (wrapper, question = "") => {
     const bubble = wrapper.querySelector(".chatbot-bubble");
