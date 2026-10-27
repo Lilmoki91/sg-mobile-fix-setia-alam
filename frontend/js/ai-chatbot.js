@@ -27,19 +27,28 @@ let promptData = null;
 // 📦 2. FUNGSI SOKONGAN AI
 // ==========================================
 async function loadLocalJSON() {
-    // 🔥 PATH YANG BETUL: ./ sahaja sebab ia dalam folder yang SAMA (folder js/)
-    const [personaRes, promptRes] = await Promise.all([
-        fetch('./persona-eliza-ai.json'),
-        fetch('./prompt-eliza-ai.json')
-    ]);
+    try {
+        // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
+        // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
+        const [personaRes, promptRes] = await Promise.all([
+            fetch('./js/persona-eliza-ai.json?v=2'),
+            fetch('./js/prompt-eliza-ai.json?v=2')
+        ]);
 
-    if (!personaRes.ok || !promptRes.ok) {
-        throw new Error("Gagal muat fail JSON. Pastikan fail .json berada dalam folder js/ yang sama.");
+        // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
+        const contentType = personaRes.headers.get("content-type");
+        if (!personaRes.ok || !promptRes.ok || !contentType || !contentType.includes("application/json")) {
+            throw new Error("Fail JSON tak jumpa (404). Pastikan path betul dan fail telah di-deploy.");
+        }
+
+        personaData = await personaRes.json();
+        promptData = await promptRes.json();
+        console.log('✅ JSON Persona & Prompt berjaya dimuatkan!');
+        
+    } catch (error) {
+        console.error('❌ Gagal muat JSON:', error.message);
+        throw error; // Lempar error untuk tunjuk di UI
     }
-
-    personaData = await personaRes.json();
-    promptData = await promptRes.json();
-    console.log('✅ JSON Persona & Prompt berjaya dimuatkan!');
 }
 
 async function decryptAESGCM(combined, keyBase64) {
