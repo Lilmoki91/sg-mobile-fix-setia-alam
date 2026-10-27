@@ -1,4 +1,4 @@
-// ==================== ELIZA AI + AI CHATBOT (GABUNGAN) ====================
+// ==================== ELIZA AI + AI CHATBOT (GABUNGAN FINAL) ====================
 "use strict";
 
 // ==========================================
@@ -19,25 +19,27 @@ const ELIZA_CONFIG = {
 
 let API_KEY = null;
 let apiKeyLoaded = false;
-let personaData = null;
-let promptData = null;
+let initError = "Sedang memulakan...";
+let personaData = { name: "ELIZA AI", role: "Pembantu Servis SG Mobile Fix" };
+let promptData = { rules: ["Jawab dalam Bahasa Melayu.", "Bantu pelanggan dengan sopan."] };
 
 // ==========================================
-// 📦 2. FUNGSI SOKONGAN AI (KOD ASAL BOS)
+// 📦 2. FUNGSI SOKONGAN AI
 // ==========================================
 async function loadLocalJSON() {
     try {
-        // Nota: Sebab fail ni dalam folder js, kita naik satu folder (../)
+        // Cuba cari fail JSON
         const [personaRes, promptRes] = await Promise.all([
-            fetch('../persona-eliza-ai.json'),
-            fetch('../prompt-eliza-ai.json')
+            fetch('/persona-eliza-ai.json'), // Guna path root /
+            fetch('/prompt-eliza-ai.json')
         ]);
-        personaData = await personaRes.json();
-        promptData = await promptRes.json();
-        console.log('✅ JSON dimuatkan');
+        if (personaRes.ok && promptRes.ok) {
+            personaData = await personaRes.json();
+            promptData = await promptRes.json();
+            console.log('✅ JSON berjaya dimuatkan');
+        }
     } catch (error) {
-        console.error('❌ Gagal load JSON:', error);
-        throw error;
+        console.warn('⚠️ JSON tak jumpa, guna default.');
     }
 }
 
@@ -97,13 +99,12 @@ async function getBookingsFromFirebase() {
 
 function buildSystemPrompt(services, bookings, lang = 'ms') {
     const serviceList = services.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
-    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
-    const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
+    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""}`).join("\n") : "Tiada.";
+    const languageInstruction = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
 
-    return `Anda adalah ELIZA AI. ${languageInstruction}\nPeraturan:\n${promptData?.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
+    return `Anda adalah ${personaData.name}. ${languageInstruction}\nPeraturan:\n${promptData.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
 }
 
-// 🔥 KOD ASAL BOS (GUNA ?key= DAN SYSTEM INSTRUCTION)
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
@@ -155,8 +156,8 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
             const data = await res.json();
             
             if (!res.ok) {
-                console.error(`API Reject [${model}] [${res.status}]`);
-                if ([400, 401, 403].includes(res.status)) return null; 
+                console.error(`API Reject [${model}] [${res.status}]:`, data);
+                if ([400, 401, 403].includes(res.status)) return `API Error ${res.status}: ${data.error?.message || "Invalid Key"}`; 
                 if (attempt < MAX_RETRIES) { await new Promise(r => setTimeout(r, 1000)); continue; }
                 return null;
             }
@@ -189,19 +190,21 @@ async function askAI(systemPrompt, userMessage, history) {
 
 async function initElizaAI() {
     try {
-        await loadLocalJSON();
+        await loadLocalJSON(); // Kalau fail, dia just skip
         API_KEY = await getApiKeyFromIPFS();
         apiKeyLoaded = true;
+        initError = "";
         console.log('✅ ELIZA AI sedia!');
         return true;
     } catch (error) {
         console.error('❌ Gagal init:', error);
+        initError = `Gagal buka API Key: ${error.message}`;
         return false;
     }
 }
 
 async function chatEliza(message, language = 'ms', history = []) {
-    if (!apiKeyLoaded) throw new Error('ELIZA AI belum sedia.');
+    if (!apiKeyLoaded) throw new Error(initError || 'ELIZA AI belum sedia.');
     const services = await getServicesFromFirebase();
     const bookings = await getBookingsFromFirebase();
     const sysPrompt = buildSystemPrompt(services, bookings, language);
@@ -210,7 +213,7 @@ async function chatEliza(message, language = 'ms', history = []) {
 
 
 // ==========================================
-// 💬 3. FUNGSI UI CHATBOT (KOD ASAL BOS)
+// 💬 3. FUNGSI UI CHATBOT
 // ==========================================
 async function initChatbot() {
   const container = document.getElementById("ai-chatbot-container");
@@ -261,7 +264,6 @@ async function initChatbot() {
   let activeSpeakButton = null;
   let editingWrapper = null;
 
-  // ==================== AUDIO ====================
   let audioCtx = null;
   const playTone = (type) => {
     try {
@@ -295,7 +297,6 @@ async function initChatbot() {
     } catch (e) {}
   };
 
-  // ==================== TTS ====================
   const setSpeaking = (active) => {
     activeSpeakButton?.classList.toggle("is-speaking", active);
     activeSpeakButton?.setAttribute("aria-pressed", String(active));
@@ -327,7 +328,6 @@ async function initChatbot() {
     (wrapper.querySelector(".chatbot-message-actions") || wrapper).appendChild(button);
   };
 
-  // ==================== MESSAGE ACTIONS ====================
   const addMessageActions = (wrapper, question = "") => {
     const bubble = wrapper.querySelector(".chatbot-bubble");
     if (!bubble || wrapper.querySelector(".chatbot-message-actions")) return;
@@ -365,7 +365,6 @@ async function initChatbot() {
     actions.appendChild(status);
   };
 
-  // ==================== UI ====================
   const updateChatBounds = () => {
     const viewport = window.visualViewport;
     const viewportTop = viewport?.offsetTop || 0;
@@ -411,7 +410,6 @@ async function initChatbot() {
   const resizeInput = () => { input.style.height = "48px"; input.style.height = `${Math.min(144, Math.max(48, input.scrollHeight + 2))}px`; };
   input.addEventListener("input", resizeInput);
 
-  // ==================== HANTAR KE AI ====================
   const sendToAPI = async (question) => {
     const lang = document.documentElement.lang || "ms";
     if (question.split(/\s+/).filter(Boolean).length > 500) { addMessage("⚠️ Mesej terlalu panjang.", false); return; }
@@ -419,7 +417,7 @@ async function initChatbot() {
     showLoading(); sendButton.disabled = true;
 
     try {
-      if (!apiKeyLoaded) throw new Error("ELIZA AI belum sedia.");
+      if (!apiKeyLoaded) throw new Error(initError || "ELIZA AI belum sedia.");
       
       const reply = await chatEliza(question, lang, chatHistory);
       removeLoading(); lastResponse = reply; addMessage(lastResponse, false, question); playTone('receive');
@@ -433,7 +431,6 @@ async function initChatbot() {
     }
   };
 
-  // ==================== BUTANG SEND ====================
   const sendMessage = () => {
     const question = input.value.trim(); if (!question) return;
     playTone('send');
@@ -462,9 +459,6 @@ async function initChatbot() {
   input.addEventListener("keydown", (event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) { event.preventDefault(); sendMessage(); } });
 }
 
-// ==========================================
-// 🚀 4. AUTO MULA
-// ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
     await initElizaAI();
     initChatbot();
