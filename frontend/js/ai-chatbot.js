@@ -39,8 +39,6 @@ async function initChatbot() {
   const input = document.getElementById("chatbot-input");
   const sendButton = document.getElementById("chatbot-send");
   const resetButton = document.getElementById("chatbot-reset");
-  
-  const API_ENDPOINT = "/api/chat";
 
   if (!toggle || !windowElement || !messages || !input || !sendButton) return;
 
@@ -52,61 +50,56 @@ async function initChatbot() {
   let activeSpeech = null;
   let activeSpeakButton = null;
   let editingWrapper = null;
-  let activeFetchController = null; 
 
-  // ==================== AUDIO NOTIFICATION (WHATSAPP STYLE) ====================
-let audioCtx = null;
-const playTone = (type) => {
-  try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // ==================== AUDIO NOTIFICATION ====================
+  let audioCtx = null;
+  const playTone = (type) => {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      const volume = 1.0;
+
+      if (type === 'send') {
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+      } else if (type === 'receive') {
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.15);
+        gain2.gain.setValueAtTime(volume, audioCtx.currentTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc2.start(audioCtx.currentTime + 0.15);
+        osc2.stop(audioCtx.currentTime + 0.3);
+      }
+    } catch (e) {
+      console.warn("Audio disekat oleh browser:", e);
     }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    // 🔥 VOLUME LEBIH KUAT (0.8 = 80%)
-    const volume = 1.0; 
-
-    if (type === 'send') {
-      // Bunyi hantar (Upward swoosh)
-      oscillator.type = 'triangle'; // Triangle lagi kuat dari sine
-      oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.15);
-    } else if (type === 'receive') {
-      // Bunyi terima (Double ding)
-      oscillator.type = 'triangle'; 
-      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.15);
-
-      // Ding kedua
-      const osc2 = audioCtx.createOscillator();
-      const gain2 = audioCtx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(audioCtx.destination);
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.15); // Frekuensi lebih tinggi
-      gain2.gain.setValueAtTime(volume, audioCtx.currentTime + 0.15);
-      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-      osc2.start(audioCtx.currentTime + 0.15);
-      osc2.stop(audioCtx.currentTime + 0.3);
-    }
-  } catch (e) {
-    console.warn("Audio disekat oleh browser:", e);
-  }
-};
+  };
 
   // ==================== TTS ====================
   const setSpeaking = (active) => {
@@ -131,10 +124,10 @@ const playTone = (type) => {
     button.type = "button";
     button.className = "chatbot-message-speak";
     button.setAttribute("aria-pressed", "false");
-    
+
     button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg>`;
     button.disabled = !window.speechSynthesis || !window.SpeechSynthesisUtterance;
-    
+
     button.addEventListener("click", () => {
       if (activeSpeakButton === button) {
         stopSpeaking();
@@ -145,7 +138,7 @@ const playTone = (type) => {
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
         .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
         .replace(/[*_#`~]/g, '').replace(/\s+/g, ' ').trim();
-        
+
       if (!text) return;
       const speech = new SpeechSynthesisUtterance(text);
       speech.lang = document.documentElement.lang === "en" ? "en-US" : "ms-MY";
@@ -180,7 +173,7 @@ const playTone = (type) => {
     const status = document.createElement("span");
     status.className = "chatbot-action-status";
     status.setAttribute("role", "status");
-    
+
     const createButton = (className, title, paths) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -192,8 +185,7 @@ const playTone = (type) => {
       return button;
     };
 
-    // 1. COPY
-    const copy = createButton("chatbot-message-copy", "Salin teks", 
+    const copy = createButton("chatbot-message-copy", "Salin teks",
       '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
     let statusTimer;
     copy.addEventListener("click", async () => {
@@ -217,11 +209,10 @@ const playTone = (type) => {
       statusTimer = setTimeout(() => { status.textContent = ""; }, 2500);
     });
 
-    // 2. EDIT / RESEND
     if (wrapper.classList.contains("chatbot-message--user")) {
-      const edit = createButton("chatbot-message-edit", "Edit mesej", 
+      const edit = createButton("chatbot-message-edit", "Edit mesej",
         '<path d="m16 3 5 5M4 20l4-1L21 6a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/>');
-      
+
       edit.addEventListener("click", () => {
         stopSpeaking();
         editingWrapper?.querySelector(".chatbot-message-edit")?.setAttribute("aria-pressed", "false");
@@ -232,15 +223,15 @@ const playTone = (type) => {
         input.focus();
         input.setSelectionRange(input.value.length, input.value.length);
       });
-      
+
     } else {
-      const resend = createButton("chatbot-message-resend", "Hantar semula", 
+      const resend = createButton("chatbot-message-resend", "Hantar semula",
         '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 17.9 17"/>');
-      
+
       resend.addEventListener("click", () => {
         stopSpeaking();
         if (question) {
-          playTone('send'); // Bunyi hantar
+          playTone('send');
           addMessage(question, true);
           sendToAPI(question);
         }
@@ -302,7 +293,7 @@ const playTone = (type) => {
         .replace(/\n/g, '<br>');
       bubble.innerHTML = formattedText;
     }
-    
+
     wrapper.appendChild(bubble);
     addMessageActions(wrapper, question);
     messages.appendChild(wrapper);
@@ -333,14 +324,14 @@ const playTone = (type) => {
   };
   input.addEventListener("input", resizeInput);
 
-  // ==================== HANTAR KE API ====================
+  // ==================== HANTAR KE API (IPFS BROWSER VERSION) ====================
   const sendToAPI = async (question) => {
     const lang = document.documentElement.lang || "ms";
 
     const wordCount = question.split(/\s+/).filter(Boolean).length;
     const lineCount = question.split('\n').length;
     if (wordCount > 500 || lineCount > 20) {
-      const warnMsg = lang === "en" 
+      const warnMsg = lang === "en"
         ? "⚠️ Your message is too long. Please limit to 500 words or 20 lines only."
         : "⚠️ Mesej anda terlalu panjang. Sila hadkan kepada 500 perkataan atau 20 baris sahaja.";
       addMessage(warnMsg, false);
@@ -350,45 +341,40 @@ const playTone = (type) => {
     showLoading();
     sendButton.disabled = true;
 
-    if (activeFetchController) activeFetchController.abort();
-    activeFetchController = new AbortController();
-    const timeoutId = setTimeout(() => activeFetchController.abort(), 20000);
-
     try {
-      const response = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question, language: lang, history: chatHistory }),
-        signal: activeFetchController.signal
-      });
+      // 🔥 SEMAK ELIZA AI READY
+      if (!window.ELIZA || !window.ELIZA.isReady()) {
+        throw new Error("ELIZA AI belum sedia. Sila tunggu sebentar.");
+      }
 
-      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-      const data = await response.json();
+      // 🔥 PANGGIL ELIZA AI (IPFS + DOUBLE DUO)
+      const reply = await window.ELIZA.chat(question, lang, chatHistory);
 
-      if (data.reply) {
-        lastResponse = data.reply;
-        addMessage(lastResponse, false, question);
-        
-        playTone('receive'); // 🔥 Bunyi terima dari Eliza
-        
-        chatHistory.push({ role: "user", text: question });
-        chatHistory.push({ role: "model", text: data.reply });
-        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
-      } else {
+      if (!reply || reply.trim() === "") {
         throw new Error("Tiada jawapan dari AI");
       }
 
+      removeLoading();
+      lastResponse = reply;
+      addMessage(lastResponse, false, question);
+
+      playTone('receive');
+
+      chatHistory.push({ role: "user", text: question });
+      chatHistory.push({ role: "model", text: reply });
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
     } catch (error) {
       console.error("Chat error:", error);
-      const errorMsg = lang === "en" 
-        ? "Sorry, my system is busy right now. Please try again later." 
+      removeLoading();
+
+      const errorMsg = lang === "en"
+        ? "Sorry, my system is busy right now. Please try again later."
         : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
       addMessage(errorMsg, false);
     } finally {
-      clearTimeout(timeoutId);
       removeLoading();
       sendButton.disabled = false;
-      activeFetchController = null;
     }
   };
 
@@ -397,17 +383,17 @@ const playTone = (type) => {
     const question = input.value.trim();
     if (!question) return;
 
-    playTone('send'); // 🔥 Bunyi hantar dari user
+    playTone('send');
 
     if (editingWrapper) {
       const oldText = editingWrapper.querySelector(".chatbot-bubble").textContent;
       editingWrapper.querySelector(".chatbot-bubble").textContent = question;
       editingWrapper.querySelector(".chatbot-message-edit").setAttribute("aria-pressed", "false");
-      
+
       const index = chatHistory.findIndex(h => h.role === "user" && h.text === oldText);
-      if (index !== -1) chatHistory = chatHistory.slice(0, index); 
+      if (index !== -1) chatHistory = chatHistory.slice(0, index);
       editingWrapper = null;
-      
+
       sendToAPI(question);
     } else {
       addMessage(question, true);
@@ -421,7 +407,6 @@ const playTone = (type) => {
   // ==================== RESET ====================
   const resetChat = () => {
     stopSpeaking();
-    if (activeFetchController) activeFetchController.abort();
     chatHistory = [];
     editingWrapper = null;
     messages.replaceChildren();
@@ -434,18 +419,18 @@ const playTone = (type) => {
   toggle.addEventListener("click", showChat);
   closeButton?.addEventListener("click", () => hideChat());
   resetButton?.addEventListener("click", resetChat);
-  
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && windowElement.classList.contains("visible")) {
       event.preventDefault();
       hideChat();
     }
   });
-  
+
   document.querySelectorAll(".mobile-bottom-nav [data-nav]").forEach((link) => {
     link.addEventListener("click", () => hideChat(false));
   });
-  
+
   updateChatBounds();
   sendButton.addEventListener("click", sendMessage);
 
