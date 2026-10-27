@@ -1,11 +1,7 @@
 // ============================================================
-// chat.js 🧠 ELIZA AI — BROWSER VERSION (FULL SYSTEM FIXED)
-// IPFS + AES-GCM + 4 GATEWAY + DOUBLE DUO AI
+// chat.js 🧠 ELIZA AI — FIXED FINAL VERSION
 // ============================================================
 
-// ==========================================
-// 🔐 IPFS + AES-GCM CONFIG
-// ==========================================
 const ELIZA_CONFIG = {
     apiKeyCid: "QmWrpDR5vvquNBHv7mWNJK3tLK47E4jZvZ3e6o2a8qV7DC",
     aesKeyCid: "QmPxbi8UGcuZBf3Anon2fBG5ZKzZDWfvWTeNGnxWCrGWdS",
@@ -15,7 +11,6 @@ const ELIZA_CONFIG = {
         "https://cloudflare-ipfs.com/ipfs/",
         "https://dweb.link/ipfs/"
     ],
-    // MODEL TERKINI 2026
     primaryModel: "gemini-flash-lite-latest",
     fallbackModel: "gemma-4-26b-a4b-it"
 };
@@ -25,15 +20,14 @@ let apiKeyLoaded = false;
 let personaData = null;
 let promptData = null;
 
-// ==========================================
-// 📦 LOAD JSON
-// ==========================================
+// 1. LOAD JSON
 async function loadLocalJSON() {
     try {
         const [personaRes, promptRes] = await Promise.all([
-            fetch('../persona-eliza-ai.json'),
-            fetch('../prompt-eliza-ai.json')
+            fetch('./persona-eliza-ai.json'), // Pastikan path ni betul
+            fetch('./prompt-eliza-ai.json')
         ]);
+        if(!personaRes.ok || !promptRes.ok) throw new Error("Fail JSON tak jumpa.");
         personaData = await personaRes.json();
         promptData = await promptRes.json();
         console.log('✅ JSON dimuatkan');
@@ -43,13 +37,8 @@ async function loadLocalJSON() {
     }
 }
 
-// ==========================================
-// 🔓 DECRYPT AES-GCM
-// ==========================================
+// 2. DECRYPT AES-GCM
 async function decryptAESGCM(combined, keyBase64) {
-    if (!window.crypto || !window.crypto.subtle) {
-        throw new Error('Web Crypto API tidak disokong');
-    }
     const keyBuffer = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
     const iv = combined.slice(0, 12);
@@ -57,9 +46,7 @@ async function decryptAESGCM(combined, keyBase64) {
     return await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encryptedData);
 }
 
-// ==========================================
-// 🌐 FETCH FROM IPFS (4 GATEWAY)
-// ==========================================
+// 3. FETCH IPFS
 async function fetchFromIPFS(cid) {
     for (let i = 0; i < ELIZA_CONFIG.gateways.length; i++) {
         try {
@@ -70,34 +57,24 @@ async function fetchFromIPFS(cid) {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return new Uint8Array(await response.arrayBuffer());
         } catch (error) {
-            console.warn(`⚠️ Gateway ${i + 1} gagal`);
             continue;
         }
     }
     throw new Error('Semua gateway IPFS gagal');
 }
 
-// ==========================================
-// 🔑 AMBIL API KEY DARI 2 CID
-// ==========================================
+// 4. AMBIL API KEY
 async function getApiKeyFromIPFS() {
-    console.log('🔍 Loading AES Key...');
     const aesDataRaw = await fetchFromIPFS(ELIZA_CONFIG.aesKeyCid);
-    const aesData = JSON.parse(new TextDecoder().decode(aesDataRaw));
-    if (!aesData.aes_key) throw new Error('AES Key tidak dijumpai');
-    
-    console.log('🔍 Loading API Key...');
+    const aesKey = JSON.parse(new TextDecoder().decode(aesDataRaw)).aes_key;
     const encryptedData = await fetchFromIPFS(ELIZA_CONFIG.apiKeyCid);
-    const decryptedData = await decryptAESGCM(encryptedData, aesData.aes_key);
+    const decryptedData = await decryptAESGCM(encryptedData, aesKey);
     const data = JSON.parse(new TextDecoder().decode(decryptedData));
-    
-    if (!data.API_KEY) throw new Error('API_KEY tidak dijumpai');
+    if (!data.API_KEY) throw new Error('API_KEY tidak dijumpai dalam fail IPFS');
     return data.API_KEY;
 }
 
-// ==========================================
-// 📋 FIREBASE URLs
-// ==========================================
+// 5. FIREBASE
 const FIREBASE_PROJECT_ID = "sgmfix-services";
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
 const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings`;
@@ -118,49 +95,49 @@ async function getBookingsFromFirebase() {
     } catch (error) { return []; }
 }
 
-// ==========================================
-// 📝 BUILD SYSTEM PROMPT
-// ==========================================
+// 6. BUILD PROMPT
 function buildSystemPrompt(services, bookings, lang = 'ms') {
     const serviceList = services.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
-    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
+    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""}`).join("\n") : "Tiada.";
     const langInst = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
 
     return `Anda adalah ${personaData?.name || "ELIZA"}. ${langInst}\nPeraturan:\n${promptData?.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
 }
 
 // ==========================================
-// ⚙️ ENJIN UTAMA - FIX UNTUK API KEY "AQ."
+// 7. API CALL (FIXED FORMAT)
 // ==========================================
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
-    // 🔥 URL TANPA ?key= (Sebab key format AQ. guna Bearer)
+    // Guna header authorization untuk key AQ.
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     
     let contents = [];
+    
+    // Masukkan System Prompt sebagai mesej pertama (Paling selamat untuk semua model)
+    contents.push({ role: "user", parts: [{ text: `SYSTEM INSTRUCTION:\n${systemPrompt}` }] });
+    contents.push({ role: "model", parts: [{ text: "Faham. Saya akan patuhi arahan ini." }] });
+
+    // Masukkan history
     history.forEach(msg => {
         if (msg.text) contents.push({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.text }] });
     });
-    if (userMessage) contents.push({ role: "user", parts: [{ text: userMessage }] });
+    
+    // Masukkan soalan user
+    contents.push({ role: "user", parts: [{ text: userMessage }] });
 
     const payload = {
         contents: contents,
-        generationConfig: { temperature: 0.4, topP: 0.9, maxOutputTokens: 1024 }
+        generationConfig: { temperature: 0.4, maxOutputTokens: 1024 }
     };
 
-    // Gemini support systemInstruction, Gemma tak support (kita masukkan dalam contents)
-    if (!model.includes("gemma")) {
-        payload.systemInstruction = { parts: [{ text: systemPrompt }] };
-    } else {
-        contents.unshift({ role: "user", parts: [{ text: "SYSTEM: " + systemPrompt }] });
-        payload.contents = contents;
-    }
-
     try {
+        console.log(`[ELIZA] Calling ${model}...`);
+        
         const res = await fetch(url, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}` // 🔥 HANTAR API KEY FORMAT AQ. DI SINI
+                "Authorization": `Bearer ${apiKey}` // Hantar sebagai Bearer
             },
             body: JSON.stringify(payload),
             signal: AbortSignal.timeout(25000)
@@ -168,89 +145,70 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
 
         const data = await res.json();
         
+        // 🔥 KALAU ERROR, THROW BIAR DIA TUNJUK DALAM CHAT
         if (!res.ok) {
-            console.error(`[ELIZA] Reject [${model}] [${res.status}]:`, data);
-            return null; // Gagal, biar fallback ambil alih
+            throw new Error(`API Error (${res.status}): ${data.error?.message || JSON.stringify(data)}`);
         }
 
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) {
-            console.error(`[ELIZA] Empty [${model}]`);
-            return null;
-        }
-
-        console.log(`[ELIZA] ✅ Success [${model}]`);
+        if (!text) throw new Error("Google API pulangkan jawapan kosong.");
+        
         return text;
         
     } catch (e) {
-        console.error(`[ELIZA] Fetch Error [${model}]:`, e.message);
-        return null;
+        console.error(`[ELIZA] Fail [${model}]:`, e.message);
+        throw e; // Lempar error ke atas
     }
 }
 
-// ==========================================
-// 🎯 DOUBLE DUO AI
-// ==========================================
+// 8. DOUBLE DUO LOGIC
 async function askAI(systemPrompt, userMessage, history) {
     if (!apiKeyLoaded || !API_KEY) throw new Error('API key belum sedia');
     
-    // 1. Cuba Primary (Gemini)
-    console.log("🔍 Trying primary: " + ELIZA_CONFIG.primaryModel);
-    let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
-    
-    if (text) return text;
-
-    // 2. Fallback (Gemma)
-    console.log("🔄 Switching to fallback: " + ELIZA_CONFIG.fallbackModel);
-    text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY);
-    
-    if (text) return text;
-
-    // 3. Gagal kedua-dua
-    return "Maaf, sistem saya sedang sibuk. Sila cuba lagi.";
+    try {
+        // Cuba Primary
+        return await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
+    } catch (errPrimary) {
+        console.warn(`Primary (${ELIZA_CONFIG.primaryModel}) gagal: ${errPrimary.message}`);
+        
+        try {
+            // Cuba Fallback
+            return await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY);
+        } catch (errFallback) {
+            console.error(`Fallback gagal: ${errFallback.message}`);
+            // 🔥 TUNJUK ERROR SEBENAR
+            throw new Error(`Ralat API. Primary: ${errPrimary.message}. Fallback: ${errFallback.message}`);
+        }
+    }
 }
 
-// ==========================================
-// 🚀 INIT ELIZA AI
-// ==========================================
+// 9. INIT
 async function initElizaAI() {
     try {
         await loadLocalJSON();
         API_KEY = await getApiKeyFromIPFS();
         apiKeyLoaded = true;
-        console.log('✅ ELIZA AI sedia! 🌙✨');
+        console.log('✅ ELIZA AI sedia!');
         return true;
     } catch (error) {
-        console.error('❌ Gagal init ELIZA AI:', error);
+        console.error('❌ Gagal init:', error.message);
         return false;
     }
 }
 
-// ==========================================
-// 💬 FUNGSI CHAT
-// ==========================================
+// 10. CHAT
 async function chatEliza(message, language = 'ms', history = []) {
-    if (!apiKeyLoaded) throw new Error('ELIZA AI belum sedia. Sila tunggu.');
-    
-    const servicesData = await getServicesFromFirebase();
-    const bookingsData = await getBookingsFromFirebase();
-    const systemPrompt = buildSystemPrompt(servicesData, bookingsData, language);
-    
-    return await askAI(systemPrompt, message, history);
+    if (!apiKeyLoaded) throw new Error('ELIZA AI belum sedia.');
+    try {
+        const services = await getServicesFromFirebase();
+        const bookings = await getBookingsFromFirebase();
+        const sysPrompt = buildSystemPrompt(services, bookings, language);
+        return await askAI(sysPrompt, message, history);
+    } catch (error) {
+        // 🔥 PAPARKAN ERROR DI SKRIN CHAT
+        return `❌ RALAT: ${error.message}`;
+    }
 }
 
-// ==========================================
-// 🌐 EXPORT KE WINDOW
-// ==========================================
-window.ELIZA = {
-    init: initElizaAI,
-    chat: chatEliza,
-    isReady: () => apiKeyLoaded
-};
-
-// ==========================================
-// 🚀 AUTO INIT
-// ==========================================
-initElizaAI().then(loaded => {
-    if (loaded) console.log('✅ ELIZA AI ready!');
-});
+window.ELIZA = { chat: chatEliza, isReady: () => apiKeyLoaded };
+initElizaAI();
