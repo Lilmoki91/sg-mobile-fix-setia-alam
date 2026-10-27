@@ -136,16 +136,16 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
-  // Tarik data dari JSON (personaData)
+    // Tarik data dari JSON (personaData)
   const kontak = personaData?.kontak || {};
   const infoKedai = `
 📍 **MAKLUMAT KEDAI**:
-- Lokasi: ${kontak.lokasi}
-- Google Maps: [Klik di sini](${kontak.google_maps})
-- Waze: [Klik di sini](${kontak.waze})
-- WhatsApp: ${kontak.whatsapp}
-- Link WhatsApp: [Klik untuk WhatsApp](${kontak.link_whatsapp})
-- Waktu Operasi: ${kontak.waktu_operasi}
+- Lokasi: ${kontak.lokasi || "Tiada maklumat"}
+- Google Maps: [Klik di sini](${kontak.google_maps || "#"})
+- Waze: [Klik di sini](${kontak.waze || "#"})
+- WhatsApp: ${kontak.whatsapp || "Tiada maklumat"}
+- Link WhatsApp: [Klik untuk WhatsApp](${kontak.link_whatsapp || "#"})
+- Waktu Operasi: ${kontak.waktu_operasi || "Tiada maklumat"}
   `;
 
   return `
