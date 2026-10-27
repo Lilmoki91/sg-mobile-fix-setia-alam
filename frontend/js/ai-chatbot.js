@@ -30,8 +30,8 @@ async function loadLocalJSON() {
     try {
         // NOTA: Jika fail JSON berada di luar folder js, tukar kepada '../persona-eliza-ai.json'
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./persona-eliza-ai.json'),
-            fetch('./prompt-eliza-ai.json')
+            fetch('../persona-eliza-ai.json'),
+            fetch('../prompt-eliza-ai.json')
         ]);
         if (!personaRes.ok || !promptRes.ok) {
             throw new Error("Fail JSON (persona/prompt) tak jumpa di folder utama.");
