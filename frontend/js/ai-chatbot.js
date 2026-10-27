@@ -213,7 +213,42 @@ ${bookingList}
   `.trim();
 }
 
-async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
+function extractFinalAnswer(data) {
+    const candidate = data?.candidates?.[0];
+    if (!candidate || candidate.finishReason === "MAX_TOKENS") return null;
+
+    // API boleh mengembalikan bahagian pemikiran berasingan daripada jawapan.
+    const parts = candidate.content?.parts;
+    if (!Array.isArray(parts)) return null;
+    let text = parts
+        .filter(part => part.thought !== true && typeof part.text === "string")
+        .map(part => part.text)
+        .join("\n")
+        .trim();
+
+    text = text.replace(/<(think|thinking|analysis|reasoning)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, "").trim();
+
+    // Jika analisis bercampur dengan teks biasa, tolak dan cuba semula.
+    // Jangan meneka jawapan akhir daripada petikan dalam pemikiran model.
+    const hasAnalysis = /<(?:think|thinking|analysis|reasoning)\b/i.test(text)
+        || /(?:^|\n)\s*(?:#{1,6}\s*)?(?:\*\*)?(?:User says|Intent|Internal (?:thoughts|reasoning)|Analysis|Thinking|Reasoning)\s*[:：]/i.test(text)
+        || /^(?:analysis\b|thinking\b|reasoning\b)/i.test(text)
+        || (text.match(/(?:^|\n)\s*(?:[-*]\s*)?(?:Language|Name|Personality|Tone|Language Rule|Background|Greeting|Introduction|Offer help|Emojis|Markdown|Length)\s*:/gi) || []).length >= 3;
+
+    return text && !hasAnalysis ? text : null;
+}
+
+async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey, filterThoughts = false) {
+    if (!model?.trim()) return null;
+    // Arahan dan penapis khas hanya diaktifkan untuk fallback Gemma 4.
+    const requestSystemPrompt = filterThoughts ? `${systemPrompt}
+
+FORMAT JAWAPAN WAJIB:
+- Paparkan HANYA jawapan akhir yang ditujukan terus kepada pelanggan.
+- Jangan paparkan pemikiran dalaman, analisis, rancangan jawapan, atau metadata persona.
+- Jangan mulakan dengan "User says:", "Language:", atau "Intent:".
+- Jangan sertakan blok <think>, <analysis>, atau bahagian "Thinking" / "Reasoning".
+- Output ONLY the final customer-facing answer, never internal reasoning or planning notes.` : systemPrompt;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
     let contents = [];
@@ -246,7 +281,7 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
     }
 
     const payload = {
-        systemInstruction: { parts: [{ text: systemPrompt }] },
+        systemInstruction: { parts: [{ text: requestSystemPrompt }] },
         contents: finalContents,
         generationConfig: { temperature: 0.4, topP: 0.9, topK: 30, maxOutputTokens: 1024 }
     };
@@ -270,9 +305,21 @@ async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
                 return null;
             }
 
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            const text = filterThoughts
+                ? extractFinalAnswer(data)
+                : (data?.candidates?.[0]?.content?.parts || [])
+                    .filter(part => typeof part.text === "string")
+                    .map(part => part.text)
+                    .join("\n")
+                    .trim();
             if (!text) {
-                if (attempt < MAX_RETRIES) { await new Promise(r => setTimeout(r, 1000)); continue; }
+                if (attempt < MAX_RETRIES) {
+                    if (filterThoughts) {
+                        payload.systemInstruction.parts = [{ text: `${requestSystemPrompt}\n\nIMPORTANT: The previous response was unusable. Reply directly to the customer with ONLY the final answer. Do not include analysis, reasoning, metadata, or a draft.` }];
+                    }
+                    await new Promise(r => setTimeout(r, 1000));
+                    continue;
+                }
                 return null;
             }
             return text;
@@ -290,7 +337,8 @@ async function askAI(systemPrompt, userMessage, history) {
     let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
     if (text) return text;
 
-    text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY);
+    const isGemma4Fallback = /^gemma[-_]?4(?:[-_]|$)/i.test(ELIZA_CONFIG.fallbackModel.trim());
+    text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY, isGemma4Fallback);
     if (text) return text;
 
     return "Maaf, sistem saya sedang sibuk. Sila WhatsApp 012-262 6434.";
