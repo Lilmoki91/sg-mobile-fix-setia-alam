@@ -13,7 +13,7 @@ const ELIZA_CONFIG = {
         "https://cloudflare-ipfs.com/ipfs/",
         "https://dweb.link/ipfs/"
     ],
-    primaryModel: "gemini-3.1-flash-lite",
+    primaryModel: "",
     fallbackModel: "gemma-4-26b-a4b-it"
 };
 
@@ -31,8 +31,8 @@ async function loadLocalJSON() {
         // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
         // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=2'),
-            fetch('./js/prompt-eliza-ai.json?v=2')
+            fetch('./persona-eliza-ai.json?v=2'),
+            fetch('./prompt-eliza-ai.json?v=2')
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -521,6 +521,7 @@ async function initChatbot() {
     windowElement.inert = false; windowElement.setAttribute("aria-hidden", "false");
     windowElement.classList.add("visible"); toggle.setAttribute("aria-expanded", "true");
     messages.scrollTop = messages.scrollHeight;
+    updateScrollDownButton();
   };
   const hideChat = (restoreFocus = true) => {
     if (!windowElement.classList.contains("visible")) return;
@@ -538,6 +539,7 @@ async function initChatbot() {
       bubble.innerHTML = formattedText;
     }
     wrapper.appendChild(bubble); addMessageActions(wrapper, question); messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
+    updateScrollDownButton();
   };
   const showLoading = () => {
     const wrapper = document.createElement("div"); wrapper.id = "loading-bubble"; wrapper.className = "chatbot-message chatbot-message--assistant";
@@ -545,6 +547,7 @@ async function initChatbot() {
     const bubble = document.createElement("div"); bubble.className = "chatbot-bubble"; bubble.style.opacity = "0.7";
     bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${typingText}`;
     wrapper.appendChild(bubble); messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
+    updateScrollDownButton();
   };
   const removeLoading = () => { document.getElementById("loading-bubble")?.remove(); };
   const resizeInput = () => { input.style.height = "48px"; input.style.height = `${Math.min(144, Math.max(48, input.scrollHeight + 2))}px`; };
@@ -589,12 +592,31 @@ async function initChatbot() {
     input.value = ""; resizeInput(); input.focus({ preventScroll: true });
   };
 
+  const scrollDownButton = document.getElementById("chatbot-scroll-down");
+  const updateScrollDownButton = () => {
+    if (!scrollDownButton) return;
+    const threshold = 48;
+    const isNearBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < threshold;
+    if (isNearBottom) {
+      scrollDownButton.hidden = true;
+    } else {
+      scrollDownButton.hidden = false;
+    }
+  };
+  const scrollToBottom = () => {
+    messages.scrollTo({ top: messages.scrollHeight, behavior: "smooth" });
+    updateScrollDownButton();
+  };
+  messages.addEventListener("scroll", updateScrollDownButton, { passive: true });
+  scrollDownButton?.addEventListener("click", scrollToBottom);
+
   toggle.addEventListener("click", showChat);
   closeButton?.addEventListener("click", () => hideChat());
   resetButton?.addEventListener("click", resetChat);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && windowElement.classList.contains("visible")) { event.preventDefault(); hideChat(); } });
   document.querySelectorAll(".mobile-bottom-nav [data-nav]").forEach((link) => { link.addEventListener("click", () => hideChat(false)); });
   updateChatBounds();
+  updateScrollDownButton();
   sendButton.addEventListener("click", sendMessage);
   input.addEventListener("keydown", (event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) { event.preventDefault(); sendMessage(); } });
 }
