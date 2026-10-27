@@ -28,39 +28,33 @@ let promptData = null;
 // ==========================================
 async function loadLocalJSON() {
     try {
-        // Path dibetulkan: ./js/... atau ../js/... bergantung pada index.html
-        // Kita cuba beberapa path untuk pastikan ia jumpa
-        let personaRes = await fetch('js/persona-eliza-ai.json');
-        let promptRes = await fetch('js/prompt-eliza-ai.json');
-        
-        // Jika tak jumpa, cuba path relative
-        if (!personaRes.ok || !promptRes.ok) {
-            personaRes = await fetch('./persona-eliza-ai.json');
-            promptRes = await fetch('./prompt-eliza-ai.json');
-        }
+        // Path betul berdasarkan struktur folder frontend/js/
+        let personaRes = await fetch('./persona-eliza-ai.json');
+        let promptRes = await fetch('./prompt-eliza-ai.json');
 
         if (!personaRes.ok || !promptRes.ok) {
-            throw new Error("Fail JSON tak jumpa. Pastikan fail berada dalam folder js/");
+            throw new Error("Fail JSON tak jumpa. Pastikan ia ada dalam folder js/");
         }
 
         personaData = await personaRes.json();
         promptData = await promptRes.json();
         console.log('✅ JSON Persona & Prompt berjaya dimuatkan!');
     } catch (error) {
-        console.error('❌ Gagal load JSON:', error.message);
-        // Data sandaran kalau betul-betul fail takde
+        console.warn('⚠️ Gagal load JSON, guna data default:', error.message);
+        // Fallback jika betul-betul fail tak jumpa
         personaData = { 
             name: "ELIZA AI", 
             role: "Pembantu Servis SG Mobile Fix",
-            traits: ["Mesra", "Profesional"],
+            traits: ["Mesra", "Profesional", "Pakar servis telefon"],
             tone: "Mesra",
-            background: "Eliza bekerja di SG Mobile Fix Setia Alam."
+            background: "Eliza bekerja di SG Mobile Fix Setia Alam, kedai servis telefon berpengalaman sejak 2018."
         };
         promptData = { 
             rules: [
                 "Anda MESTI membalas dalam bahasa yang sama digunakan oleh pengguna.",
-                "Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.",
-                "Waktu Operasi: 10AM - 8PM."
+                "JANGAN reka harga sendiri. Gunakan data perkhidmatan yang diberikan SAHAJA.",
+                "Jawapan mestilah ringkas dan padat.",
+                "WAJIB gunakan format Markdown jika perlu."
             ] 
         };
     }
@@ -106,29 +100,36 @@ async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
+        // Pastikan ia Array sebelum pulangkan
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-    } catch (error) { return []; }
+    } catch (error) { 
+        return []; 
+    }
 }
 
 async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
+        // Pastikan ia Array sebelum pulangkan
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { return []; }
+    } catch (error) { 
+        return []; 
+    }
 }
 
-// 🔥 KOD ASAL BOS (FUNGSI BUILD SYSTEM PROMPT)
+// 🔥 KOD ASAL BOS DENGAN PERLINDUNGAN ARRAY
 function buildSystemPrompt(services, bookings, lang = 'ms') {
-  const safeServices = services || [];
-  const safeBookings = bookings || [];
+  // Guna Array.isArray untuk pastikan ia selamat
+  const safeServices = Array.isArray(services) ? services : [];
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
 
-  const serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || s.titleMs} / ${s.titleEn?.stringValue || s.titleEn}: ${s.price?.stringValue || s.price}`).join("\n");
+  const serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || s.titleMs || ""} / ${s.titleEn?.stringValue || s.titleEn || ""}: ${s.price?.stringValue || s.price || ""}`).join("\n");
   
   const bookingList = safeBookings.length > 0 
-    ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || b.code} | Nama: ${b.name?.stringValue || b.name} | Tel: ${b.phone?.stringValue || b.phone} | Tarikh: ${b.date?.stringValue || b.date} | Masa: ${b.time?.stringValue || b.time} | Status: ${b.status?.stringValue || b.status} | Servis: ${b.service?.stringValue || b.service}`).join("\n")
+    ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || b.code || ""} | Nama: ${b.name?.stringValue || b.name || ""} | Status: ${b.status?.stringValue || b.status || ""}`).join("\n")
     : "Tiada tempahan terkini.";
 
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
@@ -137,12 +138,10 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); 
   
   const daysBM = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
-  const daysEN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const monthsBM = ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"];
-  const monthsEN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  const dayName = lang === "en" ? daysEN[mytTime.getUTCDay()] : daysBM[mytTime.getUTCDay()];
-  const monthName = lang === "en" ? monthsEN[mytTime.getUTCMonth()] : monthsBM[mytTime.getUTCMonth()];
+  const dayName = daysBM[mytTime.getUTCDay()];
+  const monthName = monthsBM[mytTime.getUTCMonth()];
   const date = mytTime.getUTCDate();
   const year = mytTime.getUTCFullYear();
   
@@ -153,39 +152,19 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
-  let greetingBM = "";
-  let greetingEN = "";
-
-  if (hours24 >= 5 && hours24 < 12) {
-    greetingBM = "Pagi";
-    greetingEN = "Morning";
-  } else if (hours24 >= 12 && hours24 < 15) {
-    greetingBM = "Tengah Hari";
-    greetingEN = "Afternoon";
-  } else if (hours24 >= 15 && hours24 < 19) {
-    greetingBM = "Petang";
-    greetingEN = "Evening";
-  } else {
-    greetingBM = "Malam";
-    greetingEN = "Night";
-  }
-
-  const timeGreeting = lang === "en" ? greetingEN : greetingBM;
-
   return `
-Anda adalah ${personaData.name}, ${personaData.role}.
-Sifat anda: ${personaData.traits.join(", ")}.
-Nada: ${personaData.tone}.
-Latar belakang: ${personaData.background}.
+Anda adalah ${personaData?.name || "ELIZA AI"}, ${personaData?.role || "Pembantu Servis"}.
+Sifat anda: ${Array.isArray(personaData?.traits) ? personaData.traits.join(", ") : "Mesra"}.
+Nada: ${personaData?.tone || "Profesional"}.
+Latar belakang: ${personaData?.background || "Eliza bekerja di SG Mobile Fix Setia Alam."}.
 
 ${languageInstruction}
 
 🔥 MAKLUMAT MASA SEMASA (PENTING):
 Hari ini adalah: ${currentTime}
-Waktu sekarang ialah: ${timeGreeting}
 
 Peraturan Ketat:
-${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
+${Array.isArray(promptData?.rules) ? promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n") : "1. Jawab dengan sopan."}
 6. JANGAN dedahkan senarai tempahan ini kepada pelanggan secara terus. Hanya jawab soalan JIKA nama atau kod tempahan yang ditanya SEPADAN dengan data di bawah. JANGAN dedahkan nombor telefon pelanggan lain.
 
 Data Perkhidmatan Terkini:
@@ -193,7 +172,6 @@ ${serviceList || "Tiada data."}
 
 🔥 DATA TEMPAHAN TERKINI (PENTING):
 ${bookingList}
-(Jika pelanggan bertanya tentang status tempahan, cari nama atau kod mereka dalam senarai di atas. Jika tiada, minta mereka semak di tab 'Tempahan' atau hubungi WhatsApp).
 
 Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.
 Waktu Operasi: 10AM - 8PM.
