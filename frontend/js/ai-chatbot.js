@@ -87,7 +87,7 @@ async function getApiKeyFromIPFS() {
 // 📋 FIREBASE CONFIG & URLS
 // ==========================================
 const FIREBASE_PROJECT_ID = "sgmfix-services";
-const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; // 🔥 API KEY BOS
+const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; // 🔥 PASTIKAN KEY INI ADA
 
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services?key=${FIREBASE_API_KEY}`;
 const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings?key=${FIREBASE_API_KEY}`;
@@ -98,37 +98,46 @@ const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PRO
 // AKSES DATA SERVIS KEDAI
 async function getServicesFromFirebase() {
     try {
+        console.log("🔍 Sedang ambil data servis...");
         const response = await fetch(FIREBASE_URL);
-        const data = await response.json();
         
-        // Pastikan ia Array sebelum pulangkan
-        if (!data.documents || !Array.isArray(data.documents)) {
-            console.warn("Tiada data servis atau format salah:", data);
+        if (!response.ok) {
+            console.error("❌ Firebase error:", response.status, response.statusText);
             return [];
         }
+
+        const data = await response.json();
+        console.log("✅ Data JSON diterima:", data); // Tengok console
+
+        if (!data.documents || !Array.isArray(data.documents)) return [];
         
-        return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
+        const services = data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
+        console.log(`📋 Berjaya proses ${services.length} servis.`);
+        return services;
     } catch (error) { 
-        console.error("Gagal ambil servis:", error);
+        console.error("❌ Ralat jaringan (CORS/Network):", error);
         return []; 
     }
 }
 
-// AKSES DATA BOOKING TEMPAHAN
+// AKSES BOOKING TEMPAHAN
 async function getBookingsFromFirebase() {
     try {
+        console.log("🔍 Sedang ambil data booking...");
         const response = await fetch(BOOKING_URL);
-        const data = await response.json();
         
-        // Pastikan ia Array sebelum pulangkan
-        if (!data.documents || !Array.isArray(data.documents)) {
-            console.warn("Tiada data booking atau format salah:", data);
+        if (!response.ok) {
+            console.error("❌ Firebase error:", response.status, response.statusText);
             return [];
         }
-        
+
+        const data = await response.json();
+        console.log("✅ Data Booking diterima:", data);
+
+        if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.slice(0, 10).map(doc => doc.fields);
     } catch (error) { 
-        console.error("Gagal ambil booking:", error);
+        console.error("❌ Ralat jaringan booking:", error);
         return []; 
     }
 }
