@@ -184,7 +184,7 @@ Waktu Operasi: 10AM - 8PM.
 // ==========================================
 async function askAI(systemPrompt, userMessage, history, apiKey) {
   // 1. Cuba panggil Primary Model (Gemini)
-  console.log("Mencuba Primary Model: gemini-flash-lite-latest");
+  console.log("Mencuba Primary Model: gemini-3.1-flash-lite");
   let text = await callPrimary(systemPrompt, userMessage, history, apiKey);
   if (text) {
     return text; // Berjaya guna Gemini
@@ -205,7 +205,7 @@ async function askAI(systemPrompt, userMessage, history, apiKey) {
 // 🟢 FUNGSI CALL PRIMARY (GEMINI)
 // ==========================================
 async function callPrimary(systemPrompt, userMessage, history, apiKey) {
-  return await callGoogleAI("", systemPrompt, userMessage, history, apiKey);
+  return await callGoogleAI("gemini-3.1-flash-lite", systemPrompt, userMessage, history, apiKey);
 }
 
 // ==========================================
