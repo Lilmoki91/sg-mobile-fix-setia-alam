@@ -324,7 +324,7 @@ async function initChatbot() {
   };
   input.addEventListener("input", resizeInput);
 
-  // ==================== HANTAR KE API (IPFS BROWSER VERSION) ====================
+  // ==================== HANTAR KE API ====================
   const sendToAPI = async (question) => {
     const lang = document.documentElement.lang || "ms";
 
@@ -342,17 +342,11 @@ async function initChatbot() {
     sendButton.disabled = true;
 
     try {
-      // 🔥 SEMAK ELIZA AI READY
       if (!window.ELIZA || !window.ELIZA.isReady()) {
         throw new Error("ELIZA AI belum sedia. Sila tunggu sebentar.");
       }
 
-      // 🔥 PANGGIL ELIZA AI (IPFS + DOUBLE DUO)
       const reply = await window.ELIZA.chat(question, lang, chatHistory);
-
-      if (!reply || reply.trim() === "") {
-        throw new Error("Tiada jawapan dari AI");
-      }
 
       removeLoading();
       lastResponse = reply;
@@ -367,11 +361,10 @@ async function initChatbot() {
     } catch (error) {
       console.error("Chat error:", error);
       removeLoading();
-
-      const errorMsg = lang === "en"
-        ? "Sorry, my system is busy right now. Please try again later."
-        : "Maaf, sistem saya sibuk sekarang. Sila cuba sebentar lagi.";
-      addMessage(errorMsg, false);
+      
+      // 🔥 TUNJUK ERROR SEBENAR
+      addMessage(error.message || "Maaf, sistem sibuk.", false);
+      
     } finally {
       removeLoading();
       sendButton.disabled = false;
@@ -442,3 +435,5 @@ async function initChatbot() {
   });
 
 }
+
+window.initChatbot = initChatbot;
