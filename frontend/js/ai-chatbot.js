@@ -13,7 +13,7 @@ const ELIZA_CONFIG = {
         "https://cloudflare-ipfs.com/ipfs/",
         "https://dweb.link/ipfs/"
     ],
-    primaryModel: "gemini-flash-lite-latest",
+    primaryModel: "gemini-3.1-flash-lite",
     fallbackModel: "gemma-4-26b-a4b-it"
 };
 
