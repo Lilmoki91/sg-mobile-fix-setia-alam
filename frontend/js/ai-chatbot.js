@@ -84,73 +84,76 @@ async function getApiKeyFromIPFS() {
 }
 
 // ==========================================
-// 📋 FIREBASE CONFIG & URLS
+// 📋 FIREBASE CONFIG
 // ==========================================
 const FIREBASE_PROJECT_ID = "sgmfix-services";
-const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; // 🔥 PASTIKAN KEY INI ADA
+const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; 
 
 const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services?key=${FIREBASE_API_KEY}`;
 const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings?key=${FIREBASE_API_KEY}`;
 
 // ==========================================
-// 📋 FIREBASE READERS
+// 📋 SYSTEM BACA DATA (KOD ASAL BOS)
 // ==========================================
-// AKSES DATA SERVIS KEDAI
 async function getServicesFromFirebase() {
-    try {
-        console.log("🔍 Sedang ambil data servis...");
-        const response = await fetch(FIREBASE_URL);
-        
-        if (!response.ok) {
-            console.error("❌ Firebase error:", response.status, response.statusText);
-            return [];
-        }
-
-        const data = await response.json();
-        console.log("✅ Data JSON diterima:", data); // Tengok console
-
-        if (!data.documents || !Array.isArray(data.documents)) return [];
-        
-        const services = data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-        console.log(`📋 Berjaya proses ${services.length} servis.`);
-        return services;
-    } catch (error) { 
-        console.error("❌ Ralat jaringan (CORS/Network):", error);
-        return []; 
-    }
+  try {
+    const response = await fetch(FIREBASE_URL);
+    const data = await response.json();
+    if (!data.documents || !Array.isArray(data.documents)) return [];
+    
+    // 🔥 STRUKTUR ASAL BOS (Sangat penting supaya prompt tak rosak)
+    return data.documents.map(doc => {
+      const fields = doc.fields;
+      return {
+        titleMs: fields.titleMs?.stringValue || "",
+        titleEn: fields.titleEn?.stringValue || "",
+        price: fields.price?.stringValue || "N/A",
+        active: fields.active?.booleanValue !== false
+      };
+    }).filter(s => s.active);
+  } catch (error) {
+    console.error("Ralat Servis:", error);
+    return [];
+  }
 }
 
-// AKSES BOOKING TEMPAHAN
 async function getBookingsFromFirebase() {
-    try {
-        console.log("🔍 Sedang ambil data booking...");
-        const response = await fetch(BOOKING_URL);
-        
-        if (!response.ok) {
-            console.error("❌ Firebase error:", response.status, response.statusText);
-            return [];
-        }
-
-        const data = await response.json();
-        console.log("✅ Data Booking diterima:", data);
-
-        if (!data.documents || !Array.isArray(data.documents)) return [];
-        return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { 
-        console.error("❌ Ralat jaringan booking:", error);
-        return []; 
-    }
+  try {
+    const response = await fetch(BOOKING_URL);
+    const data = await response.json();
+    if (!data.documents || !Array.isArray(data.documents)) return [];
+    
+    // 🔥 STRUKTUR ASAL BOS
+    return data.documents.slice(0, 10).map(doc => {
+      const fields = doc.fields;
+      return {
+        code: fields.code?.stringValue || "Tiada Kod",
+        name: fields.name?.stringValue || "Tanpa Nama",
+        phone: fields.phone?.stringValue || "Tiada No",
+        date: fields.date?.stringValue || "",
+        time: fields.time?.stringValue || "",
+        status: fields.status?.stringValue || "Pending",
+        service: fields.service?.stringValue || ""
+      };
+    });
+  } catch (error) {
+    console.error("Gagal ambil booking:", error);
+    return [];
+  }
 }
 
-// 🔥 KOD ASAL BOS DENGAN PERLINDUNGAN ARRAY & TARIK DATA KONTAK DARI JSON
+// ==========================================
+// 📝 BUILD SYSTEM PROMPT (KOD ASAL BOS)
+// ==========================================
 function buildSystemPrompt(services, bookings, lang = 'ms') {
   const safeServices = Array.isArray(services) ? services : [];
   const safeBookings = Array.isArray(bookings) ? bookings : [];
 
-  const serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || s.titleMs || ""} / ${s.titleEn?.stringValue || s.titleEn || ""}: ${s.price?.stringValue || s.price || ""}`).join("\n");
+  // Struktur pemetaan ni sepadan dengan data dari Firebase di atas
+  const serviceList = safeServices.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
   
   const bookingList = safeBookings.length > 0 
-    ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || b.code || ""} | Nama: ${b.name?.stringValue || b.name || ""} | Status: ${b.status?.stringValue || b.status || ""}`).join("\n")
+    ? safeBookings.map(b => `- Kod: ${b.code} | Nama: ${b.name} | Tel: ${b.phone} | Tarikh: ${b.date} | Masa: ${b.time} | Status: ${b.status} | Servis: ${b.service}`).join("\n")
     : "Tiada tempahan terkini.";
 
   const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
@@ -173,23 +176,22 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
-    // Tarik data dari JSON (personaData)
   const kontak = personaData?.kontak || {};
   const infoKedai = `
 📍 **MAKLUMAT KEDAI**:
-- Lokasi: ${kontak.lokasi || "Tiada maklumat"}
+- Lokasi: ${kontak.lokasi || "Tiada"}
 - Google Maps: [Klik di sini](${kontak.google_maps || "#"})
 - Waze: [Klik di sini](${kontak.waze || "#"})
-- WhatsApp: ${kontak.whatsapp || "Tiada maklumat"}
+- WhatsApp: ${kontak.whatsapp || "Tiada"}
 - Link WhatsApp: [Klik untuk WhatsApp](${kontak.link_whatsapp || "#"})
-- Waktu Operasi: ${kontak.waktu_operasi || "Tiada maklumat"}
+- Waktu Operasi: ${kontak.waktu_operasi || "Tiada"}
   `;
 
   return `
-Anda adalah ${personaData.name}, ${personaData.role}.
-Sifat anda: ${personaData.traits.join(", ")}.
-Nada: ${personaData.tone}.
-Latar belakang: ${personaData.background}.
+Anda adalah ${personaData?.name || "ELIZA AI"}, ${personaData?.role || "Pembantu Servis"}.
+Sifat anda: ${Array.isArray(personaData?.traits) ? personaData.traits.join(", ") : "Mesra"}.
+Nada: ${personaData?.tone || "Profesional"}.
+Latar belakang: ${personaData?.background || "Bekerja di SG Mobile Fix"}.
 
 ${languageInstruction}
 
@@ -197,7 +199,7 @@ ${languageInstruction}
 Hari ini adalah: ${currentTime}
 
 Peraturan Ketat:
-${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
+${Array.isArray(promptData?.rules) ? promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n") : "1. Jawab dengan sopan."}
 6. JANGAN dedahkan senarai tempahan ini kepada pelanggan secara terus. Hanya jawab soalan JIKA nama atau kod tempahan yang ditanya SEPADAN dengan data di bawah. JANGAN dedahkan nombor telefon pelanggan lain.
 
 ${infoKedai}
