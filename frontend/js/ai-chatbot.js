@@ -19,27 +19,25 @@ const ELIZA_CONFIG = {
 
 let API_KEY = null;
 let apiKeyLoaded = false;
-let initError = null;
 let personaData = null;
 let promptData = null;
 
 // ==========================================
-// 📦 2. FUNGSI SOKONGAN AI (DARI CHAT.JS)
+// 📦 2. FUNGSI SOKONGAN AI (KOD ASAL BOS)
 // ==========================================
 async function loadLocalJSON() {
     try {
-        // NOTA: Jika fail JSON berada di luar folder js, tukar kepada '../persona-eliza-ai.json'
+        // Nota: Sebab fail ni dalam folder js, kita naik satu folder (../)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('persona-eliza-ai.json'),
-            fetch('prompt-eliza-ai.json')
+            fetch('../persona-eliza-ai.json'),
+            fetch('../prompt-eliza-ai.json')
         ]);
-        if (!personaRes.ok || !promptRes.ok) {
-            throw new Error("Fail JSON (persona/prompt) tak jumpa di folder utama.");
-        }
         personaData = await personaRes.json();
         promptData = await promptRes.json();
+        console.log('✅ JSON dimuatkan');
     } catch (error) {
-        throw new Error(`Gagal load JSON: ${error.message}`);
+        console.error('❌ Gagal load JSON:', error);
+        throw error;
     }
 }
 
@@ -64,7 +62,7 @@ async function fetchFromIPFS(cid) {
             continue;
         }
     }
-    throw new Error('Semua gateway IPFS gagal (Check internet)');
+    throw new Error('Semua gateway IPFS gagal');
 }
 
 async function getApiKeyFromIPFS() {
@@ -83,7 +81,8 @@ async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
-        return data.documents ? data.documents.map(doc => doc.fields) : [];
+        if (!data.documents) return [];
+        return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
     } catch (error) { return []; }
 }
 
@@ -91,89 +90,101 @@ async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
-        return data.documents ? data.documents.slice(0, 10).map(doc => doc.fields) : [];
+        if (!data.documents) return [];
+        return data.documents.slice(0, 10).map(doc => doc.fields);
     } catch (error) { return []; }
 }
 
 function buildSystemPrompt(services, bookings, lang = 'ms') {
     const serviceList = services.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
-    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""}`).join("\n") : "Tiada.";
-    const langInst = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
+    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
+    const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
 
-    return `Anda adalah ${personaData?.name || "ELIZA"}. ${langInst}\nPeraturan:\n${promptData?.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
+    return `Anda adalah ELIZA AI. ${languageInstruction}\nPeraturan:\n${promptData?.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
 }
 
+// 🔥 KOD ASAL BOS (GUNA ?key= DAN SYSTEM INSTRUCTION)
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
-    // 🔥 URL TANPA ?key= (Sebab guna Authorization Bearer untuk key AQ.)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
     let contents = [];
-    // Masukkan System Prompt sebagai mesej biasa (Paling selamat untuk Gemini & Gemma)
-    contents.push({ role: "user", parts: [{ text: systemPrompt }] });
-    contents.push({ role: "model", parts: [{ text: "Faham. Saya akan patuhi arahan ini." }] });
-
     history.forEach(msg => {
-        if (msg.text) contents.push({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.text }] });
+        if (msg.text && msg.text.trim() !== "") {
+            contents.push({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.text.trim() }] });
+        }
     });
-    
-    contents.push({ role: "user", parts: [{ text: userMessage }] });
+
+    if (userMessage && userMessage.trim() !== "") {
+        contents.push({ role: "user", parts: [{ text: userMessage.trim() }] });
+    }
+
+    const finalContents = [];
+    for (const item of contents) {
+        if (finalContents.length === 0) {
+            if (item.role === "user") finalContents.push(item);
+        } else {
+            const prev = finalContents[finalContents.length - 1];
+            if (prev.role === item.role) {
+                prev.parts[0].text += "\n" + item.parts[0].text;
+            } else {
+                finalContents.push(item);
+            }
+        }
+    }
+
+    if (finalContents.length === 0) {
+        finalContents.push({ role: "user", parts: [{ text: userMessage || "Hello" }] });
+    }
 
     const payload = {
-        contents: contents,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 1024 }
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: finalContents,
+        generationConfig: { temperature: 0.4, topP: 0.9, topK: 30, maxOutputTokens: 1024 }
     };
 
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}` // 🔥 WAJIB UNTUK KEY AQ.
-            },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(25000)
-        });
+    const MAX_RETRIES = 2;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(25000)
+            });
 
-        const data = await res.json();
-        
-        if (!res.ok) {
-            throw new Error(`API Error (${res.status}): ${data.error?.message || JSON.stringify(data)}`);
+            const data = await res.json();
+            
+            if (!res.ok) {
+                console.error(`API Reject [${model}] [${res.status}]`);
+                if ([400, 401, 403].includes(res.status)) return null; 
+                if (attempt < MAX_RETRIES) { await new Promise(r => setTimeout(r, 1000)); continue; }
+                return null;
+            }
+
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) {
+                if (attempt < MAX_RETRIES) { await new Promise(r => setTimeout(r, 1000)); continue; }
+                return null;
+            }
+            return text;
+        } catch (e) {
+            if (attempt === MAX_RETRIES) return null;
+            await new Promise(r => setTimeout(r, 1000));
         }
-
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error("Google API pulangkan jawapan kosong.");
-        
-        return text;
-        
-    } catch (e) {
-        throw e; 
     }
+    return null;
 }
 
 async function askAI(systemPrompt, userMessage, history) {
     if (!apiKeyLoaded || !API_KEY) throw new Error('API key belum sedia');
     
-    try {
-        return await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
-    } catch (errPrimary) {
-        try {
-            return await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY);
-        } catch (errFallback) {
-            throw new Error(`Primary: ${errPrimary.message} | Fallback: ${errFallback.message}`);
-        }
-    }
-}
+    let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
+    if (text) return text;
 
-async function chatEliza(message, language = 'ms', history = []) {
-    if (!apiKeyLoaded) throw new Error(initError || 'ELIZA AI belum sedia.');
-    try {
-        const services = await getServicesFromFirebase();
-        const bookings = await getBookingsFromFirebase();
-        const sysPrompt = buildSystemPrompt(services, bookings, language);
-        return await askAI(sysPrompt, message, history);
-    } catch (error) {
-        return `❌ RALAT: ${error.message}`;
-    }
+    text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY);
+    if (text) return text;
+
+    return "Maaf, sistem saya sedang sibuk. Sila WhatsApp 012-262 6434.";
 }
 
 async function initElizaAI() {
@@ -184,15 +195,22 @@ async function initElizaAI() {
         console.log('✅ ELIZA AI sedia!');
         return true;
     } catch (error) {
-        console.error('❌ Gagal init:', error.message);
-        initError = error.message; 
+        console.error('❌ Gagal init:', error);
         return false;
     }
 }
 
+async function chatEliza(message, language = 'ms', history = []) {
+    if (!apiKeyLoaded) throw new Error('ELIZA AI belum sedia.');
+    const services = await getServicesFromFirebase();
+    const bookings = await getBookingsFromFirebase();
+    const sysPrompt = buildSystemPrompt(services, bookings, language);
+    return await askAI(sysPrompt, message, history);
+}
+
 
 // ==========================================
-// 💬 3. FUNGSI UI CHATBOT (DARI AI-CHATBOT.JS)
+// 💬 3. FUNGSI UI CHATBOT (KOD ASAL BOS)
 // ==========================================
 async function initChatbot() {
   const container = document.getElementById("ai-chatbot-container");
@@ -234,7 +252,6 @@ async function initChatbot() {
   const resetButton = document.getElementById("chatbot-reset");
 
   if (!toggle || !windowElement || !messages || !input || !sendButton) return;
-
   if (windowElement.dataset.initialized === "true") return;
   windowElement.dataset.initialized = "true";
 
@@ -397,15 +414,13 @@ async function initChatbot() {
   // ==================== HANTAR KE AI ====================
   const sendToAPI = async (question) => {
     const lang = document.documentElement.lang || "ms";
-    const wordCount = question.split(/\s+/).filter(Boolean).length;
-    if (wordCount > 500) { addMessage("⚠️ Mesej terlalu panjang.", false); return; }
+    if (question.split(/\s+/).filter(Boolean).length > 500) { addMessage("⚠️ Mesej terlalu panjang.", false); return; }
 
     showLoading(); sendButton.disabled = true;
 
     try {
-      if (!apiKeyLoaded) {
-        throw new Error(initError || "ELIZA AI belum sedia. Sila refresh.");
-      }
+      if (!apiKeyLoaded) throw new Error("ELIZA AI belum sedia.");
+      
       const reply = await chatEliza(question, lang, chatHistory);
       removeLoading(); lastResponse = reply; addMessage(lastResponse, false, question); playTone('receive');
       chatHistory.push({ role: "user", text: question }); chatHistory.push({ role: "model", text: reply });
@@ -451,9 +466,6 @@ async function initChatbot() {
 // 🚀 4. AUTO MULA
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Hidupkan enjin AI (IPFS & API Key)
     await initElizaAI();
-    
-    // 2. Hidupkan UI Chatbot
     initChatbot();
 });
