@@ -27,37 +27,19 @@ let promptData = null;
 // 📦 2. FUNGSI SOKONGAN AI
 // ==========================================
 async function loadLocalJSON() {
-    try {
-        // Path betul berdasarkan struktur folder frontend/js/
-        let personaRes = await fetch('./persona-eliza-ai.json');
-        let promptRes = await fetch('./prompt-eliza-ai.json');
+    // 🔥 PATH YANG BETUL: ./ sahaja sebab ia dalam folder yang SAMA (folder js/)
+    const [personaRes, promptRes] = await Promise.all([
+        fetch('./persona-eliza-ai.json'),
+        fetch('./prompt-eliza-ai.json')
+    ]);
 
-        if (!personaRes.ok || !promptRes.ok) {
-            throw new Error("Fail JSON tak jumpa. Pastikan ia ada dalam folder js/");
-        }
-
-        personaData = await personaRes.json();
-        promptData = await promptRes.json();
-        console.log('✅ JSON Persona & Prompt berjaya dimuatkan!');
-    } catch (error) {
-        console.warn('⚠️ Gagal load JSON, guna data default:', error.message);
-        // Fallback jika betul-betul fail tak jumpa
-        personaData = { 
-            name: "ELIZA AI", 
-            role: "Pembantu Servis SG Mobile Fix",
-            traits: ["Mesra", "Profesional", "Pakar servis telefon"],
-            tone: "Mesra",
-            background: "Eliza bekerja di SG Mobile Fix Setia Alam, kedai servis telefon berpengalaman sejak 2018."
-        };
-        promptData = { 
-            rules: [
-                "Anda MESTI membalas dalam bahasa yang sama digunakan oleh pengguna.",
-                "JANGAN reka harga sendiri. Gunakan data perkhidmatan yang diberikan SAHAJA.",
-                "Jawapan mestilah ringkas dan padat.",
-                "WAJIB gunakan format Markdown jika perlu."
-            ] 
-        };
+    if (!personaRes.ok || !promptRes.ok) {
+        throw new Error("Gagal muat fail JSON. Pastikan fail .json berada dalam folder js/ yang sama.");
     }
+
+    personaData = await personaRes.json();
+    promptData = await promptRes.json();
+    console.log('✅ JSON Persona & Prompt berjaya dimuatkan!');
 }
 
 async function decryptAESGCM(combined, keyBase64) {
@@ -100,29 +82,22 @@ async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
-        // Pastikan ia Array sebelum pulangkan
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-    } catch (error) { 
-        return []; 
-    }
+    } catch (error) { return []; }
 }
 
 async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
-        // Pastikan ia Array sebelum pulangkan
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { 
-        return []; 
-    }
+    } catch (error) { return []; }
 }
 
-// 🔥 KOD ASAL BOS DENGAN PERLINDUNGAN ARRAY
+// 🔥 KOD ASAL BOS DENGAN PERLINDUNGAN ARRAY & TARIK DATA KONTAK DARI JSON
 function buildSystemPrompt(services, bookings, lang = 'ms') {
-  // Guna Array.isArray untuk pastikan ia selamat
   const safeServices = Array.isArray(services) ? services : [];
   const safeBookings = Array.isArray(bookings) ? bookings : [];
 
@@ -152,11 +127,23 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
+  // Tarik data dari JSON (personaData)
+  const kontak = personaData?.kontak || {};
+  const infoKedai = `
+📍 **MAKLUMAT KEDAI**:
+- Lokasi: ${kontak.lokasi}
+- Google Maps: [Klik di sini](${kontak.google_maps})
+- Waze: [Klik di sini](${kontak.waze})
+- WhatsApp: ${kontak.whatsapp}
+- Link WhatsApp: [Klik untuk WhatsApp](${kontak.link_whatsapp})
+- Waktu Operasi: ${kontak.waktu_operasi}
+  `;
+
   return `
-Anda adalah ${personaData?.name || "ELIZA AI"}, ${personaData?.role || "Pembantu Servis"}.
-Sifat anda: ${Array.isArray(personaData?.traits) ? personaData.traits.join(", ") : "Mesra"}.
-Nada: ${personaData?.tone || "Profesional"}.
-Latar belakang: ${personaData?.background || "Eliza bekerja di SG Mobile Fix Setia Alam."}.
+Anda adalah ${personaData.name}, ${personaData.role}.
+Sifat anda: ${personaData.traits.join(", ")}.
+Nada: ${personaData.tone}.
+Latar belakang: ${personaData.background}.
 
 ${languageInstruction}
 
@@ -164,8 +151,10 @@ ${languageInstruction}
 Hari ini adalah: ${currentTime}
 
 Peraturan Ketat:
-${Array.isArray(promptData?.rules) ? promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n") : "1. Jawab dengan sopan."}
+${promptData.rules.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
 6. JANGAN dedahkan senarai tempahan ini kepada pelanggan secara terus. Hanya jawab soalan JIKA nama atau kod tempahan yang ditanya SEPADAN dengan data di bawah. JANGAN dedahkan nombor telefon pelanggan lain.
+
+${infoKedai}
 
 Data Perkhidmatan Terkini:
 ${serviceList || "Tiada data."}
@@ -173,8 +162,6 @@ ${serviceList || "Tiada data."}
 🔥 DATA TEMPAHAN TERKINI (PENTING):
 ${bookingList}
 
-Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.
-Waktu Operasi: 10AM - 8PM.
   `.trim();
 }
 
@@ -271,7 +258,7 @@ async function initElizaAI() {
         return true;
     } catch (error) {
         console.error('❌ Gagal init:', error);
-        initError = `Gagal buka API Key: ${error.message}`;
+        initError = `Gagal buka sistem: ${error.message}`;
         return false;
     }
 }
@@ -283,7 +270,6 @@ async function chatEliza(message, language = 'ms', history = []) {
     const sysPrompt = buildSystemPrompt(services, bookings, language);
     return await askAI(sysPrompt, message, history);
 }
-
 
 // ==========================================
 // 💬 3. FUNGSI UI CHATBOT
