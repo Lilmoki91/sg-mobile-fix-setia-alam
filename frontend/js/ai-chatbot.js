@@ -83,26 +83,36 @@ async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
-        if (!data.documents) return [];
+        // 🔥 Pastikan ia Array sebelum guna .map()
+        if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-    } catch (error) { return []; }
+    } catch (error) { 
+        return []; 
+    }
 }
 
 async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
-        if (!data.documents) return [];
+        // 🔥 Pastikan ia Array sebelum guna .map()
+        if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { return []; }
+    } catch (error) { 
+        return []; 
+    }
 }
 
 function buildSystemPrompt(services, bookings, lang = 'ms') {
-    const serviceList = services.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
-    const bookingList = bookings.length > 0 ? bookings.map(b => `- Kod: ${b.code?.stringValue || ""}`).join("\n") : "Tiada.";
-    const languageInstruction = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
+    // 🔥 Paksa jadi Array kalau ia bukan Array
+    const safeServices = Array.isArray(services) ? services : [];
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
 
-    return `Anda adalah ${personaData.name}. ${languageInstruction}\nPeraturan:\n${promptData.rules?.join("\n")}\nServis:\n${serviceList}\nTempahan:\n${bookingList}`.trim();
+    const serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
+    const bookingList = safeBookings.length > 0 ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
+    const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
+
+    return `Anda adalah ${personaData.name}. ${languageInstruction}\nPeraturan:\n${promptData.rules?.join("\n")}\nServis:\n${serviceList || "Tiada"}\nTempahan:\n${bookingList}`.trim();
 }
 
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
