@@ -20,29 +20,10 @@ const ELIZA_CONFIG = {
 let API_KEY = null;
 let apiKeyLoaded = false;
 let initError = "Sedang memulakan...";
-let personaData = { name: "ELIZA AI", role: "Pembantu Servis SG Mobile Fix" };
-let promptData = { rules: ["Jawab dalam Bahasa Melayu.", "Bantu pelanggan dengan sopan."] };
 
 // ==========================================
 // 📦 2. FUNGSI SOKONGAN AI
 // ==========================================
-async function loadLocalJSON() {
-    try {
-        // Cuba cari fail JSON
-        const [personaRes, promptRes] = await Promise.all([
-            fetch('/persona-eliza-ai.json'), // Guna path root /
-            fetch('/prompt-eliza-ai.json')
-        ]);
-        if (personaRes.ok && promptRes.ok) {
-            personaData = await personaRes.json();
-            promptData = await promptRes.json();
-            console.log('✅ JSON berjaya dimuatkan');
-        }
-    } catch (error) {
-        console.warn('⚠️ JSON tak jumpa, guna default.');
-    }
-}
-
 async function decryptAESGCM(combined, keyBase64) {
     const keyBuffer = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
     const key = await crypto.subtle.importKey('raw', keyBuffer, { name: 'AES-GCM' }, false, ['decrypt']);
@@ -83,36 +64,53 @@ async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
-        // 🔥 Pastikan ia Array sebelum guna .map()
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-    } catch (error) { 
-        return []; 
-    }
+    } catch (error) { return []; }
 }
 
 async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
-        // 🔥 Pastikan ia Array sebelum guna .map()
         if (!data.documents || !Array.isArray(data.documents)) return [];
         return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { 
-        return []; 
-    }
+    } catch (error) { return []; }
 }
 
+// 🔥 PROMPT DIMASUKKAN TERUS (TAK PERLU JSON LAGI)
 function buildSystemPrompt(services, bookings, lang = 'ms') {
-    // 🔥 Paksa jadi Array kalau ia bukan Array
     const safeServices = Array.isArray(services) ? services : [];
     const safeBookings = Array.isArray(bookings) ? bookings : [];
 
-    const serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
-    const bookingList = safeBookings.length > 0 ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
-    const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
+    let serviceList = "";
+    if (safeServices.length > 0) {
+        serviceList = safeServices.map(s => `- ${s.titleMs?.stringValue || ""}: ${s.price?.stringValue || ""}`).join("\n");
+    } else {
+        serviceList = "- Servis Baiki Telefon (iPhone, Android, Tablet)\n- Penggantian Bateri / Skrin\n- Jualan Aksesori";
+    }
 
-    return `Anda adalah ${personaData.name}. ${languageInstruction}\nPeraturan:\n${promptData.rules?.join("\n")}\nServis:\n${serviceList || "Tiada"}\nTempahan:\n${bookingList}`.trim();
+    const bookingList = safeBookings.length > 0 ? safeBookings.map(b => `- Kod: ${b.code?.stringValue || ""} | Nama: ${b.name?.stringValue || ""}`).join("\n") : "Tiada.";
+    const langInst = lang === "en" ? "Reply in English." : "Balas dalam Bahasa Melayu.";
+
+    return `Anda adalah ELIZA AI, pembantu peribadi untuk kedai SG Mobile Fix.
+Tugas anda adalah untuk membantu pelanggan berkenaan servis baiki telefon, harga, dan status tempahan.
+${langInst}
+
+Lokasi: 55-G Jalan Setia Perdana BA U13/BA, Setia Alam.
+Waktu Operasi: 10AM - 8PM.
+
+Peraturan:
+1. Jawab dengan mesra dan profesional.
+2. JANGAN beri nasihat perubatan atau kewangan.
+3. Jika pelanggan tanya status tempahan, rujuk senarai di bawah. Jika tiada, minta mereka semak di tab 'Tempahan'.
+4. JANGAN dedahkan nombor telefon pelanggan lain.
+
+Senarai Servis:
+${serviceList}
+
+Senarai Tempahan:
+${bookingList}`.trim();
 }
 
 async function callGoogleAI(model, systemPrompt, userMessage, history, apiKey) {
@@ -200,7 +198,6 @@ async function askAI(systemPrompt, userMessage, history) {
 
 async function initElizaAI() {
     try {
-        await loadLocalJSON(); // Kalau fail, dia just skip
         API_KEY = await getApiKeyFromIPFS();
         apiKeyLoaded = true;
         initError = "";
