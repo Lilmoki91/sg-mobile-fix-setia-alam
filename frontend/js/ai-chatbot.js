@@ -83,26 +83,54 @@ async function getApiKeyFromIPFS() {
     return JSON.parse(new TextDecoder().decode(decryptedData)).API_KEY;
 }
 
+// ==========================================
+// 📋 FIREBASE CONFIG & URLS
+// ==========================================
 const FIREBASE_PROJECT_ID = "sgmfix-services";
-const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services`;
-const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings`;
+const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; // 🔥 API KEY BOS
 
+const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services?key=${FIREBASE_API_KEY}`;
+const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings?key=${FIREBASE_API_KEY}`;
+
+// ==========================================
+// 📋 FIREBASE READERS
+// ==========================================
+// AKSES DATA SERVIS KEDAI
 async function getServicesFromFirebase() {
     try {
         const response = await fetch(FIREBASE_URL);
         const data = await response.json();
-        if (!data.documents || !Array.isArray(data.documents)) return [];
+        
+        // Pastikan ia Array sebelum pulangkan
+        if (!data.documents || !Array.isArray(data.documents)) {
+            console.warn("Tiada data servis atau format salah:", data);
+            return [];
+        }
+        
         return data.documents.map(doc => doc.fields).filter(s => s.active?.booleanValue !== false);
-    } catch (error) { return []; }
+    } catch (error) { 
+        console.error("Gagal ambil servis:", error);
+        return []; 
+    }
 }
 
+// AKSES DATA BOOKING TEMPAHAN
 async function getBookingsFromFirebase() {
     try {
         const response = await fetch(BOOKING_URL);
         const data = await response.json();
-        if (!data.documents || !Array.isArray(data.documents)) return [];
+        
+        // Pastikan ia Array sebelum pulangkan
+        if (!data.documents || !Array.isArray(data.documents)) {
+            console.warn("Tiada data booking atau format salah:", data);
+            return [];
+        }
+        
         return data.documents.slice(0, 10).map(doc => doc.fields);
-    } catch (error) { return []; }
+    } catch (error) { 
+        console.error("Gagal ambil booking:", error);
+        return []; 
+    }
 }
 
 // 🔥 KOD ASAL BOS DENGAN PERLINDUNGAN ARRAY & TARIK DATA KONTAK DARI JSON
