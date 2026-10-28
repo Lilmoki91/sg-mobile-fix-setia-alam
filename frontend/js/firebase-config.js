@@ -39,18 +39,25 @@ async function initFirebase() {
   window.firebaseGlobalReady = true;
 }
 
-initFirebase();
+window.firebaseConfig = firebaseConfig;
+window.firebaseReady = initFirebase();
+window.firebaseReady.catch((error) => {
+  window.firebaseGlobalReady = false;
+  console.error('Gagal memulakan Firebase:', error);
+});
 
-// Helper: pastikan window.firestoreFns tersedia
-function ensureFirestoreFns() {
-  return new Promise((resolve) => {
-    if (window.firestoreFns) return resolve(window.firestoreFns);
-    const check = setInterval(() => {
-      if (window.firestoreFns) {
-        clearInterval(check);
-        resolve(window.firestoreFns);
-      }
-    }, 50);
+// Tunggu inisialisasi sebenar; jangan tunggu tanpa had jika import SDK gagal.
+function ensureFirestoreFns(timeoutMs = 10000) {
+  if (window.firestoreFns && window.db) return Promise.resolve(window.firestoreFns);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Firebase mengambil masa terlalu lama untuk dimuatkan.')), timeoutMs);
+    window.firebaseReady.then(() => {
+      clearTimeout(timer);
+      resolve(window.firestoreFns);
+    }, (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
   });
 }
 window.ensureFirestoreFns = ensureFirestoreFns;
