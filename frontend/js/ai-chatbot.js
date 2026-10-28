@@ -13,7 +13,7 @@ const ELIZA_CONFIG = {
         "https://cloudflare-ipfs.com/ipfs/",
         "https://dweb.link/ipfs/"
     ],
-    primaryModel: "",
+    primaryModel: "gemini-flash-lite-latest",
     fallbackModel: "gemma-4-26b-a4b-it"
 };
 
@@ -31,14 +31,13 @@ async function loadLocalJSON() {
         // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
         // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=2'),
-            fetch('./js/prompt-eliza-ai.json?v=2')
+            fetch('./persona-eliza-ai.json?v=2'),
+            fetch('./prompt-eliza-ai.json?v=2')
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
-        const contentType = personaRes.headers.get("content-type");
-        if (!personaRes.ok || !promptRes.ok || !contentType || !contentType.includes("application/json")) {
-            throw new Error("Fail JSON tak jumpa (404). Pastikan path betul dan fail telah di-deploy.");
+        if (!personaRes.ok || !promptRes.ok) {
+            throw new Error(`Fail JSON tak jumpa. persona=${personaRes.status}, prompt=${promptRes.status}`);
         }
 
         personaData = await personaRes.json();
@@ -86,60 +85,85 @@ async function getApiKeyFromIPFS() {
 // ==========================================
 // 📋 FIREBASE CONFIG
 // ==========================================
-const FIREBASE_PROJECT_ID = "sgmfix-services";
-const FIREBASE_API_KEY = "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"; 
-
-const FIREBASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/services?key=${FIREBASE_API_KEY}`;
-const BOOKING_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/bookings?key=${FIREBASE_API_KEY}`;
-
 // ==========================================
-// 📋 SYSTEM BACA DATA (KOD ASAL BOS)
+// 📋 SYSTEM BACA DATA
 // ==========================================
-async function getServicesFromFirebase() {
+function withFirebaseTimeout(promise, timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Bacaan Firebase tamat masa.')), timeoutMs);
+    Promise.resolve(promise).then((value) => {
+      clearTimeout(timer);
+      resolve(value);
+    }, (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+  });
+}
+
+// Nama berasingan supaya tidak ditimpa helper global services-firebase.js.
+async function loadChatbotServices() {
   try {
-    const response = await fetch(FIREBASE_URL);
-    const data = await response.json();
-    if (!data.documents || !Array.isArray(data.documents)) return [];
-    
-    // 🔥 STRUKTUR ASAL BOS (Sangat penting supaya prompt tak rosak)
-    return data.documents.map(doc => {
-      const fields = doc.fields;
-      return {
-        titleMs: fields.titleMs?.stringValue || "",
-        titleEn: fields.titleEn?.stringValue || "",
-        price: fields.price?.stringValue || "N/A",
-        active: fields.active?.booleanValue !== false
-      };
-    }).filter(s => s.active);
+    if (typeof window.getServicesFromFirebase !== 'function') {
+      throw new Error('Helper servis Firebase belum dimuatkan.');
+    }
+    const result = await withFirebaseTimeout(window.getServicesFromFirebase());
+    if (!result?.success || !Array.isArray(result.services)) {
+      throw new Error(result?.error || 'Respons servis Firebase tidak sah.');
+    }
+    return result.services.filter(s => s.active !== false).map(s => ({
+      titleMs: s.titleMs || '',
+      titleEn: s.titleEn || '',
+      price: s.price ?? 'N/A'
+    }));
   } catch (error) {
-    console.error("Ralat Servis:", error);
-    return [];
+    console.warn('Laluan SDK servis gagal; cuba REST:', error);
+  }
+
+  // REST masih mematuhi Firestore Security Rules; API key bukan kebenaran akses.
+  try {
+    const config = window.firebaseConfig;
+    if (!config?.projectId || !config?.apiKey) throw new Error('Konfigurasi Firebase tiada.');
+    const url = new URL(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/services`);
+    url.searchParams.set('key', config.apiKey);
+    url.searchParams.set('pageSize', '100');
+    const services = [];
+    let pageToken = '';
+    do {
+      if (pageToken) url.searchParams.set('pageToken', pageToken);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      let data;
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        data = await response.json();
+        if (!response.ok) throw new Error(`${data.error?.status || response.status}: ${data.error?.message || 'Bacaan servis gagal'}`);
+      } finally {
+        clearTimeout(timer);
+      }
+      for (const doc of data.documents || []) {
+        const fields = doc.fields || {};
+        if (fields.active?.booleanValue === false) continue;
+        services.push({
+          titleMs: fields.titleMs?.stringValue || '',
+          titleEn: fields.titleEn?.stringValue || '',
+          price: fields.price?.stringValue ?? fields.price?.integerValue ?? fields.price?.doubleValue ?? 'N/A'
+        });
+      }
+      pageToken = data.nextPageToken || '';
+    } while (pageToken);
+    return services;
+  } catch (error) {
+    console.error('Gagal akses servis Firebase untuk chatbot:', error);
+    throw new Error(document.documentElement.lang === 'en'
+      ? 'Service data could not be loaded. Please try again or WhatsApp 012-262 6434.'
+      : 'Data servis gagal dimuatkan. Sila cuba lagi atau WhatsApp 012-262 6434.');
   }
 }
 
-async function getBookingsFromFirebase() {
-  try {
-    const response = await fetch(BOOKING_URL);
-    const data = await response.json();
-    if (!data.documents || !Array.isArray(data.documents)) return [];
-    
-    // 🔥 STRUKTUR ASAL BOS
-    return data.documents.slice(0, 10).map(doc => {
-      const fields = doc.fields;
-      return {
-        code: fields.code?.stringValue || "Tiada Kod",
-        name: fields.name?.stringValue || "Tanpa Nama",
-        phone: fields.phone?.stringValue || "Tiada No",
-        date: fields.date?.stringValue || "",
-        time: fields.time?.stringValue || "",
-        status: fields.status?.stringValue || "Pending",
-        service: fields.service?.stringValue || ""
-      };
-    });
-  } catch (error) {
-    console.error("Gagal ambil booking:", error);
-    return [];
-  }
+async function loadChatbotBookings() {
+  // Jangan hantar data tempahan peribadi kepada model AI.
+  return [];
 }
 
 // ==========================================
@@ -150,7 +174,8 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   const safeBookings = Array.isArray(bookings) ? bookings : [];
 
   // Struktur pemetaan ni sepadan dengan data dari Firebase di atas
-  const serviceList = safeServices.map(s => `- ${s.titleMs} / ${s.titleEn}: ${s.price}`).join("\n");
+  const serviceList = safeServices.map((s, i) => `${i + 1}) ${s.titleMs || "-"} / ${s.titleEn || "-"} — Harga: ${s.price || "N/A"}`).join("\n");
+  const serviceCatalogBlock = serviceList || "Tiada data servis aktif buat masa ini.";
   
   const bookingList = safeBookings.length > 0 
     ? safeBookings.map(b => `- Kod: ${b.code} | Nama: ${b.name} | Tel: ${b.phone} | Tarikh: ${b.date} | Masa: ${b.time} | Status: ${b.status} | Servis: ${b.service}`).join("\n")
@@ -204,8 +229,14 @@ ${Array.isArray(promptData?.rules) ? promptData.rules.map((rule, i) => `${i + 1}
 
 ${infoKedai}
 
-Data Perkhidmatan Terkini:
-${serviceList || "Tiada data."}
+🔥 SENARAI SERVIS SAH (RUJUKAN WAJIB UNTUK SOALAN SERVIS/HARGA):
+${serviceCatalogBlock}
+
+Peraturan Servis & Harga (WAJIB PATUH):
+- Jika pelanggan tanya servis, harga, atau cadangan servis, jawab BERDASARKAN senarai servis sah di atas sahaja.
+- JANGAN reka nama servis, harga, promosi, atau pakej yang tiada dalam senarai.
+- Jika servis yang ditanya tiada dalam senarai, maklumkan dengan jelas bahawa servis itu tiada dalam data semasa dan cadangkan pelanggan WhatsApp untuk semakan lanjut.
+- Jika pelanggan minta senarai servis, paparkan semula item dari senarai servis sah sahaja.
 
 🔥 DATA TEMPAHAN TERKINI (PENTING):
 ${bookingList}
@@ -360,11 +391,23 @@ async function initElizaAI() {
 }
 
 async function chatEliza(message, language = 'ms', history = []) {
-    if (!apiKeyLoaded) throw new Error(initError || 'ELIZA AI belum sedia.');
-    const services = await getServicesFromFirebase();
-    const bookings = await getBookingsFromFirebase();
+    console.log("[CHAT] chatEliza start", { language, historyLen: history.length });
+    if (!apiKeyLoaded) {
+        console.error("[CHAT] apiKeyLoaded=false, initError:", initError);
+        throw new Error(initError || 'ELIZA AI belum sedia.');
+    }
+    console.log("[CHAT] fetching services...");
+    const services = await loadChatbotServices();
+    console.log("[CHAT] services loaded:", services.length);
+    const bookings = await loadChatbotBookings();
     const sysPrompt = buildSystemPrompt(services, bookings, language);
-    return await askAI(sysPrompt, message, history);
+    const promptPreview = sysPrompt.replace(/\s+/g, " ").slice(0, 320);
+    console.log(`[CHAT] prompt services count: ${Array.isArray(services) ? services.length : 0}`);
+    console.log("[CHAT] prompt preview:", promptPreview + (sysPrompt.length > 320 ? "..." : ""));
+    console.log("[CHAT] askAI start...");
+    const answer = await askAI(sysPrompt, message, history);
+    console.log("[CHAT] askAI done");
+    return answer;
 }
 
 // ==========================================
@@ -602,6 +645,7 @@ async function initChatbot() {
   input.addEventListener("input", resizeInput);
 
   const sendToAPI = async (question) => {
+    console.log("[CHAT] sendToAPI called:", question);
     const lang = document.documentElement.lang || "ms";
     if (question.split(/\s+/).filter(Boolean).length > 500) { addMessage("⚠️ Mesej terlalu panjang.", false); return; }
 
@@ -609,6 +653,7 @@ async function initChatbot() {
 
     try {
       if (!apiKeyLoaded) throw new Error(initError || "ELIZA AI belum sedia.");
+      console.log("[CHAT] API key ready:", apiKeyLoaded);
       
       const reply = await chatEliza(question, lang, chatHistory);
       removeLoading(); lastResponse = reply; addMessage(lastResponse, false, question); playTone('receive');
