@@ -216,6 +216,38 @@
     }
   };
 
+  // Carian khusus; tidak membaca atau mengemas kini cache semua pelanggan.
+  // Padanan nama di browser bukan autentikasi; Security Rules tetap diperlukan.
+  window.findChatbotBooking = async function(code, suppliedText) {
+    const normalize = value => String(value || '').normalize('NFKC')
+      .toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    try {
+      const fns = await getFirestoreFns();
+      const snapshot = await fns.getDocs(fns.query(
+        fns.collection(getDb(), COLLECTION_NAME),
+        fns.where('code', '==', code)
+      ));
+      const matches = [];
+      snapshot.forEach(item => {
+        const data = item.data();
+        const name = normalize(data.name);
+        const text = ` ${normalize(suppliedText)} `;
+        if (name && text.includes(` ${name} `)) matches.push(data);
+      });
+      if (matches.length !== 1) return { success: true, booking: null };
+      const b = matches[0];
+      // Hanya butiran minimum rekod sepadan; telefon dan nota tidak dihantar ke AI.
+      return { success: true, booking: {
+        code: b.code, name: b.name, device: b.device,
+        service: b.service, date: b.date, time: b.time,
+        status: b.status || 'pending'
+      } };
+    } catch (error) {
+      console.error('Carian tempahan chatbot gagal:', error);
+      return { success: false, error: error.code || error.message };
+    }
+  };
+
   // Helper global untuk kegunaan konsol / debug
   window.debugFirebaseBooking = {
     getCached: window.getCachedBookings,
