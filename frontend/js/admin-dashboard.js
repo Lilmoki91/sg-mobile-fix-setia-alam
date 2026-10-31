@@ -90,13 +90,10 @@
       }
     });
 
-    if (tab === 'bookings') {
-      bookingPanel?.classList.remove('hidden');
-      servicePanel?.classList.add('hidden');
-    } else {
-      bookingPanel?.classList.add('hidden');
-      servicePanel?.classList.remove('hidden');
-    }
+    bookingPanel?.classList.toggle('hidden', tab !== 'bookings');
+    servicePanel?.classList.toggle('hidden', tab !== 'services');
+    document.getElementById('admin-gallery-panel')?.classList.toggle('hidden', tab !== 'gallery');
+    if (tab === 'gallery') window.refreshAdminGallery?.();
 
     // Scroll to top of panels
     const panels = document.getElementById('admin-panels');
@@ -606,6 +603,8 @@
         sessionStorage.setItem('sgm_admin_logged_in', '1');
         loginError.classList.add('hidden');
         showDashboard();
+        // Sesi galeri disahkan sendiri oleh Pages Functions, bukan flag browser.
+        window.startGallerySession?.(input).catch(() => {});
       } else {
         loginError.classList.remove('hidden');
       }
@@ -620,10 +619,10 @@
     }
   });
 
-  logoutBtn?.addEventListener('click', () => {
+  logoutBtn?.addEventListener('click', async () => {
     sessionStorage.removeItem('sgm_admin_logged_in');
     sessionStorage.removeItem('sgm_admin_token');
-    location.reload();
+    try { await window.endGallerySession?.(); } finally { location.reload(); }
   });
 
   filterBtns.forEach(btn => {
