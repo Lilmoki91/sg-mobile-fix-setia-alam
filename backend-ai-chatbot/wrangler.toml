@@ -1,6 +1,0 @@
-name = "eliza-ai-backend"
-main = "src/index.js"
-compatibility_date = "2026-10-20"
-compatibility_flags = ["nodejs_compat"]
-
-# API Key GEMINI_API_KEY akan diambil dari Cloudflare Dashboard (Environment Variables)
