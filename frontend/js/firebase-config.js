@@ -1,4 +1,5 @@
 // ============================================================
+// gallery-admin.js
 // 🔥 KONFIGURASI FIREBASE CLIENT SDK
 // ============================================================
 // GUNAKAN Firebase Client SDK (bukan Admin SDK) untuk aplikasi web.
