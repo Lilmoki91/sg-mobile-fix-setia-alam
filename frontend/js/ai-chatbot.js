@@ -1,4 +1,3 @@
-// ai-chatbot.js
 // ==================== ELIZA AI + AI CHATBOT (GABUNGAN FINAL) ====================
 "use strict";
 
@@ -32,8 +31,8 @@ async function loadLocalJSON() {
         // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
         // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=2'),
-            fetch('./js/prompt-eliza-ai.json?v=2')
+            fetch('./persona-eliza-ai.json?v=2'),
+            fetch('./prompt-eliza-ai.json?v=2')
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -162,6 +161,20 @@ async function loadChatbotServices() {
   }
 }
 
+async function loadChatbotHours() {
+  try {
+    if (typeof window.shopHours?.refresh !== 'function') {
+      throw new Error('Helper waktu operasi belum dimuatkan.');
+    }
+    // Baca semula sumber dashboard bagi setiap pertanyaan, bukan waktu dalam persona.
+    await withFirebaseTimeout(window.shopHours.refresh());
+    return window.shopHours.value;
+  } catch (error) {
+    console.warn('Waktu operasi untuk Eliza tidak tersedia:', error.message);
+    return null;
+  }
+}
+
 function getBookingRequest(message, history = []) {
   const codePattern = /\bSGM\s*[-–]\s*([a-z0-9]{7})\b/i;
   let match = message.match(codePattern);
@@ -231,8 +244,8 @@ async function lookupChatbotBooking(request, language, history = []) {
 
   // Jika AI belum sedia, pelanggan masih boleh melihat keputusan Firebase.
   if (!apiKeyLoaded || !API_KEY) return details;
-  const services = await loadChatbotServices();
-  const systemPrompt = `${buildSystemPrompt(services, [b], language)}
+  const [services, shopHours] = await Promise.all([loadChatbotServices(), loadChatbotHours()]);
+  const systemPrompt = `${buildSystemPrompt(services, [b], language, shopHours)}
 
 SEMAKAN TEMPAHAN KHUSUS:
 - Aplikasi sudah memadankan kod dan nama penuh untuk rekod ini sahaja.
@@ -253,7 +266,7 @@ async function loadChatbotBookings() {
 // ==========================================
 // 📝 BUILD SYSTEM PROMPT (KOD ASAL BOS)
 // ==========================================
-function buildSystemPrompt(services, bookings, lang = 'ms') {
+function buildSystemPrompt(services, bookings, lang = 'ms', shopHours = null) {
   const safeServices = Array.isArray(services) ? services : [];
   const safeBookings = Array.isArray(bookings) ? bookings : [];
 
@@ -285,6 +298,18 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
   
   const currentTime = `${dayName}, ${date} ${monthName} ${year}, ${hours12}:${minutes} ${ampm} (MYT)`;
 
+  let operatingHours = 'Waktu operasi tidak tersedia / Operating hours unavailable. Minta pelanggan sahkan melalui WhatsApp; jangan teka waktu atau status buka/tutup.';
+  if (shopHours) {
+    const minutesNow = hours24 * 60 + mytTime.getUTCMinutes();
+    const toMinutes = time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+    const isOpen = shopHours.days.includes(mytTime.getUTCDay())
+      && minutesNow >= toMinutes(shopHours.openingTime)
+      && minutesNow < toMinutes(shopHours.closingTime);
+    const dayNames = lang === 'en'
+      ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] : daysBM;
+    operatingHours = `Tetapan dashboard terkini (Asia/Kuala_Lumpur / MYT): ${shopHours.openingTime}–${shopHours.closingTime} (24 jam). Hari operasi: ${shopHours.days.map(day => dayNames[day]).join(', ')}. Hari lain tutup. Status mengikut jadual sekarang: ${isOpen ? 'BUKA / OPEN' : 'TUTUP / CLOSED'}.`;
+  }
+
   const kontak = personaData?.kontak || {};
   const infoKedai = `
 📍 **MAKLUMAT KEDAI**:
@@ -296,7 +321,10 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
 - Facebook: ${kontak.facebook || "Tiada"}
 - TikTok: ${kontak.tiktok || "Tiada"}
 - Instagram: ${kontak.instagram || "Tiada"}
-- Waktu Operasi: ${kontak.waktu_operasi || "Tiada"}
+- Waktu Operasi: ${operatingHours}
+- Tetapan waktu dashboard di atas mengatasi waktu dalam persona atau sejarah perbualan. Jangan gunakan jawapan terdahulu sebagai jadual terkini.
+- Status buka/tutup ialah mengikut jadual, bukan pengesahan staf bertugas atau pengecualian cuti. Jangan reka pengecualian cuti.
+- Eliza masih boleh membantu di luar waktu kedai, tetapi jangan menjanjikan balasan staf segera.
 - Untuk pertanyaan media sosial, gunakan URL rasmi di atas sahaja. Jangan reka URL; jika tiada, minta pelanggan menghubungi kedai.
   `;
 
@@ -487,10 +515,10 @@ async function chatEliza(message, language = 'ms', history = []) {
         throw new Error(initError || 'ELIZA AI belum sedia.');
     }
     console.log("[CHAT] fetching services...");
-    const services = await loadChatbotServices();
+    const [services, shopHours] = await Promise.all([loadChatbotServices(), loadChatbotHours()]);
     console.log("[CHAT] services loaded:", services.length);
     const bookings = await loadChatbotBookings();
-    const sysPrompt = buildSystemPrompt(services, bookings, language);
+    const sysPrompt = buildSystemPrompt(services, bookings, language, shopHours);
     const promptPreview = sysPrompt.replace(/\s+/g, " ").slice(0, 320);
     console.log(`[CHAT] prompt services count: ${Array.isArray(services) ? services.length : 0}`);
     console.log("[CHAT] prompt preview:", promptPreview + (sysPrompt.length > 320 ? "..." : ""));
