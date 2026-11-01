@@ -65,7 +65,13 @@
     }).finally(() => { loading = null; });
     return loading;
   }
-  window.shopHours = { text, slots, refresh, get configured() { return hours !== null; } };
+  window.shopHours = {
+    text, slots, refresh,
+    get configured() { return hours !== null; },
+    get value() {
+      return hours ? { ...hours, days: [...hours.days] } : null;
+    }
+  };
   window.shopHours.ready = refresh().catch(error => {
     console.warn('Waktu operasi tidak tersedia:', error.message);
     return null;
