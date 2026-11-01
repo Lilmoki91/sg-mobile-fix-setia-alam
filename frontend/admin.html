@@ -10,9 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- 📌 css acsess 📌 -->
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/ai-chatbot.css">
-  <link rel="stylesheet" href="css/admin-panel.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="ai-chatbot.css">
+  <link rel="stylesheet" href="admin-panel.css">
 </head>
 <body class="min-h-screen">
 
@@ -99,6 +99,9 @@
           </button>
           <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="services">
             <i class="fas fa-tools mr-1"></i> <span>Servis</span>
+          </button>
+          <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="hours">
+            <i class="fas fa-clock mr-1"></i> <span>Waktu Operasi</span>
           </button>
           <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="gallery">
             <i class="fas fa-images mr-1"></i> <span>Gambar Kedai</span>
@@ -277,6 +280,29 @@
         </div>
       </div>
 
+        <section id="admin-hours-panel" class="hidden">
+          <div class="admin-card p-5 mb-6">
+            <h2 class="text-lg font-bold mb-2">Tetapan Waktu Operasi</h2>
+            <p class="text-sm text-gray-500 mb-4">Waktu Malaysia (Asia/Kuala_Lumpur). Masa yang sama digunakan pada hari terpilih; slot appointment setiap 30 minit, sebelum masa tutup. Tidak menyokong operasi merentas tengah malam.</p>
+            <p id="hours-message" role="status" aria-live="polite" class="text-sm mb-4"></p>
+            <form id="hours-login-form" class="space-y-3 mb-4">
+              <label for="hours-password" class="block text-sm font-semibold">Sahkan akses menggunakan kata laluan galeri</label>
+              <input id="hours-password" type="password" required autocomplete="current-password" class="w-full border rounded-xl px-4 py-2">
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Sahkan akses tetapan</button>
+            </form>
+            <form id="hours-form" class="space-y-4 hidden">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label for="hours-opening" class="block text-sm font-semibold mb-1">Masa buka</label><input id="hours-opening" type="time" required class="w-full border rounded-xl px-4 py-2"></div>
+                <div><label for="hours-closing" class="block text-sm font-semibold mb-1">Masa tutup</label><input id="hours-closing" type="time" required class="w-full border rounded-xl px-4 py-2"></div>
+              </div>
+              <fieldset><legend class="text-sm font-semibold mb-2">Hari operasi</legend><div id="hours-days" class="flex flex-wrap gap-4"></div></fieldset>
+              <p id="hours-preview" class="text-sm text-blue-700"></p>
+              <p id="hours-slots-preview" class="text-sm text-gray-600"></p>
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Simpan Perubahan</button>
+            </form>
+          </div>
+        </section>
+
         <section id="admin-gallery-panel" class="hidden">
           <div class="admin-card p-5 mb-6">
             <h2 class="text-lg font-bold mb-2">Pengurusan Gambar Kedai</h2>
@@ -319,12 +345,13 @@
   </div>
 
   <!-- 📌 java script acsess 📌 -->
-  <script src="js/script.js" defer></script> 
-  <script src="js/firebase-config.js" defer></script>
-  <script src="js/booking-firebase.js" defer></script>
-  <script src="js/booking-ui.js" defer></script>
-  <script src="js/services-firebase.js" defer></script>
-  <script src="js/gallery-admin.js" defer></script>
-  <script src="js/admin-dashboard.js" defer></script>
+  <script src="script.js" defer></script> 
+  <script src="firebase-config.js" defer></script>
+  <script src="booking-firebase.js" defer></script>
+  <script src="booking-ui.js" defer></script>
+  <script src="services-firebase.js" defer></script>
+  <script src="gallery-admin.js" defer></script>
+  <script src="shop-hours.js" defer></script>
+  <script src="admin-dashboard.js" defer></script>
 </body>
 </html>
