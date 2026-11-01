@@ -1,3 +1,4 @@
+// ai-chatbot.js
 // ==================== ELIZA AI + AI CHATBOT (GABUNGAN FINAL) ====================
 "use strict";
 
@@ -31,8 +32,8 @@ async function loadLocalJSON() {
         // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
         // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=2'),
-            fetch('./js/prompt-eliza-ai.json?v=2')
+            fetch('./persona-eliza-ai.json?v=2'),
+            fetch('./prompt-eliza-ai.json?v=2')
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -292,7 +293,11 @@ function buildSystemPrompt(services, bookings, lang = 'ms') {
 - Waze: [Klik di sini](${kontak.waze || "#"})
 - WhatsApp: ${kontak.whatsapp || "Tiada"}
 - Link WhatsApp: [Klik untuk WhatsApp](${kontak.link_whatsapp || "#"})
+- Facebook: ${kontak.facebook || "Tiada"}
+- TikTok: ${kontak.tiktok || "Tiada"}
+- Instagram: ${kontak.instagram || "Tiada"}
 - Waktu Operasi: ${kontak.waktu_operasi || "Tiada"}
+- Untuk pertanyaan media sosial, gunakan URL rasmi di atas sahaja. Jangan reka URL; jika tiada, minta pelanggan menghubungi kedai.
   `;
 
   return `
@@ -710,8 +715,12 @@ async function initChatbot() {
     const bubble = document.createElement("div"); bubble.className = "chatbot-bubble";
     if (isUser) { bubble.textContent = text; } else {
       const escaped = text.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-      let formattedText = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline font-semibold">$1</a>')
-        .replace(/(^|[^"'])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" class="text-blue-400 underline font-semibold break-all">$2</a>')
+      // Proses pautan sekali sahaja supaya pautan Markdown tidak menjadi pautan bersarang.
+      let formattedText = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g,
+        (match, label, markdownUrl, plainUrl) => {
+          const url = markdownUrl || plainUrl;
+          return `<a href="${url}" target="_blank" rel="noreferrer noopener" class="text-blue-400 underline font-semibold break-all">${label || url}</a>`;
+        })
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
       bubble.innerHTML = formattedText;
     }
