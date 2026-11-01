@@ -63,12 +63,12 @@
     }
     loadServicesFromFirebase();
 
-    const times = [];
-    for (let h = 10; h < 20; h++) {
-      times.push(`${String(h).padStart(2, '0')}:00`);
-      times.push(`${String(h).padStart(2, '0')}:30`);
+    function availableTimes() {
+      return dateInput.value && window.shopHours ? window.shopHours.slots(dateInput.value) : [];
     }
-    times.push("20:00");
+    dateInput.addEventListener('change', populateOptions);
+    document.addEventListener('shop-hours-changed', populateOptions);
+    window.shopHours?.ready.then(() => populateOptions());
 
     function populateOptions() {
       const lang = document.documentElement.lang || 'ms';
@@ -84,22 +84,28 @@
       });
       if (currentService) serviceSelect.value = currentService;
 
-                        timeSelect.innerHTML = `<option value="" disabled selected data-i18n-key="BookingTime">${window.translations[lang]?.BookingTime || 'Masa'}</option>`;
+      const times = availableTimes();
+      const timeLabel = !window.shopHours?.configured
+        ? (lang === 'en' ? 'Operating hours unavailable' : 'Waktu operasi belum tersedia')
+        : !dateInput.value
+        ? (lang === 'en' ? 'Choose a date first' : 'Pilih tarikh dahulu')
+        : times.length ? (window.translations[lang]?.BookingTime || 'Masa')
+        : (lang === 'en' ? 'Shop closed on this date' : 'Kedai tutup pada tarikh ini');
+      timeSelect.disabled = !dateInput.value || !times.length;
+      timeSelect.innerHTML = `<option value="" disabled selected>${timeLabel}</option>`;
       times.forEach(t => {
         const option = document.createElement('option');
         option.value = t;
         option.textContent = formatTime12Hour(t);
         timeSelect.appendChild(option);
       });
-      if (currentTime) timeSelect.value = currentTime;
+      if (currentTime && times.includes(currentTime)) timeSelect.value = currentTime;
     }
 
     function setMinDate() {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      dateInput.min = `${yyyy}-${mm}-${dd}`;
+      const parts = new Intl.DateTimeFormat('en', { timeZone: 'Asia/Kuala_Lumpur', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+      const part = type => parts.find(item => item.type === type).value;
+      dateInput.min = `${part('year')}-${part('month')}-${part('day')}`;
     }
 
     function generateCode() {
@@ -316,10 +322,23 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
 
-      const result = await window.addBookingToFirebase(booking);
-
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
+      let result;
+      try {
+        await window.shopHours.refresh();
+        setMinDate();
+        if (date < dateInput.min || !window.shopHours.slots(date).includes(time)) {
+          showToast(lang === 'en' ? 'This slot is unavailable. Please choose another date/time.' : 'Slot ini tidak tersedia. Sila pilih tarikh/masa lain.');
+          populateOptions();
+          return;
+        }
+        result = await window.addBookingToFirebase(booking);
+      } catch (error) {
+        showToast(lang === 'en' ? 'Unable to check/save your booking. Please try again.' : 'Gagal menyemak/menyimpan tempahan. Sila cuba lagi.');
+        return;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
 
       if (result.success) {
         showToast(t.BookingSavedFirebase || t.BookingSaved);
