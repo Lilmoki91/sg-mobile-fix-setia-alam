@@ -122,7 +122,7 @@ export async function onRequest({ request, env }) {
     const url = new URL(request.url);
     const route = url.pathname.replace(/^\/api\/gallery\/?/, '').replace(/\/$/, '');
     const method = request.method;
-    if (!['session', 'images'].includes(route)) return json({ error: 'Endpoint tidak dijumpai.' }, 404);
+    if (!['session', 'images', 'hours'].includes(route)) return json({ error: 'Endpoint tidak dijumpai.' }, 404);
     if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(method)) return json({ error: 'Kaedah tidak dibenarkan.' }, 405);
     if (method !== 'GET') {
       // Tiada CORS terbuka; semua perubahan mesti datang dari origin laman yang sama.
@@ -157,6 +157,17 @@ export async function onRequest({ request, env }) {
       if (!await authenticated(request, env)) fail('Sesi galeri tamat. Sila sahkan kata laluan semula.', 401);
     }
     if (!env.GALLERY_KV) fail('Binding GALLERY_KV belum dikonfigurasi.', 503);
+    if (route === 'hours') {
+      if (method === 'GET') return json({ hours: await env.GALLERY_KV.get('settings:hours', 'json') });
+      if (method !== 'POST') return json({ error: 'Kaedah tidak dibenarkan.' }, 405);
+      const input = await readJson(request);
+      const validTime = value => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+      if (!validTime(input.openingTime) || !validTime(input.closingTime) || input.openingTime >= input.closingTime) fail('Masa tutup mesti selepas masa buka (hari yang sama).');
+      if (!Array.isArray(input.days) || !input.days.length || input.days.length > 7 || input.days.some(day => !Number.isInteger(day) || day < 0 || day > 6) || new Set(input.days).size !== input.days.length) fail('Pilih sekurang-kurangnya satu hari operasi yang sah.');
+      const hours = { openingTime: input.openingTime, closingTime: input.closingTime, days: [...input.days].sort(), updatedAt: new Date().toISOString() };
+      await env.GALLERY_KV.put('settings:hours', JSON.stringify(hours));
+      return json({ success: true, hours });
+    }
     if (method === 'GET') {
       const configured = (await env.GALLERY_KV.get('gallery:configured')) === 'true';
       const images = await records(env);
