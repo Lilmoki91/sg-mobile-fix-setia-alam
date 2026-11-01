@@ -94,6 +94,8 @@
     servicePanel?.classList.toggle('hidden', tab !== 'services');
     document.getElementById('admin-gallery-panel')?.classList.toggle('hidden', tab !== 'gallery');
     if (tab === 'gallery') window.refreshAdminGallery?.();
+    document.getElementById('admin-hours-panel')?.classList.toggle('hidden', tab !== 'hours');
+    if (tab === 'hours') window.refreshAdminHours?.();
 
     // Scroll to top of panels
     const panels = document.getElementById('admin-panels');
