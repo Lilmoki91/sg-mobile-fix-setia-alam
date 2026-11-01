@@ -31,8 +31,8 @@ async function loadLocalJSON() {
         // 🔥 PATH DARI PERSPEKTIF INDEX.HTML (Naik ke folder js/)
         // Tambah ?v=2 untuk paksa browser ambil fail baru (bypass cache)
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./persona-eliza-ai.json?v=2'),
-            fetch('./prompt-eliza-ai.json?v=2')
+            fetch('./js/persona-eliza-ai.json?v=2'),
+            fetch('./js/prompt-eliza-ai.json?v=2')
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
