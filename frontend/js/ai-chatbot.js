@@ -30,8 +30,8 @@ async function loadLocalJSON() {
     try {
         // Muat persona dan arahan semasa selepas kemas kini katalog telefon.
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./persona-eliza-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./prompt-eliza-ai.json?v=3', { cache: 'no-store' })
+            fetch('./js/persona-eliza-ai.json?v=3', { cache: 'no-store' }),
+            fetch('./js/prompt-eliza-ai.json?v=3', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
