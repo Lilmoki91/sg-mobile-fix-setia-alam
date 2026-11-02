@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/ai-chatbot.css">
   <link rel="stylesheet" href="css/admin-panel.css">
+  <link rel="stylesheet" href="css/phones.css">
 </head>
 <body class="min-h-screen">
 
@@ -102,6 +103,9 @@
           </button>
           <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="hours">
             <i class="fas fa-clock mr-1"></i> <span>Waktu Operasi</span>
+          </button>
+          <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="phones">
+            <i class="fas fa-mobile-screen-button mr-1"></i> <span data-phone-text="catalog">Telefon Dijual</span>
           </button>
           <button class="admin-tab-btn px-4 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700" data-tab="gallery">
             <i class="fas fa-images mr-1"></i> <span>Gambar Kedai</span>
@@ -280,6 +284,33 @@
         </div>
       </div>
 
+        <section id="admin-phones-panel" class="hidden phone-admin">
+          <div class="admin-card p-5 mb-6">
+            <h2 class="text-lg font-bold" data-phone-text="manage">Pengurusan Telefon</h2>
+            <p class="phone-note" data-phone-text="adminNote">Butiran dalam Firestore, gambar dalam Cloudinary. Produk baharu disimpan sebagai draf sehingga diterbitkan.</p>
+            <p id="phone-admin-message" role="status" aria-live="polite"></p>
+            <form id="phone-login-form" class="phone-login">
+              <label for="phone-password" data-phone-text="access">Sahkan akses dengan kata laluan galeri</label>
+              <input id="phone-password" type="password" required autocomplete="current-password">
+              <button type="submit" data-phone-text="verify">Sahkan akses</button>
+            </form>
+            <div id="phone-admin-controls" class="hidden">
+              <div class="phone-actions"><button id="phone-new" type="button" data-phone-text="new">Produk baharu</button><button id="phone-redmi" type="button" data-phone-text="redmi">Isi draf Redmi Note 13</button><button id="phone-admin-refresh" type="button" data-phone-text="refresh">Muat semula</button></div>
+              <form id="phone-product-form">
+                <input id="phone-product-id" type="hidden">
+                <div id="phone-fields" class="phone-form-grid"></div>
+                <label class="phone-check"><input id="phone-published" type="checkbox"><span data-phone-text="publish">Terbitkan kepada pelanggan</span></label>
+                <label for="phone-files" data-phone-text="upload">Tambah gambar (JPEG, PNG, WebP; 5 MB setiap gambar; maksimum 6)</label>
+                <input id="phone-files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+                <p class="phone-note" data-phone-text="imageHelp">Gambar pertama ialah gambar utama. Buang gambar atau susun semula sebelum simpan.</p>
+                <div id="phone-image-editor" class="phone-image-editor"></div>
+                <div class="phone-actions"><button type="submit" data-phone-text="save">Simpan produk</button><button id="phone-cancel" type="button" data-phone-text="cancel">Batal edit</button></div>
+              </form>
+              <div id="phone-admin-list" class="phone-grid"></div>
+            </div>
+          </div>
+        </section>
+
         <section id="admin-hours-panel" class="hidden">
           <div class="admin-card p-5 mb-6">
             <h2 class="text-lg font-bold mb-2">Tetapan Waktu Operasi</h2>
@@ -352,6 +383,8 @@
   <script src="js/services-firebase.js" defer></script>
   <script src="js/gallery-admin.js" defer></script>
   <script src="js/shop-hours.js" defer></script>
+  <script src="js/phones-common.js" defer></script>
+  <script src="js/phones-admin.js" defer></script>
   <script src="js/admin-dashboard.js" defer></script>
 </body>
 </html>
