@@ -5,9 +5,12 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const encoder = new TextEncoder();
 
 function json(data, status = 200, extra = {}) {
-  return new Response(JSON.stringify(data), {
-    status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...extra }
-  });
+  const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...extra });
+  if (extra['Set-Cookie']) {
+    // Expire the old narrower cookie when migrating to a shared /api session.
+    headers.append('Set-Cookie', `${COOKIE}=; Path=/api/gallery; HttpOnly; Secure; SameSite=Strict; Max-Age=0`);
+  }
+  return new Response(JSON.stringify(data), { status, headers });
 }
 function fail(message, status = 400) {
   const error = new Error(message); error.status = status; throw error;
@@ -27,7 +30,7 @@ async function sessionSignature(value, secret) {
   const result = await crypto.subtle.sign('HMAC', key, encoder.encode(value));
   return [...new Uint8Array(result)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
-async function authenticated(request, env) {
+export async function authenticated(request, env) {
   if (!env.GALLERY_SESSION_SECRET || env.GALLERY_SESSION_SECRET.length < 32) return false;
   const cookie = (request.headers.get('Cookie') || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${COOKIE}=`));
   if (!cookie) return false;
@@ -39,14 +42,14 @@ async function authenticated(request, env) {
   return same(signature, await sessionSignature(`${expiry}.${nonce}`, env.GALLERY_SESSION_SECRET));
 }
 function cookie(value, age) {
-  return `${COOKIE}=${value}; Path=/api/gallery; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
+  return `${COOKIE}=${value}; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
 }
 function requireCloudinary(env) {
   if (!env.CLOUDINARY_CLOUD_NAME || !/^[a-zA-Z0-9_-]+$/.test(env.CLOUDINARY_CLOUD_NAME) || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET || !env.CLOUDINARY_GALLERY_PRESET) {
     fail('Konfigurasi Cloudinary belum lengkap pada Pages Functions.', 503);
   }
 }
-async function cloudinary(env, action, parameters, file = null) {
+export async function cloudinary(env, action, parameters, file = null) {
   requireCloudinary(env);
   const signed = { ...parameters, timestamp: String(Math.floor(Date.now() / 1000)) };
   const signingText = Object.keys(signed).sort().map(key => `${key}=${signed[key]}`).join('&');
@@ -107,7 +110,7 @@ async function readJson(request) {
   try { const data = JSON.parse(text); if (!data || Array.isArray(data) || typeof data !== 'object') fail('JSON tidak sah.'); return data; }
   catch { fail('JSON tidak sah.'); }
 }
-async function validateFile(file) {
+export async function validateFile(file) {
   if (!file || typeof file.arrayBuffer !== 'function' || !file.size) fail('Sila pilih gambar.');
   if (file.size > MAX_BYTES) fail('Gambar melebihi 5 MB.', 413);
   const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
