@@ -96,6 +96,8 @@
     if (tab === 'gallery') window.refreshAdminGallery?.();
     document.getElementById('admin-hours-panel')?.classList.toggle('hidden', tab !== 'hours');
     if (tab === 'hours') window.refreshAdminHours?.();
+    document.getElementById('admin-phones-panel')?.classList.toggle('hidden', tab !== 'phones');
+    if (tab === 'phones') window.refreshAdminPhones?.();
 
     // Scroll to top of panels
     const panels = document.getElementById('admin-panels');
