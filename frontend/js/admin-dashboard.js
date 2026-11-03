@@ -75,15 +75,86 @@
     }
   }
 
+  // Theme uses the same preference and styling as the main page.
+  const adminThemeToggle = document.getElementById('admin-theme-toggle');
+  function updateAdminThemeButton() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    const en = document.documentElement.lang === 'en';
+    const label = dark ? (en ? 'Light Mode' : 'Mod Cerah') : (en ? 'Dark Mode' : 'Mod Gelap');
+    document.getElementById('admin-theme-text').textContent = label;
+    document.getElementById('admin-theme-icon').className = `fas ${dark ? 'fa-sun' : 'fa-moon'}`;
+    adminThemeToggle.setAttribute('aria-pressed', String(dark));
+    adminThemeToggle.setAttribute('aria-label', en ? 'Dark mode' : 'Mod gelap');
+    adminThemeToggle.title = label;
+  }
+
+  applyTheme(document.documentElement.dataset.theme || 'light');
+  updateAdminThemeButton();
+  adminThemeToggle?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    setStorage('theme', next);
+    updateAdminThemeButton();
+  });
+  document.addEventListener('admin-language', updateAdminThemeButton);
+
   // ============================================================
   // ADMIN TAB NAVIGATION
   // ============================================================
+  const sidebar = document.getElementById('admin-sidebar');
+  const sidebarOverlay = document.getElementById('admin-sidebar-overlay');
+  const menuToggle = document.getElementById('admin-menu-toggle');
+  const menuClose = document.getElementById('admin-menu-close');
+  let menuReturnFocus = null;
+
+  function setAdminMenu(open) {
+    if (!sidebar) return;
+    if (open) menuReturnFocus = document.activeElement;
+    sidebar.classList.toggle('is-open', open);
+    sidebar.inert = !open;
+    sidebar.setAttribute('aria-hidden', String(!open));
+    menuToggle?.setAttribute('aria-expanded', String(open));
+    if (sidebarOverlay) sidebarOverlay.hidden = !open;
+    document.body.classList.toggle('admin-menu-open', open);
+    document.getElementById('admin-header').inert = open;
+    document.getElementById('admin-main').inert = open;
+    if (open) menuClose?.focus();
+    else if (menuReturnFocus) {
+      menuReturnFocus.focus();
+      menuReturnFocus = null;
+    }
+  }
+
+  menuToggle?.addEventListener('click', () => setAdminMenu(true));
+  menuClose?.addEventListener('click', () => setAdminMenu(false));
+  sidebarOverlay?.addEventListener('click', () => setAdminMenu(false));
+  document.addEventListener('keydown', (event) => {
+    if (!sidebar?.classList.contains('is-open')) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setAdminMenu(false);
+    }
+    if (event.key === 'Tab') {
+      const buttons = sidebar.querySelectorAll('button:not(:disabled)');
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
   function initAdminTabs() {
     const tabBtns = document.querySelectorAll('.admin-tab-btn');
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
         switchAdminTab(tab);
+        setAdminMenu(false);
       });
     });
   }
@@ -93,9 +164,11 @@
 
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
       if (btn.dataset.tab === tab) {
+        btn.setAttribute('aria-current', 'page');
         btn.classList.remove('bg-gray-200', 'text-gray-700');
         btn.classList.add('bg-blue-600', 'text-white');
       } else {
+        btn.removeAttribute('aria-current');
         btn.classList.remove('bg-blue-600', 'text-white');
         btn.classList.add('bg-gray-200', 'text-gray-700');
       }
@@ -637,15 +710,24 @@
     try { await window.endGallerySession?.(); } finally { location.reload(); }
   });
 
+  function updateBookingFilterButtons() {
+    filterBtns.forEach(btn => {
+      const selected = btn.dataset.filter === currentFilter;
+      btn.classList.toggle('active', selected);
+      btn.classList.toggle('bg-blue-600', selected);
+      btn.classList.toggle('text-white', selected);
+      btn.classList.toggle('bg-gray-200', !selected);
+      btn.classList.toggle('text-gray-700', !selected);
+      btn.setAttribute('aria-pressed', String(selected));
+    });
+  }
+
+  updateBookingFilterButtons();
+
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       currentFilter = btn.dataset.filter;
-      filterBtns.forEach(b => {
-        b.classList.remove('bg-blue-600', 'text-white');
-        b.classList.add('bg-gray-200', 'text-gray-700');
-      });
-      btn.classList.remove('bg-gray-200', 'text-gray-700');
-      btn.classList.add('bg-blue-600', 'text-white');
+      updateBookingFilterButtons();
       renderBookings(allBookings);
     });
   });
@@ -811,9 +893,13 @@
 
   function applyAdminLanguage(lang) {
     document.documentElement.lang = lang;
-    if (adminLangText) adminLangText.textContent = lang === 'en' ? 'MS' : 'EN';
+    if (adminLangText) adminLangText.textContent = 'MS / EN';
+    adminLangToggle?.setAttribute('aria-label', lang === 'en' ? 'Switch language to Malay' : 'Tukar bahasa kepada Inggeris');
+    menuToggle?.setAttribute('aria-label', lang === 'en' ? 'Open menu' : 'Buka menu');
+    menuClose?.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Tutup menu');
     if (typeof applyTranslations === 'function') applyTranslations(lang);
     window.AdminI18n.translate();
+    updateAdminThemeButton();
     renderBookings(allBookings);
     renderServices(allServices);
     updateServiceLabels();
