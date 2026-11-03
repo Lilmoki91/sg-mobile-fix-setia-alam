@@ -37,6 +37,17 @@
   let allBookings = [];
   let allServices = [];
   let currentAdminTab = 'bookings';
+  const t = (ms, en) => window.AdminI18n.t(ms, en);
+
+  function updateServiceLabels() {
+    const editing = !!document.getElementById('service-id').value;
+    serviceFormTitle.textContent = t(editing ? 'Edit Servis' : 'Tambah Servis Baharu');
+    if (!serviceSubmitBtn.disabled) {
+      serviceSubmitBtn.innerHTML = `<i class="fas ${editing ? 'fa-save' : 'fa-plus'} mr-2"></i> ${t(editing ? 'Simpan Perubahan' : 'Tambah Servis')}`;
+    } else {
+      serviceSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${t('Menyimpan...')}`;
+    }
+  }
 
   function getTranslation(key, fallbackEn, fallbackMs) {
     const lang = document.documentElement.lang || 'ms';
@@ -109,7 +120,7 @@
   // FORMAT HELPERS (Booking)
   // ============================================================
   function formatStatusLabel(status, booking) {
-    const lang = booking?.lang || document.documentElement.lang || 'ms';
+    const lang = (booking ? booking.lang : document.documentElement.lang) || 'ms';
     const t = window.translations?.[lang] || window.translations?.ms || {};
     const labels = {
       pending: t.BookingStatusPending || (lang === 'en' ? 'Pending Confirmation' : 'Menunggu Pengesahan'),
@@ -120,7 +131,7 @@
   }
 
   function getAdminTranslations(booking) {
-    const lang = booking?.lang || document.documentElement.lang || 'ms';
+    const lang = (booking ? booking.lang : document.documentElement.lang) || 'ms';
     const t = window.translations?.[lang] || window.translations?.ms || {};
     return {
       BookingTitle: t.BookingTitle || (lang === 'en' ? 'Appointment Booking' : 'Tempahan Appointment'),
@@ -213,7 +224,7 @@
   }
 
   function getNotifyButtonText(booking) {
-    const lang = booking?.lang || document.documentElement.lang || 'ms';
+    const lang = (booking ? booking.lang : document.documentElement.lang) || 'ms';
     return lang === 'en' ? 'Notify' : 'Maklumkan';
   }
 
@@ -255,43 +266,43 @@
       card.innerHTML = `
         <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
           <div>
-            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">${getAdminTranslations(booking).BookingCode}</p>
+            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">${getAdminTranslations().BookingCode}</p>
             <p class="text-lg font-bold text-blue-800">${booking.code}</p>
           </div>
           <span class="px-3 py-1 rounded-full text-xs font-bold ${getStatusClass(booking.status)}">
-            ${formatStatusLabel(booking.status, booking)}
+            ${formatStatusLabel(booking.status)}
           </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingName}:</span> <span class="font-semibold">${booking.name}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingPhone}:</span> <span class="font-semibold">${booking.phone}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingDevice}:</span> <span class="font-semibold">${booking.device || '-'}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingService}:</span> <span class="font-semibold">${booking.service}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingDate}:</span> <span class="font-semibold">${booking.date}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingTime}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></div>
-          <div><span class="text-gray-500">${getAdminTranslations(booking).BookingCreatedAt}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingName}:</span> <span class="font-semibold">${booking.name}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingPhone}:</span> <span class="font-semibold">${booking.phone}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingDevice}:</span> <span class="font-semibold">${booking.device || '-'}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingService}:</span> <span class="font-semibold">${booking.service}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingDate}:</span> <span class="font-semibold">${booking.date}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingTime}:</span> <span class="font-semibold">${formatTime12Hour(booking.time)}</span></div>
+          <div><span class="text-gray-500">${getAdminTranslations().BookingCreatedAt}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></div>
         </div>
 
         ${booking.notes ? `
           <div class="bg-gray-50 rounded-lg p-3 mb-4 text-sm">
-            <span class="text-gray-500">${getAdminTranslations(booking).BookingNotes}:</span> ${booking.notes}
+            <span class="text-gray-500">${getAdminTranslations().BookingNotes}:</span> ${booking.notes}
           </div>
         ` : ''}
 
         <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
           <button data-id="${booking.id}" data-status="confirmed"
                   class="btn-action flex-1 min-w-[110px] bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas fa-check mr-1"></i> ${getAdminTranslations(booking).BookingStatusConfirmed}
+            <i class="fas fa-check mr-1"></i> ${getAdminTranslations().BookingStatusConfirmed}
           </button>
           <button data-id="${booking.id}" data-status="rejected"
                   class="btn-action flex-1 min-w-[110px] bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas fa-times mr-1"></i> ${getAdminTranslations(booking).BookingStatusRejected}
+            <i class="fas fa-times mr-1"></i> ${getAdminTranslations().BookingStatusRejected}
           </button>
           <a href="https://wa.me/${booking.phone.replace(/[^0-9]/g, '')}?text=${formatWhatsAppMessage(booking)}"
              target="_blank" rel="noopener noreferrer"
              class="btn-action flex-1 min-w-[110px] bg-[#25D366] hover:bg-[#128C7E] text-white text-sm font-bold py-2 px-3 rounded-lg text-center">
-            <i class="fab fa-whatsapp mr-1"></i> ${getNotifyButtonText(booking)}
+            <i class="fab fa-whatsapp mr-1"></i> ${getNotifyButtonText()}
           </a>
           <button data-id="${booking.id}" data-action="delete"
                   class="btn-action min-w-[50px] bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold py-2 px-3 rounded-lg">
@@ -308,7 +319,7 @@
   // ============================================================
   async function updateStatus(id, status) {
     const result = await window.updateBookingStatusInFirebase(id, status);
-    if (!result.success) alert('Gagal kemas kini status: ' + result.error);
+    if (!result.success) alert(t('Gagal kemas kini status: ') + result.error);
   }
 
   async function deleteBooking(id) {
@@ -319,7 +330,7 @@
     if (!confirm(`${msg}\n${booking.code}`)) return;
 
     const result = await window.deleteBookingFromFirebase(id);
-    if (!result.success) alert('Gagal padam: ' + result.error);
+    if (!result.success) alert(t('Gagal padam: ') + result.error);
   }
 
   // ============================================================
@@ -399,29 +410,29 @@
               <i class="${icon}"></i>
             </div>
             <div>
-              <p class="font-bold text-gray-800">${service.titleMs}</p>
-              <p class="text-xs text-gray-500">${service.titleEn}</p>
+              <p class="font-bold text-gray-800">${document.documentElement.lang === 'en' ? service.titleEn : service.titleMs}</p>
+              <p class="text-xs text-gray-500">${document.documentElement.lang === 'en' ? service.titleMs : service.titleEn}</p>
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded-full text-xs font-bold ${service.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${service.active ? 'Aktif' : 'Tidak Aktif'}</span>
+            <span class="px-2 py-1 rounded-full text-xs font-bold ${service.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${t(service.active ? 'Aktif' : 'Tidak Aktif')}</span>
             <span class="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">${service.price || 'N/A'}</span>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mb-3">
           <div><span class="text-gray-500">BM:</span> ${service.descMs}</div>
           <div><span class="text-gray-500">EN:</span> ${service.descEn}</div>
-          <div><span class="text-gray-500">Kategori:</span> <span class="font-semibold">${service.category || '-'}</span></div>
-          <div><span class="text-gray-500">Susunan:</span> <span class="font-semibold">${service.order}</span></div>
+          <div><span class="text-gray-500">${t('Kategori')}:</span> <span class="font-semibold">${service.category || '-'}</span></div>
+          <div><span class="text-gray-500">${t('Susunan')}:</span> <span class="font-semibold">${service.order}</span></div>
         </div>
         <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
           <button data-id="${service.id}" data-action="edit"
                   class="btn-action flex-1 min-w-[80px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas fa-edit mr-1"></i> Edit
+            <i class="fas fa-edit mr-1"></i> ${t('Edit')}
           </button>
           <button data-id="${service.id}" data-action="toggle"
                   class="btn-action flex-1 min-w-[80px] ${service.active ? 'bg-amber-500 hover:bg-amber-600' : 'bg-green-500 hover:bg-green-600'} text-white text-sm font-bold py-2 px-3 rounded-lg">
-            <i class="fas ${service.active ? 'fa-eye-slash' : 'fa-eye'} mr-1"></i> ${service.active ? 'Sembunyi' : 'Papar'}
+            <i class="fas ${service.active ? 'fa-eye-slash' : 'fa-eye'} mr-1"></i> ${t(service.active ? 'Sembunyi' : 'Papar')}
           </button>
           <button data-id="${service.id}" data-action="delete"
                   class="btn-action min-w-[50px] bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-3 rounded-lg">
@@ -436,8 +447,7 @@
   function resetServiceForm() {
     serviceForm.reset();
     document.getElementById('service-id').value = '';
-    serviceFormTitle.textContent = 'Tambah Servis Baharu';
-    serviceSubmitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Tambah Servis';
+    updateServiceLabels();
     serviceCancelBtn.classList.add('hidden');
   }
 
@@ -458,8 +468,7 @@
     document.getElementById('service-active').checked = service.active !== false;
     document.getElementById('service-original').checked = service.isOriginal === true;
 
-    serviceFormTitle.textContent = 'Edit Servis';
-    serviceSubmitBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Simpan Perubahan';
+    updateServiceLabels();
     serviceCancelBtn.classList.remove('hidden');
     window.scrollTo({ top: serviceForm.offsetTop - 100, behavior: 'smooth' });
   }
@@ -483,9 +492,8 @@
     };
 
     const submitBtn = serviceSubmitBtn;
-    const originalHtml = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ${t('Menyimpan...')}`;
 
     let result;
     if (id) {
@@ -495,12 +503,12 @@
     }
 
     submitBtn.disabled = false;
-    submitBtn.innerHTML = originalHtml;
+    updateServiceLabels();
 
     if (result.success) {
       resetServiceForm();
     } else {
-      alert('Gagal simpan servis: ' + result.error);
+      alert(t('Gagal simpan servis: ') + result.error);
     }
   }
 
@@ -508,15 +516,15 @@
     const service = allServices.find(s => s.id === id);
     if (!service) return;
     const result = await window.updateServiceInFirebase(id, { active: !service.active });
-    if (!result.success) alert('Gagal kemas kini status: ' + result.error);
+    if (!result.success) alert(t('Gagal kemas kini status: ') + result.error);
   }
 
   async function deleteService(id) {
     const service = allServices.find(s => s.id === id);
     if (!service) return;
-    if (!confirm(`Padam servis ini?\n${service.titleMs}`)) return;
+    if (!confirm(`${t('Padam servis ini?')}\n${document.documentElement.lang === 'en' ? service.titleEn : service.titleMs}`)) return;
     const result = await window.deleteServiceFromFirebase(id);
-    if (!result.success) alert('Gagal padam servis: ' + result.error);
+    if (!result.success) alert(t('Gagal padam servis: ') + result.error);
   }
 
   // ============================================================
@@ -544,7 +552,7 @@
   ];
 
   async function seedDefaultServices() {
-    if (!confirm('Reset servis kepada data asal (' + DEFAULT_SERVICES.length + ' servis)? Ini akan menggantikan semua servis sedia ada.')) return;
+    if (!confirm(t(`Reset servis kepada data asal (${DEFAULT_SERVICES.length} servis)? Ini akan menggantikan semua servis sedia ada.`, `Reset to defaults (${DEFAULT_SERVICES.length} services)? This will replace all existing services.`))) return;
 
     // Padam semua servis sedia ada
     for (const s of allServices) {
@@ -554,9 +562,9 @@
     // Import semula default
     const result = await window.importServicesToFirebase(DEFAULT_SERVICES, true);
     if (result.success) {
-      alert('Servis asal telah dipulihkan! ' + result.count + ' servis diimport.');
+      alert(t(`Servis asal telah dipulihkan! ${result.count} servis diimport.`, `Default services restored! ${result.count} services imported.`));
     } else {
-      alert('Gagal reset servis: ' + result.error);
+      alert(t('Gagal reset servis: ') + result.error);
     }
   }
 
@@ -590,7 +598,7 @@
     const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Log Masuk';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyemak...';
+      submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('Menyemak...')}`;
     }
 
     try {
@@ -614,7 +622,7 @@
       }
     } catch (err) {
       console.error("Ralat Login:", err);
-      alert("Ralat sambungan ke server. Sila cuba lagi.");
+      alert(t('Ralat sambungan ke server. Sila cuba lagi.'));
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -703,16 +711,16 @@
     reader.onload = async (event) => {
       try {
         const imported = JSON.parse(event.target.result);
-        if (!Array.isArray(imported)) throw new Error('Format tidak sah');
-        if (!confirm(`Import ${imported.length} servis?`)) return;
+        if (!Array.isArray(imported)) throw new Error(t('Format tidak sah'));
+        if (!confirm(t(`Import ${imported.length} servis?`, `Import ${imported.length} services?`))) return;
         const result = await window.importServicesToFirebase(imported, true);
         if (result.success) {
-          alert('Import berjaya! ' + result.count + ' servis diimport.');
+          alert(t(`Import berjaya! ${result.count} servis diimport.`, `Import successful! ${result.count} services imported.`));
         } else {
-          alert('Import gagal: ' + result.error);
+          alert(t('Import gagal: ') + result.error);
         }
       } catch (err) {
-        alert('Gagal import: ' + err.message);
+        alert(t('Gagal import: ') + err.message);
       }
     };
     reader.readAsText(file);
@@ -748,16 +756,16 @@
     reader.onload = async (event) => {
       try {
         const imported = JSON.parse(event.target.result);
-        if (!Array.isArray(imported)) throw new Error('Format tidak sah');
-        if (!confirm(`Import ${imported.length} tempahan? Ini akan gabungkan dengan tempahan sedia ada.`)) return;
+        if (!Array.isArray(imported)) throw new Error(t('Format tidak sah'));
+        if (!confirm(t(`Import ${imported.length} tempahan? Ini akan gabungkan dengan tempahan sedia ada.`, `Import ${imported.length} bookings? These will be merged with existing bookings.`))) return;
         const result = await window.importBookingsToFirebase(imported);
         if (result.success) {
-          alert('Import berjaya! ' + result.count + ' tempahan diimport.');
+          alert(t(`Import berjaya! ${result.count} tempahan diimport.`, `Import successful! ${result.count} bookings imported.`));
         } else {
-          alert('Import gagal: ' + result.error);
+          alert(t('Import gagal: ') + result.error);
         }
       } catch (err) {
-        alert('Gagal import: ' + err.message);
+        alert(t('Gagal import: ') + err.message);
       }
     };
     reader.readAsText(file);
@@ -805,7 +813,10 @@
     document.documentElement.lang = lang;
     if (adminLangText) adminLangText.textContent = lang === 'en' ? 'MS' : 'EN';
     if (typeof applyTranslations === 'function') applyTranslations(lang);
+    window.AdminI18n.translate();
     renderBookings(allBookings);
+    renderServices(allServices);
+    updateServiceLabels();
   }
 
   // Initialize language on admin page load
