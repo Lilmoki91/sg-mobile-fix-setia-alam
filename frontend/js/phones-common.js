@@ -1,4 +1,4 @@
-// phones-commons.js
+// phones-common.js
 (function () {
   'use strict';
   const words = {
@@ -11,7 +11,7 @@
       available: 'Tersedia', reserved: 'Ditempah', sold: 'Terjual', unknown: 'Belum disahkan', newCondition: 'Baharu', used: 'Terpakai', refurbished: 'Dibaik pulih',
       name: 'Nama produk', model: 'Model', ram: 'RAM', storage: 'Storan', variant: 'Varian', colorMs: 'Warna (BM)', colorEn: 'Warna (EN)',
       color: 'Warna', price: 'Harga (RM)', stock: 'Stok', status: 'Status', battery: 'Kesihatan bateri (%)',
-      set: 'Kelengkapan', full: 'Full set', phoneOnly: 'Telefon sahaja', accessoriesMs: 'Kandungan set (BM)', accessoriesEn: 'Kandungan set (EN)',
+      set: 'Kelengkapan', full: 'Set lengkap', phoneOnly: 'Telefon sahaja', accessoriesMs: 'Kandungan set (BM)', accessoriesEn: 'Kandungan set (EN)',
       accessories: 'Kandungan set', warrantyMs: 'Waranti (BM)', warrantyEn: 'Waranti (EN)', warranty: 'Waranti',
       descriptionMs: 'Penerangan (BM)', descriptionEn: 'Penerangan (EN)', description: 'Penerangan', code: 'Kod produk',
       purchaseNote: 'Pertanyaan melalui WhatsApp bukan pengesahan pembelian. Harga dan stok perlu disahkan dengan kedai.',
@@ -19,7 +19,7 @@
       access: 'Sahkan akses dengan kata laluan galeri', verify: 'Sahkan akses', new: 'Produk baharu', redmi: 'Isi draf Redmi Note 13',
       publish: 'Terbitkan kepada pelanggan', upload: 'Tambah gambar (JPEG, PNG, WebP; 5 MB setiap gambar; maksimum 6)',
       imageHelp: 'Gambar pertama ialah gambar utama. Buang gambar atau susun semula sebelum simpan.',
-      save: 'Simpan produk', cancel: 'Batal edit', edit: 'Edit', delete: 'Padam', remove: 'Buang', first: 'Jadikan utama',
+      save: 'Simpan produk', cancel: 'Batal suntingan', edit: 'Sunting', delete: 'Padam', remove: 'Buang', first: 'Jadikan utama',
       draft: 'Draf', published: 'Diterbitkan', saved: 'Produk berjaya disimpan.', deleted: 'Produk dipadam.', saving: 'Menyimpan…',
       confirmDelete: 'Padam produk ini dan gambarnya?', imageMissing: 'Gambar belum ditambah', invalidFiles: 'Pilih maksimum 6 gambar JPEG, PNG atau WebP, setiap satu tidak melebihi 5 MB.',
       error: 'Operasi gagal. Semak sesi atau konfigurasi backend.', sessionExpired: 'Sesi tamat. Sila sahkan akses semula.', cleanup: 'Rekod disimpan, tetapi ada gambar yang belum dipadam. Semak log Cloudflare.',
