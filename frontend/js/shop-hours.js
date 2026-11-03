@@ -7,6 +7,7 @@
   };
   let hours = null;
   let loading = null;
+  const t = (ms, en) => window.AdminI18n ? window.AdminI18n.t(ms, en) : (document.documentElement.lang === 'en' ? (en || ms) : ms);
   const minutes = time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
   function format(time) {
     const [h, m] = time.split(':').map(Number);
@@ -80,10 +81,11 @@
   const form = document.getElementById('hours-form');
   const login = document.getElementById('hours-login-form');
   const field = name => document.getElementById(`hours-${name}`);
-  let busy = false;
+  let busy = false, lastStatus = '';
   function status(message, error = false) {
+    lastStatus = message;
     if (!field('message')) return;
-    field('message').textContent = message;
+    field('message').textContent = t(message);
     field('message').style.color = error ? '#dc2626' : '#15803d';
   }
   function access(allowed) {
@@ -96,11 +98,12 @@
   }
   function preview(value) {
     const valid = value.openingTime && value.closingTime && value.openingTime < value.closingTime && value.days.length;
-    field('preview').textContent = valid ? text('ms', value) : 'Pilih hari dan pastikan masa tutup selepas masa buka.';
+    field('preview').textContent = valid ? text(document.documentElement.lang, value) : t('Pilih hari dan pastikan masa tutup selepas masa buka.');
     const times = valid ? slots(null, value) : [];
     field('slots-preview').textContent = times.length
-      ? `Slot booking: ${format(times[0])} hingga ${format(times[times.length - 1])}, setiap 30 minit (${times.length} slot sehari). Teks laman dan slot booking menggunakan tetapan ini bersama.`
-      : 'Tiada slot booking untuk tetapan ini.';
+      ? t(`Slot booking: ${format(times[0])} hingga ${format(times[times.length - 1])}, setiap 30 minit (${times.length} slot sehari). Teks laman dan slot booking menggunakan tetapan ini bersama.`,
+          `Booking slots: ${format(times[0])} to ${format(times[times.length - 1])}, every 30 minutes (${times.length} slots per day). The website text and booking slots share these settings.`)
+      : t('Tiada slot booking untuk tetapan ini.');
   }
   function fill() {
     field('opening').value = hours?.openingTime || '';
@@ -113,8 +116,18 @@
       const label = document.createElement('label');
       const input = document.createElement('input');
       input.type = 'checkbox'; input.value = day; input.className = 'mr-2';
-      label.append(input, document.createTextNode(names.ms[day]));
+      const caption = document.createElement('span');
+      caption.dataset.hoursDay = day;
+      caption.textContent = names[document.documentElement.lang === 'en' ? 'en' : 'ms'][day];
+      label.append(input, caption);
       field('days').append(label);
+    });
+    window.addEventListener('admin-language', () => {
+      field('days').querySelectorAll('[data-hours-day]').forEach(caption => {
+        caption.textContent = names[document.documentElement.lang === 'en' ? 'en' : 'ms'][Number(caption.dataset.hoursDay)];
+      });
+      preview(draft());
+      field('message').textContent = t(lastStatus);
     });
     window.refreshAdminHours = async () => {
       if (busy) return;
