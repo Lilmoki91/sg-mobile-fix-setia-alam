@@ -3,7 +3,7 @@
   'use strict';
   const U = window.PhoneUI, $ = id => document.getElementById(id), form = $('phone-product-form');
   if (!form) return;
-  let products = [], images = [], busy = false, dirty = false, updateTime = '';
+  let products = [], images = [], busy = false, dirty = false, updateTime = '', lastMessage = null;
   const fields = [
     ['name', 'text', true, 120], ['brand', 'text', true, 60], ['model', 'text', true, 80],
     ['ram', 'text', true, 30], ['storage', 'text', true, 30], ['variant', 'select'], ['condition', 'select'],
@@ -31,8 +31,10 @@
     U.options(field('status'), [['unknown', U.t('unknown')], ['available', U.t('available')], ['reserved', U.t('reserved')], ['sold', U.t('sold')]]);
     U.options(field('set'), [['unknown', U.t('unknown')], ['full', U.t('full')], ['phoneOnly', U.t('phoneOnly')]]);
     renderImages(); renderList();
+    if (lastMessage) message(...lastMessage);
   }
   function message(key, error = false, detail = '') {
+    lastMessage = [key, error, detail];
     $('phone-admin-message').textContent = U.t(key) + (detail ? ' ' + detail : '');
     $('phone-admin-message').style.color = error ? '#dc2626' : '#15803d';
   }
