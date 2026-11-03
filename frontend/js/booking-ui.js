@@ -3,6 +3,7 @@
 // ============================================================
 // Fail ini menggantikan fungsi initBooking dalam script.js.
 // Pastikan booking-firebase.js dimuat sebelum fail ini.
+// 📌 Pemadaman kini dikira 12 jam selepas tarikh dan masa appointment yang dipilih pengguna, bukan createdAt.
 // booking-ui.js
 
 (function() {
@@ -159,26 +160,27 @@
     return `${day} ${month} ${year}, ${hh}:${mm} ${ampm}`;
   }
 
-  function isOlderThan12Hours(isoOrTimestamp) {
-    if (!isoOrTimestamp) return false;
-    let date;
-    if (typeof isoOrTimestamp === 'object' && isoOrTimestamp.seconds) {
-      date = new Date(isoOrTimestamp.seconds * 1000);
-    } else if (isoOrTimestamp.toDate) {
-      date = isoOrTimestamp.toDate();
-    } else {
-      date = new Date(isoOrTimestamp);
-    }
-    if (isNaN(date.getTime())) return false;
-    const now = new Date();
-    return (now.getTime() - date.getTime()) > (12 * 60 * 60 * 1000);
+  function isBookingExpired(booking) {
+    const { date, time } = booking;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') ||
+        !/^([01]\d|2[0-3]):[0-5]\d$/.test(time || '')) return false;
+
+    // Waktu appointment kedai ialah waktu Malaysia, bukan zon masa browser.
+    const appointment = new Date(`${date}T${time}:00+08:00`);
+    const appointmentMs = appointment.getTime();
+    if (!Number.isFinite(appointmentMs)) return false;
+    const malaysiaDateTime = new Date(appointmentMs + 8 * 60 * 60 * 1000)
+      .toISOString().slice(0, 16);
+    if (malaysiaDateTime !== `${date}T${time}`) return false;
+
+    return Date.now() - appointmentMs >= 12 * 60 * 60 * 1000;
   }
 
   async function cleanupExpiredBookings(bookings) {
     const lang = document.documentElement.lang || 'ms';
     const t = window.translations[lang] || window.translations.ms;
     for (const booking of bookings) {
-      if (booking.createdAt && isOlderThan12Hours(booking.createdAt)) {
+      if (isBookingExpired(booking)) {
         const result = await window.deleteBookingFromFirebase(booking.id);
         if (result.success) {
           const message = (t.BookingAutoDeleted || '').replace(/\{code\}/g, booking.code);
