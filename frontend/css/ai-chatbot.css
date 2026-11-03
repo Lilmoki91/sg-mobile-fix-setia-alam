@@ -164,6 +164,32 @@ body.chatbot-open #chatbot-toggle {
   white-space: pre-wrap;
 }
 .chatbot-bubble p { margin: 0; }
+.chatbot-bubble code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .92em;
+}
+.chatbot-inline-code {
+  padding: 2px 6px;
+  color: var(--chat-text);
+  background: #6366f11a;
+  border: 1px solid var(--chat-border);
+  border-radius: 5px;
+  white-space: pre-wrap;
+}
+.chatbot-code-block {
+  max-width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+  color: var(--chat-text);
+  background: #6366f11a;
+  border: 1px solid var(--chat-border);
+  border-radius: 10px;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  line-height: 1.5;
+  tab-size: 2;
+}
 .chatbot-message--user .chatbot-bubble { color: white; background: linear-gradient(135deg, #2563eb, #6366f1); border-color: transparent; border-radius: 18px 18px 4px 18px; }
 
 .chatbot-composer {
