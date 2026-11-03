@@ -794,15 +794,30 @@ async function initChatbot() {
     const wrapper = document.createElement("div"); wrapper.className = `chatbot-message chatbot-message--${isUser ? "user" : "assistant"}`;
     const bubble = document.createElement("div"); bubble.className = "chatbot-bubble";
     if (isUser) { bubble.textContent = text; } else {
-      const escaped = text.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-      // Proses pautan sekali sahaja supaya pautan Markdown tidak menjadi pautan bersarang.
-      let formattedText = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g,
-        (match, label, markdownUrl, plainUrl) => {
-          const url = markdownUrl || plainUrl;
-          return `<a href="${url}" target="_blank" rel="noreferrer noopener" class="text-blue-400 underline font-semibold break-all">${label || url}</a>`;
-        })
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
-      bubble.innerHTML = formattedText;
+      const escapeHTML = value => value.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const formatText = value => escapeHTML(value)
+        // Proses pautan sekali sahaja supaya pautan Markdown tidak bersarang.
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g,
+          (match, label, markdownUrl, plainUrl) => {
+            const url = markdownUrl || plainUrl;
+            return `<a href="${url}" target="_blank" rel="noreferrer noopener" class="text-blue-400 underline font-semibold break-all">${label || url}</a>`;
+          })
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+      // Asingkan kod dahulu: HTML, pautan dan penekanan di dalamnya kekal teks literal.
+      const codePattern = /```[ \t]*(?:[\w+-]+[ \t]*)?\r?\n([\s\S]*?)```|(?<!`)`([^`\r\n]+)`(?!`)/g;
+      let formattedText = "";
+      let offset = 0;
+      for (const match of text.matchAll(codePattern)) {
+        formattedText += formatText(text.slice(offset, match.index));
+        formattedText += match[1] !== undefined
+          ? `<pre class="chatbot-code-block"><code>${escapeHTML(match[1])}</code></pre>`
+          : `<code class="chatbot-inline-code">${escapeHTML(match[2])}</code>`;
+        offset = match.index + match[0].length;
+      }
+      // Baris baharu dikekalkan oleh white-space: pre-wrap pada bubble.
+      bubble.innerHTML = formattedText + formatText(text.slice(offset));
     }
     wrapper.appendChild(bubble); addMessageActions(wrapper, question); messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
     updateScrollDownButton();
