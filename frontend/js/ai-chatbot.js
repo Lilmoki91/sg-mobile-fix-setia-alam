@@ -28,10 +28,10 @@ let promptData = null;
 // ==========================================
 async function loadLocalJSON() {
     try {
-        // Muat persona dan arahan semasa selepas kemas kini katalog telefon.
+        // Muat arahan terkini termasuk penapisan keselamatan mengikut konteks.
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./js/prompt-eliza-ai.json?v=3', { cache: 'no-store' })
+            fetch('./persona-eliza-ai.json?v=3', { cache: 'no-store' }),
+            fetch('./prompt-eliza-ai.json?v=4', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
