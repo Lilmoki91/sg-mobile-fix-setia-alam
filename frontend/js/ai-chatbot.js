@@ -30,8 +30,8 @@ async function loadLocalJSON() {
     try {
         // Muat arahan terkini termasuk penapisan keselamatan mengikut konteks.
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./persona-eliza-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./prompt-eliza-ai.json?v=6', { cache: 'no-store' })
+            fetch('./js/persona-eliza-ai.json?v=3', { cache: 'no-store' }),
+            fetch('./js/prompt-eliza-ai.json?v=7', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -329,7 +329,7 @@ function buildSystemPrompt(services, bookings, lang = 'ms', shopHours = null, ph
     ? safeBookings.map(b => JSON.stringify({ code: b.code, name: b.name, device: b.device, date: b.date, time: b.time, status: b.status, service: b.service })).join("\n")
     : "Tiada tempahan terkini.";
 
-  const languageInstruction = lang === "en" ? "You MUST reply in English." : "Anda MESTI membalas dalam Bahasa Melayu.";
+  const languageInstruction = `Balas dalam bahasa mesej pelanggan terkini: Bahasa Melayu atau English. Teks pautan juga mesti mengikut bahasa tersebut. Jika bahasa mesej tidak jelas, gunakan ${lang === "en" ? "English" : "Bahasa Melayu"} sebagai bahasa lalai web.`;
 
   const now = new Date();
   const mytTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); 
@@ -813,21 +813,33 @@ async function initChatbot() {
     document.body.classList.remove("chatbot-open"); toggle.setAttribute("aria-expanded", "false");
     if (restoreFocus) toggle.focus({ preventScroll: true });
   };
-  // Pautan dalaman menggunakan navigasi sedia ada tanpa reload halaman.
+  // Hanya tiga destinasi dalaman dibenarkan; katalog menggunakan aliran muatan sedia ada.
+  const internalTabs = new Set(["booking-tab", "services-tab", "phones-tab"]);
   messages.addEventListener("click", (event) => {
-    const link = event.target.closest('a[data-chatbot-booking]');
+    const link = event.target.closest('a[data-chatbot-tab]');
     if (!link || !messages.contains(link)) return;
     event.preventDefault();
-    if (!document.getElementById("booking-tab") || typeof window.showTab !== "function") {
+    const tabId = link.dataset.chatbotTab;
+    if (!internalTabs.has(tabId)) return;
+    if (!document.getElementById(tabId) || typeof window.showTab !== "function") {
       addMessage(document.documentElement.lang === "en"
-        ? "The booking form is unavailable. Please contact the shop via WhatsApp."
-        : "Borang tempahan tidak tersedia. Sila hubungi kedai melalui WhatsApp.", false);
+        ? "This section is unavailable. Please contact the shop via WhatsApp."
+        : "Bahagian ini tidak tersedia. Sila hubungi kedai melalui WhatsApp.", false);
       return;
     }
     hideChat(false);
-    window.showTab("booking-tab");
-    document.querySelectorAll(".mobile-bottom-nav a").forEach(item => item.classList.remove("active"));
-    document.querySelector('#booking-form input:not([type="hidden"])')?.focus({ preventScroll: true });
+    if (tabId === "phones-tab" && document.getElementById("phones-menu-action")) {
+      document.getElementById("phones-menu-action").click();
+    } else {
+      window.showTab(tabId);
+    }
+    document.querySelectorAll(".mobile-bottom-nav a").forEach(item => {
+      item.classList.toggle("active", item.dataset.nav === tabId);
+    });
+    const focusTarget = tabId === "booking-tab"
+      ? document.querySelector('#booking-form input:not([type="hidden"])')
+      : document.getElementById(tabId === "services-tab" ? "service-search" : "phones-search");
+    focusTarget?.focus({ preventScroll: true });
   });
 
   const addMessage = (text, isUser, question = "") => {
@@ -837,11 +849,11 @@ async function initChatbot() {
       const escapeHTML = value => value.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const formatText = value => escapeHTML(value)
         // Proses pautan sekali sahaja supaya pautan Markdown tidak bersarang.
-        .replace(/\[([^\]]+)\]\((#booking-tab|https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g,
+        .replace(/\[([^\]]+)\]\((#(?:booking|services|phones)-tab|https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g,
           (match, label, markdownUrl, plainUrl) => {
             const url = markdownUrl || plainUrl;
-            if (url === "#booking-tab") {
-              return `<a href="#booking-tab" data-chatbot-booking="true" class="text-blue-400 underline font-semibold">${label}</a>`;
+            if (url.startsWith("#") && internalTabs.has(url.slice(1))) {
+              return `<a href="${url}" data-chatbot-tab="${url.slice(1)}" class="text-blue-400 underline font-semibold">${label}</a>`;
             }
             return `<a href="${url}" target="_blank" rel="noreferrer noopener" class="text-blue-400 underline font-semibold break-all">${label || url}</a>`;
           })
