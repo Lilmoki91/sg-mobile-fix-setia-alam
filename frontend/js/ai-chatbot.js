@@ -31,7 +31,7 @@ async function loadLocalJSON() {
         // Muat arahan terkini termasuk penapisan keselamatan mengikut konteks.
         const [personaRes, promptRes] = await Promise.all([
             fetch('./js/persona-eliza-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./js/prompt-eliza-ai.json?v=4', { cache: 'no-store' })
+            fetch('./js/prompt-eliza-ai.json?v=5', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -204,6 +204,21 @@ async function loadChatbotHours() {
 function getBookingRequest(message, history = []) {
   const codePattern = /\bSGM\s*[-–]\s*([a-z0-9]{7})\b/i;
   let match = message.match(codePattern);
+  const serviceIntent = /\b(servis|service|repair|baiki|pembaikan|rosak|appointment|ganti|tukar skrin)\b/i;
+  const salesIntent = /\b(beli|membeli|belian|pembelian|buy|buying|purchase|jual|jualan|sale|deposit|stok|stock|reserved)\b/i;
+  const phoneIntent = /\b(telefon|talipon|telepon|phone|iphone|samsung|oppo|vivo|xiaomi|realme|honor)\b/i;
+  const reservationIntent = /\b(tempah|menempah|tempahan|booking|book|reserve|reservation)\b/i;
+  const previousUser = [...history].reverse().find(h => h.role === 'user');
+  const isPhoneSale = text => !serviceIntent.test(text)
+    && (salesIntent.test(text) || (phoneIntent.test(text) && reservationIntent.test(text)));
+  // Kod SGM tetap ke semakan servis. Tempahan jualan kekal dalam aliran AI/katalog.
+  const salesContext = isPhoneSale(message)
+    || (!serviceIntent.test(message) && !phoneIntent.test(message)
+      && reservationIntent.test(message) && previousUser && !previousUser.privateBooking
+      && isPhoneSale(previousUser.text));
+  if (!match && salesContext) {
+    return { code: null, text: message, message, requested: false };
+  }
   let text = message;
   const last = history[history.length - 1];
   if (match && last?.role === 'model' && /nama penuh|full name/i.test(last.text)) {
@@ -237,7 +252,9 @@ function getBookingRequest(message, history = []) {
     code: match ? `SGM-${match[1].toUpperCase()}` : null,
     text,
     message,
-    requested: Boolean(match) || /\b(booking|tempahan|appointment)\b/i.test(message)
+    // Permintaan kabur dijawab AI dengan soalan penjelasan, bukan terus meminta kod.
+    requested: Boolean(match) || (reservationIntent.test(message) || /\bappointment\b/i.test(message))
+      && (serviceIntent.test(message) || last?.privateBooking === true)
   };
 }
 
@@ -393,6 +410,9 @@ Peraturan Servis & Harga (WAJIB PATUH):
 ${phoneCatalogBlock}
 
 Peraturan Jualan Telefon (WAJIB PATUH):
+- Tab Tempahan web hanya untuk servis/pembaikan, BUKAN pembelian telefon. Untuk tempah beli telefon, arahkan ke WhatsApp rasmi bagi semakan stok dan deposit oleh staf; jangan meminta kod servis SGM.
+- Jangan reka jumlah atau syarat deposit, mengesahkan bayaran, atau mendakwa unit sudah ditempah untuk pelanggan. Staf mesti mengesahkan bayaran diterima dahulu.
+- Jika tujuan tempahan tidak jelas, tanya sama ada pelanggan mahu slot servis atau pembelian telefon sebelum memberi arahan.
 - Untuk pembelian telefon, harga dan spesifikasi, gunakan katalog telefon di atas sahaja, BUKAN senarai harga servis.
 - Harga price ialah Ringgit Malaysia (RM). Nyatakan kod produk code apabila membantu membezakan varian.
 - Hanya status available DAN stock nombor lebih daripada 0 boleh dicadangkan sebagai tersedia mengikut katalog.
