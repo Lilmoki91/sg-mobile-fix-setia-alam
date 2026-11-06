@@ -1,14 +1,39 @@
+// wrangler.jsonc — konfigurasi Cloudflare PAGES (bukan Worker).
+// Projek ini menggunakan Pages Functions (folder functions/), jadi kunci
+// "pages_build_output_dir" wajib. Kunci Worker seperti "assets" dan
+// "observability" tidak disokong untuk Pages.
+//
+// PENTING: Apabila fail ini wujud, ia menjadi sumber kebenaran untuk
+// "vars" (Text) dan binding. Pemboleh ubah jenis Text dalam dashboard
+// akan diabaikan. Nilai rahsia MESTI ditetapkan sebagai "Secret" di
+// dashboard (Settings → Variables and Secrets), dan Secret tetap berfungsi.
+//
+// Secret yang perlu ada di dashboard (Production & Preview):
+//   FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY,
+//   TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, TURNSTILE_HOSTNAME,
+//   ADMIN_PASSWORD (min. 16 aksara),
+//   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET,
+//   CLOUDINARY_GALLERY_PRESET, CLOUDINARY_PHONES_PRESET
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // Mesti sama tepat dengan nama projek Pages di dashboard.
   "name": "sg-mobile-fix-setia-alam",
-  "compatibility_date": "2026-09-05",
-  "observability": {
-    "enabled": true
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Nilai awam (bukan rahsia) yang digunakan oleh lib/auth-server.js dan lib/phones-store.js.
+  "vars": {
+    "FIREBASE_PROJECT_ID": "sgmfix-services",
+    "FIREBASE_WEB_API_KEY": "AIzaSyDH-mFlL-XesjH5vpfYDwfx5Y-A-Th8OwM"
   },
-  "assets": {
-    "directory": "."
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
+
+  // GALLERY_KV: galeri, waktu operasi dan had percubaan login admin.
+  // Ganti "id" dengan ID dari Storage & Databases → KV.
+  "kv_namespaces": [
+    {
+      "binding": "GALLERY_KV",
+      "id": "shop-gallery-data"
+    }
   ]
 }
