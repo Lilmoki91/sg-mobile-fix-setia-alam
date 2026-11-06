@@ -650,6 +650,13 @@ async function initChatbot() {
   windowElement.dataset.initialized = "true";
 
   let chatHistory = [];
+  let chatSessionVersion = 0;
+  document.addEventListener('sgm-auth-changed', event => {
+    if (event.detail) return;
+    chatSessionVersion++;
+    chatHistory = []; lastResponse = ''; editingWrapper = null;
+    stopSpeaking(); hideChat(false); messages.replaceChildren(); input.value = '';
+  });
   let lastResponse = "";
   let activeSpeech = null;
   let activeSpeakButton = null;
@@ -890,6 +897,7 @@ async function initChatbot() {
   input.addEventListener("input", resizeInput);
 
   const sendToAPI = async (question) => {
+    const requestVersion = chatSessionVersion;
     console.log("[CHAT] sendToAPI called:", question);
     const lang = document.documentElement.lang || "ms";
     if (question.split(/\s+/).filter(Boolean).length > 500) { addMessage("⚠️ Mesej terlalu panjang.", false); return; }
@@ -897,13 +905,16 @@ async function initChatbot() {
     showLoading(); sendButton.disabled = true;
 
     try {
+      const session = await window.sgmAuth.require();
       const privateBooking = getBookingRequest(question, chatHistory).requested;
       const reply = await chatEliza(question, lang, chatHistory);
+      if (window.sgmAuth.current?.uid !== session.uid || chatSessionVersion !== requestVersion) return;
       removeLoading(); lastResponse = reply; addMessage(lastResponse, false, question); playTone('receive');
       chatHistory.push({ role: "user", text: question, privateBooking });
       chatHistory.push({ role: "model", text: reply, privateBooking });
       if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
     } catch (error) {
+      if (requestVersion !== chatSessionVersion) return;
       console.error("Chat error:", error);
       removeLoading(); addMessage(error.message, false);
     } finally {
