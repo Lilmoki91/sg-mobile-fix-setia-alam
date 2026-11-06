@@ -3,7 +3,6 @@
 // ============================================================
 // Fail ini menggantikan fungsi initBooking dalam script.js.
 // Pastikan booking-firebase.js dimuat sebelum fail ini.
-// 📌 Pemadaman kini dikira 12 jam selepas tarikh dan masa appointment yang dipilih pengguna, bukan createdAt.
 // booking-ui.js
 
 (function() {
@@ -235,7 +234,9 @@
       const lang = document.documentElement.lang || 'ms';
       const t = window.translations[lang] || window.translations.ms;
 
-      bookingCache.forEach((booking) => {
+      bookingCache.forEach((rawBooking) => {
+        const booking = { ...rawBooking };
+        ['id', 'code', 'name', 'phone', 'device', 'service', 'date', 'time', 'notes'].forEach(k => { booking[k] = window.escapeHtml(booking[k]); });
         const card = document.createElement('div');
         card.className = 'bg-gray-50 rounded-xl p-4 border border-gray-100';
         card.innerHTML = `
