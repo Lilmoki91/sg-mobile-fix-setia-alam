@@ -8,8 +8,7 @@
 (function() {
   'use strict';
 
-  // URL Backend Cloudflare Worker anda
-  const WORKER_URL = "https://sgmfix-admin.taihaulengcai.workers.dev";
+  // Kuasa admin disahkan oleh cookie backend + Firebase custom session.
   const SHOP_PHONE = '60122626434';
 
   const loginScreen = document.getElementById('login-screen');
@@ -333,7 +332,9 @@
       return da - db;
     });
 
-    filtered.forEach(booking => {
+    filtered.forEach(rawBooking => {
+      const booking = { ...rawBooking };
+      ['id', 'code', 'name', 'phone', 'device', 'service', 'date', 'time', 'notes'].forEach(k => { booking[k] = window.escapeHtml(booking[k]); });
       const card = document.createElement('div');
       card.className = 'admin-card p-5';
       card.innerHTML = `
@@ -675,27 +676,14 @@
     }
 
     try {
-      const response = await fetch(`${WORKER_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: input })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        sessionStorage.setItem('sgm_admin_token', data.token);
-        sessionStorage.setItem('sgm_admin_logged_in', '1');
-        loginError.classList.add('hidden');
-        showDashboard();
-        // Sesi galeri disahkan sendiri oleh Pages Functions, bukan flag browser.
-        window.startGallerySession?.(input).catch(() => {});
-      } else {
-        loginError.classList.remove('hidden');
-      }
+      await window.sgmAuth.adminLogin(input);
+      document.getElementById('admin-password').value = '';
+      loginError.classList.add('hidden');
+      showDashboard();
     } catch (err) {
       console.error("Ralat Login:", err);
-      alert(t('Ralat sambungan ke server. Sila cuba lagi.'));
+      loginError.textContent = err.message || t('Ralat sambungan ke server. Sila cuba lagi.');
+      loginError.classList.remove('hidden');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -705,9 +693,8 @@
   });
 
   logoutBtn?.addEventListener('click', async () => {
-    sessionStorage.removeItem('sgm_admin_logged_in');
-    sessionStorage.removeItem('sgm_admin_token');
-    try { await window.endGallerySession?.(); } finally { location.reload(); }
+    try { await window.sgmAuth.logout(); location.reload(); }
+    catch (error) { alert(error.message); }
   });
 
   function updateBookingFilterButtons() {
@@ -854,7 +841,14 @@
     importFile.value = '';
   });
 
+  let dashboardStarted = false;
   function showDashboard() {
+    if (window.sgmAuth.current?.role !== 'admin') return;
+    if (dashboardStarted) {
+      loginScreen?.classList.add('hidden'); adminDashboard?.classList.remove('hidden');
+      return;
+    }
+    dashboardStarted = true;
     loginScreen?.classList.add('hidden');
     adminDashboard?.classList.remove('hidden');
 
@@ -880,10 +874,16 @@
     }
   }
 
-  // Semak session semasa load
-  if (sessionStorage.getItem('sgm_admin_logged_in') === '1') {
-    showDashboard();
-  }
+  // Flags browser tidak pernah memberi kuasa admin.
+  window.sgmAuth.ready.then(s => { if (s?.role === 'admin') showDashboard(); });
+  document.addEventListener('sgm-auth-changed', event => {
+    if (!event.detail) {
+      loginScreen?.classList.remove('hidden');
+      adminDashboard?.classList.add('hidden');
+      allBookings = []; allServices = [];
+      bookingList?.replaceChildren(); serviceList?.replaceChildren();
+    }
+  });
 
   // ============================================================
   // ADMIN LANGUAGE TOGGLE
