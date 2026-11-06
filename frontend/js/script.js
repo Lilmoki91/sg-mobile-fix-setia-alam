@@ -2,6 +2,8 @@
 // LIBRARY LUCIDE ICON
 "use strict";
 
+window.escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 // Pastikan initBooking fallback wujud sebelum DOMContentLoaded.
 function initBooking() {}
 
