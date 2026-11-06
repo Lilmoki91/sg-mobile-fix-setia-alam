@@ -1,0 +1,103 @@
+// functions/api/auth/[[path]].js
+import { DAY, fail, json, origin, body, hash, equal, str, stamp, docName, rest, fields, commit, session, cookie, captcha, googleIdentity, customToken, issue, revoke, queryOwned } from '../../../lib/auth-server.js';
+import { token as serviceToken } from '../../../lib/phones-store.js';
+
+async function responseSession(env, s, profile = null) {
+  return { authenticated: true, uid: s.uid, role: s.role, profile, expiresAt: s.expiresAt, serverNow: new Date().toISOString(), customToken: await customToken(env, s) };
+}
+async function adminAttempts(request, env) {
+  // KV is best-effort; configure an edge rate-limit rule for this endpoint too.
+  if (!env.GALLERY_KV) fail('GALLERY_KV diperlukan untuk had percubaan admin.', 503);
+  const key = 'auth-admin:' + await hash(request.headers.get('CF-Connecting-IP') || 'unknown');
+  const value = await env.GALLERY_KV.get(key, 'json');
+  const recent = value && Date.now() - value.since < 900000;
+  if (recent && value.count >= 8) fail('Terlalu banyak percubaan. Tunggu 15 minit.', 429);
+  await env.GALLERY_KV.put(key, JSON.stringify({ since: recent ? value.since : Date.now(), count: recent ? value.count + 1 : 1 }), { expirationTtl: 900 });
+  return key;
+}
+export async function onRequest({ request, env }) {
+  const route = new URL(request.url).pathname.replace(/^\/api\/auth\/?/, '').replace(/\/$/, '');
+  const role = route.startsWith('admin') ? 'admin' : 'pelanggan';
+  try {
+    if (request.method !== 'GET') origin(request);
+    if (route === 'config' && request.method === 'GET') {
+      if (!env.TURNSTILE_SITE_KEY) fail('TURNSTILE_SITE_KEY belum ditetapkan pada Cloudflare.', 503);
+      return json({ siteKey: env.TURNSTILE_SITE_KEY });
+    }
+    if (['session', 'admin-session'].includes(route) && request.method === 'GET') {
+      const s = await session(request, env, role);
+      if (!s) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
+      const profile = role === 'pelanggan' ? fields(await rest(env, 'users/' + encodeURIComponent(s.uid))) : null;
+      if (role === 'pelanggan' && (!profile.uid || profile.deleting || await rest(env, 'authDeletions/' + encodeURIComponent(s.uid)))) fail('Akaun tidak tersedia.', 403);
+      return json(await responseSession(env, s, profile));
+    }
+    if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
+      const s = await session(request, env, role);
+      if (s) await revoke(env, s.uid, role);
+      return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
+    }
+    if (route === 'login' && request.method === 'POST') {
+      const input = await body(request);
+      const identity = await googleIdentity(env, input.idToken, true);
+      await captcha(request, env, input.captchaToken, 'login');
+      if (await rest(env, 'authDeletions/' + encodeURIComponent(identity.uid))) fail('UID ini telah dipadam atau sedang dipadam.', 403);
+      const path = 'users/' + encodeURIComponent(identity.uid);
+      let profileDoc = await rest(env, path);
+      if (!profileDoc) {
+        const profile = { uid: str(identity.uid), email: str(identity.email), nama: str(identity.nama), no_telefon: str(''), peranan: str('pelanggan') };
+        try {
+          await commit(env, [{ update: { name: docName(env, path), fields: profile }, updateTransforms: [{ fieldPath: 'tarikh_daftar', setToServerValue: 'REQUEST_TIME' }], currentDocument: { exists: false } }]);
+        } catch (e) { if (e.status !== 409) throw e; }
+        profileDoc = await rest(env, path);
+      }
+      const profile = fields(profileDoc);
+      if (profile.deleting) fail('Akaun sedang dipadam. Hubungi admin jika proses terganggu.', 403);
+      const old = await session(request, env);
+      if (old) await revoke(env, old.uid, 'pelanggan');
+      const s = await issue(env, identity.uid, 'pelanggan');
+      return json(await responseSession(env, s, profile), 200, { 'Set-Cookie': cookie('pelanggan', s.raw, DAY / 1000) });
+    }
+    if (route === 'admin-login' && request.method === 'POST') {
+      const input = await body(request), key = await adminAttempts(request, env);
+      if (!env.ADMIN_PASSWORD || env.ADMIN_PASSWORD.length < 16) fail('Tetapkan ADMIN_PASSWORD sekurang-kurangnya 16 aksara.', 503);
+      if (typeof input.password !== 'string' || input.password.length > 256 || !equal(await hash(input.password), await hash(env.ADMIN_PASSWORD))) fail('Kata laluan salah.', 401);
+      await env.GALLERY_KV.delete(key);
+      // Persist one random, reserved admin identity; never collide with a customer UID.
+      let adminConfig = await rest(env, 'authConfig/admin');
+      if (!adminConfig) {
+        try {
+          await commit(env, [{ update: { name: docName(env, 'authConfig/admin'), fields: { uid: str('admin-' + crypto.randomUUID()) } }, currentDocument: { exists: false } }]);
+        } catch (e) { if (e.status !== 409) throw e; }
+        adminConfig = await rest(env, 'authConfig/admin');
+      }
+      const adminUid = fields(adminConfig).uid;
+      if (!adminUid) fail('Konfigurasi identiti admin tidak sah.', 503);
+      const s = await issue(env, adminUid, 'admin');
+      return json(await responseSession(env, s), 200, { 'Set-Cookie': cookie('admin', s.raw, DAY / 1000) });
+    }
+    if (route === 'delete-account' && request.method === 'POST') {
+      const s = await session(request, env); if (!s) fail('Sila login semula.', 401);
+      const input = await body(request);
+      const identity = await googleIdentity(env, input.idToken, true);
+      if (identity.uid !== s.uid) fail('Akaun Google tidak sepadan.', 403);
+      await captcha(request, env, input.captchaToken, 'delete_account');
+      // A tombstone blocks in-flight login attempts from resurrecting the old UID.
+      await commit(env, [
+        { update: { name: docName(env, 'authDeletions/' + encodeURIComponent(s.uid)), fields: { startedAt: stamp(Date.now()) } } },
+        { update: { name: docName(env, 'users/' + encodeURIComponent(s.uid)), fields: { deleting: { booleanValue: true } } }, updateMask: { fieldPaths: ['deleting'] } }
+      ]);
+      const bookings = await queryOwned(env, 'bookings', 'ownerUid', s.uid);
+      for (let i = 0; i < bookings.length; i += 400) await commit(env, bookings.slice(i, i + 400).map(d => ({ delete: d.name })));
+      const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts:delete`, { method: 'POST', headers: { Authorization: 'Bearer ' + await serviceToken(env, 'https://www.googleapis.com/auth/cloud-platform'), 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: s.uid }), signal: AbortSignal.timeout(15000) });
+      const result = await r.json();
+      if (!r.ok && !String(result.error?.message).includes('USER_NOT_FOUND')) fail('Pemadaman Firebase Auth gagal. Hubungi admin untuk sambung pembersihan.', 502);
+      await rest(env, 'users/' + encodeURIComponent(s.uid), 'DELETE');
+      await revoke(env, s.uid, 'pelanggan');
+      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
+    }
+    return json({ error: 'Endpoint atau kaedah tidak dibenarkan.' }, 404);
+  } catch (e) {
+    if (!e.status) console.error('Authentication backend:', e.message);
+    return json({ error: e.status ? e.message : 'Ralat backend. Semak log Cloudflare.' }, e.status || 500);
+  }
+}
