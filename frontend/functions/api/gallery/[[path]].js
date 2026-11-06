@@ -1,4 +1,6 @@
+// functions/api/gallery/[[path]].js
 // Cloudflare Pages Functions only: tidak dimuatkan sebagai skrip browser.
+import { adminAuthenticated } from '../../../lib/auth-server.js';
 const COOKIE = 'sgm_gallery_session';
 const PREFIX = 'shop-gallery/';
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -19,27 +21,8 @@ async function hash(value, algorithm = 'SHA-256') {
   const digest = await crypto.subtle.digest(algorithm, encoder.encode(value));
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
-function same(a, b) {
-  if (a.length !== b.length) return false;
-  let different = 0;
-  for (let i = 0; i < a.length; i++) different |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return different === 0;
-}
-async function sessionSignature(value, secret) {
-  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const result = await crypto.subtle.sign('HMAC', key, encoder.encode(value));
-  return [...new Uint8Array(result)].map(byte => byte.toString(16).padStart(2, '0')).join('');
-}
 export async function authenticated(request, env) {
-  if (!env.GALLERY_SESSION_SECRET || env.GALLERY_SESSION_SECRET.length < 32) return false;
-  const cookie = (request.headers.get('Cookie') || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${COOKIE}=`));
-  if (!cookie) return false;
-  const token = cookie.slice(COOKIE.length + 1);
-  const [expiry, nonce, signature, extra] = token.split('.');
-  if (extra || !/^\d+$/.test(expiry || '') || !/^[a-f0-9-]{36}$/.test(nonce || '') || !/^[a-f0-9]{64}$/.test(signature || '')) return false;
-  const now = Math.floor(Date.now() / 1000);
-  if (Number(expiry) <= now || Number(expiry) > now + 3600) return false;
-  return same(signature, await sessionSignature(`${expiry}.${nonce}`, env.GALLERY_SESSION_SECRET));
+  return adminAuthenticated(request, env);
 }
 function cookie(value, age) {
   return `${COOKIE}=${value}; Path=/api; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
@@ -137,23 +120,7 @@ export async function onRequest({ request, env }) {
       if (method === 'GET') return json({ authenticated: await authenticated(request, env) });
       if (method === 'DELETE') return json({ success: true }, 200, { 'Set-Cookie': cookie('', 0) });
       if (method !== 'POST') return json({ error: 'Kaedah tidak dibenarkan.' }, 405);
-      if (!env.GALLERY_ADMIN_PASSWORD || !env.GALLERY_SESSION_SECRET || env.GALLERY_SESSION_SECRET.length < 32) fail('Secret sesi galeri belum dikonfigurasi pada Cloudflare.', 503);
-      if (!env.GALLERY_KV) fail('Binding GALLERY_KV belum dikonfigurasi.', 503);
-      const data = await readJson(request);
-      // KV ialah perlindungan best-effort sahaja; tambah rate limiting di edge.
-      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-      const attemptKey = `login:${await hash(ip + env.GALLERY_SESSION_SECRET)}`;
-      const attempts = await env.GALLERY_KV.get(attemptKey, 'json');
-      const recent = attempts && Date.now() - attempts.since < 15 * 60 * 1000;
-      if (recent && attempts.count >= 8) fail('Terlalu banyak percubaan. Cuba lagi selepas 15 minit.', 429);
-      if (typeof data.password !== 'string' || data.password.length > 256 || !same(await hash(data.password), await hash(env.GALLERY_ADMIN_PASSWORD))) {
-        await env.GALLERY_KV.put(attemptKey, JSON.stringify({ since: recent ? attempts.since : Date.now(), count: recent ? attempts.count + 1 : 1 }), { expirationTtl: 900 });
-        fail('Kata laluan galeri salah.', 401);
-      }
-      await env.GALLERY_KV.delete(attemptKey);
-      const payload = `${Math.floor(Date.now() / 1000) + 3600}.${crypto.randomUUID()}`;
-      const token = `${payload}.${await sessionSignature(payload, env.GALLERY_SESSION_SECRET)}`;
-      return json({ success: true }, 200, { 'Set-Cookie': cookie(token, 3600) });
+      return json({ error: 'Sila gunakan login admin utama di admin.html.' }, 403);
     }
     const admin = url.searchParams.get('admin') === '1';
     if (method !== 'GET' || admin) {
@@ -229,3 +196,4 @@ export async function onRequest({ request, env }) {
     return json({ error: error.status ? error.message : 'Ralat backend galeri. Semak log Pages Functions.' }, error.status || 500);
   }
 }
+ 
