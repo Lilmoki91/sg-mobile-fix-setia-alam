@@ -34,7 +34,7 @@ export async function onRequest({ request, env }) {
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
       const s = await session(request, env, role);
       if (s) await revoke(env, s.uid, role);
-      return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
+      return json({ success: true }, 200, { 'Set-Cookie': cookie(role) });
     }
     if (route === 'login' && request.method === 'POST') {
       const input = await body(request);
@@ -93,7 +93,7 @@ export async function onRequest({ request, env }) {
       if (!r.ok && !String(result.error?.message).includes('USER_NOT_FOUND')) fail('Pemadaman Firebase Auth gagal. Hubungi admin untuk sambung pembersihan.', 502);
       await rest(env, 'users/' + encodeURIComponent(s.uid), 'DELETE');
       await revoke(env, s.uid, 'pelanggan');
-      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
+      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan') });
     }
     return json({ error: 'Endpoint atau kaedah tidak dibenarkan.' }, 404);
   } catch (e) {
