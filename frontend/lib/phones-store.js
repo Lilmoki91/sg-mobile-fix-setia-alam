@@ -1,3 +1,4 @@
+// lib/phones-store.js
 // Server only. Firestore REST uses a service account; no browser credentials.
 const encoder = new TextEncoder();
 let cachedToken = null;
@@ -6,23 +7,23 @@ function base64url(bytes) {
   let text = ''; for (const byte of bytes) text += String.fromCharCode(byte);
   return btoa(text).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
-async function token(env) {
+export async function token(env, scope = 'https://www.googleapis.com/auth/datastore') {
   if (!env.FIREBASE_PROJECT_ID || !/^[a-z0-9-]+$/.test(env.FIREBASE_PROJECT_ID) || !env.FIREBASE_CLIENT_EMAIL || !env.FIREBASE_PRIVATE_KEY) fail('Konfigurasi service account Firestore belum lengkap. / Firestore service account configuration is incomplete.');
   const now = Math.floor(Date.now() / 1000);
-  if (cachedToken && cachedToken.email === env.FIREBASE_CLIENT_EMAIL && cachedToken.expires > now + 60) return cachedToken.value;
+  if (cachedToken && cachedToken.email === env.FIREBASE_CLIENT_EMAIL && cachedToken.scope === scope && cachedToken.expires > now + 60) return cachedToken.value;
   const privateKey = env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, '');
   let key;
   try {
     key = await crypto.subtle.importKey('pkcs8', Uint8Array.from(atob(privateKey), c => c.charCodeAt(0)), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
   } catch { fail('Private key Firestore tidak sah. / Invalid Firestore private key.'); }
   const header = base64url(encoder.encode(JSON.stringify({ alg: 'RS256', typ: 'JWT' })));
-  const claims = base64url(encoder.encode(JSON.stringify({ iss: env.FIREBASE_CLIENT_EMAIL, scope: 'https://www.googleapis.com/auth/datastore', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 })));
+  const claims = base64url(encoder.encode(JSON.stringify({ iss: env.FIREBASE_CLIENT_EMAIL, scope, aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600 })));
   const payload = header + '.' + claims;
   const signature = base64url(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, encoder.encode(payload))));
   const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: payload + '.' + signature }), signal: AbortSignal.timeout(15000) });
   const data = await response.json();
   if (!response.ok || !data.access_token) fail('Autentikasi Firestore gagal. Semak service account. / Firestore authentication failed.');
-  cachedToken = { email: env.FIREBASE_CLIENT_EMAIL, value: data.access_token, expires: now + Number(data.expires_in || 3600) };
+  cachedToken = { email: env.FIREBASE_CLIENT_EMAIL, scope, value: data.access_token, expires: now + Number(data.expires_in || 3600) };
   return data.access_token;
 }
 function encode(value) {
