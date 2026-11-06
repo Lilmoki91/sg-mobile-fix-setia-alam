@@ -32,6 +32,13 @@
     return window.db;
   }
 
+  async function bookingQuery(fns) {
+    const s = await window.sgmAuth.require();
+    return s.role === 'admin'
+      ? fns.query(fns.collection(getDb(), COLLECTION_NAME), fns.orderBy('date', 'asc'))
+      : fns.query(fns.collection(getDb(), COLLECTION_NAME), fns.where('ownerUid', '==', s.uid));
+  }
+
   function normalizeBooking(docId, data) {
     return {
       id: docId,
@@ -54,36 +61,34 @@
   // REAL-TIME LISTENER
   // ============================================================
   window.startBookingListener = function(callback) {
-    let unsubscribe = null;
-
-    (async () => {
+    let unsubscribe, stopped = false, version = 0;
+    async function connect() {
+      const mine = ++version;
+      unsubscribe?.(); unsubscribe = null;
+      window.cachedBookings = []; window.cachedBookingsReady = false;
+      if (typeof callback === 'function') callback([]);
+      if (stopped || !window.sgmAuth?.current) return;
       try {
         const fns = await getFirestoreFns();
-        const db = getDb();
-        const q = fns.query(
-          fns.collection(db, COLLECTION_NAME),
-          fns.orderBy('date', 'asc')
-        );
-
-        unsubscribe = fns.onSnapshot(q, (snapshot) => {
+        const q = await bookingQuery(fns);
+        if (stopped || mine !== version) return;
+        unsubscribe = fns.onSnapshot(q, snapshot => {
+          if (mine !== version) return;
           const bookings = [];
-          snapshot.forEach((docItem) => {
-            bookings.push(normalizeBooking(docItem.id, docItem.data()));
-          });
+          snapshot.forEach(item => bookings.push(normalizeBooking(item.id, item.data())));
           window.cachedBookings = sortBookings(bookings);
           window.cachedBookingsReady = true;
           if (typeof callback === 'function') callback(window.cachedBookings);
-        }, (error) => {
-          console.error('Error real-time listener:', error);
+        }, error => {
+          window.cachedBookings = []; window.cachedBookingsReady = false;
+          if (typeof callback === 'function') callback([]);
+          console.error('Listener booking ditolak:', error);
         });
-      } catch (error) {
-        console.error('Gagal pasang listener Firebase:', error);
-      }
-    })();
-
-    return function stopListener() {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
+      } catch (error) { console.error('Gagal pasang listener:', error); }
+    }
+    document.addEventListener('sgm-auth-changed', connect);
+    window.sgmAuth.ready.then(connect);
+    return () => { stopped = true; version++; unsubscribe?.(); document.removeEventListener('sgm-auth-changed', connect); };
   };
 
   window.getCachedBookings = function() {
@@ -99,9 +104,11 @@
       const db = getDb();
       const now = new Date();
       const localCreatedAt = now.toISOString();
+      const s = await window.sgmAuth.require();
       const bookingWithMeta = {
         ...bookingData,
-        status: bookingData.status || 'pending',
+        ownerUid: s.role === 'admin' ? bookingData.ownerUid : s.uid,
+        status: s.role === 'admin' ? (bookingData.status || 'pending') : 'pending',
         lang: bookingData.lang || document.documentElement.lang || 'ms',
         createdAt: localCreatedAt,
         createdAtServer: fns.serverTimestamp(),
@@ -122,6 +129,8 @@
     try {
       const fns = await getFirestoreFns();
       const db = getDb();
+      const s = await window.sgmAuth.require();
+      if (s.role !== 'admin') throw new Error('Status hanya boleh dikemas kini oleh admin.');
       const ref = fns.doc(db, COLLECTION_NAME, docId);
       await fns.updateDoc(ref, {
         status: status,
@@ -154,6 +163,8 @@
   // ============================================================
   window.importBookingsToFirebase = async function(bookingsArray) {
     try {
+      const s = await window.sgmAuth.require();
+      if (s.role !== 'admin') throw new Error('Import hanya untuk admin.');
       const fns = await getFirestoreFns();
       const db = getDb();
       let count = 0;
@@ -201,7 +212,7 @@
     try {
       const fns = await getFirestoreFns();
       const db = getDb();
-      const q = fns.query(fns.collection(db, COLLECTION_NAME), fns.orderBy('date', 'asc'));
+      const q = await bookingQuery(fns);
       const snapshot = await fns.getDocs(q);
       const bookings = [];
       snapshot.forEach((docItem) => {
@@ -223,8 +234,11 @@
       .toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
     try {
       const fns = await getFirestoreFns();
+      const s = await window.sgmAuth.require();
+      if (s.role !== 'pelanggan') return { success: false, error: 'Carian pelanggan sahaja.' };
       const snapshot = await fns.getDocs(fns.query(
         fns.collection(getDb(), COLLECTION_NAME),
+        fns.where('ownerUid', '==', s.uid),
         fns.where('code', '==', code)
       ));
       const matches = [];
