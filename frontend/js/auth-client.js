@@ -10,7 +10,13 @@
   const el = id => document.getElementById('auth-' + id);
   const message = value => { if (el('message')) el('message').textContent = value; };
   async function api(path, data) {
-    const response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
+    let response;
+    try {
+      // Timeout so the overlay never stays on "Menyemak sesi selamat…" forever.
+      response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(20000), ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
+    } catch (e) {
+      throw new Error(e.name === 'TimeoutError' ? 'Pelayan lambat bertindak balas. Muat semula dan cuba lagi.' : 'Sambungan gagal. Semak internet dan cuba lagi.');
+    }
     let result;
     try { result = await response.json(); } catch { throw new Error('Pages Functions belum tersedia. Sistem ini memerlukan deployment Cloudflare dan konfigurasi Firebase/Turnstile.'); }
     if (!response.ok) { const e = new Error(result.error || 'Sesi tamat. Sila login semula.'); e.status = response.status; throw e; }
@@ -87,6 +93,7 @@
   }
   async function logout(broadcast = true) {
     lock();
+    message('Sedang log keluar…');
     let error;
     try { await api(adminPage ? 'admin-logout' : 'logout', {}); } catch (e) { error = e; }
     await clearBrowser();
