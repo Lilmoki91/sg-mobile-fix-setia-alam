@@ -1,7 +1,17 @@
 // Never HTTP-cache API responses or the login/application shell.
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  const logoutRole = { '/api/auth/logout': 'pelanggan', '/api/auth/admin-logout': 'admin' }[url.pathname.replace(/\/$/, '')];
+  const path = url.pathname.replace(/\/$/, '');
+  const statusRole = { '/api/auth/logout-status': 'pelanggan', '/api/auth/admin-logout-status': 'admin' }[path];
+  if (statusRole && context.request.method === 'GET') {
+    // No Firestore lookup: only confirm whether this browser still sends the cookie.
+    const name = statusRole === 'admin' ? '__Host-sgm_admin' : '__Host-sgm_session';
+    const present = (context.request.headers.get('Cookie') || '').split(';').some(part => part.trim().startsWith(name + '='));
+    return new Response(JSON.stringify({ cookieCleared: !present, role: statusRole }), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' }
+    });
+  }
+  const logoutRole = { '/api/auth/logout': 'pelanggan', '/api/auth/admin-logout': 'admin' }[path];
   if (logoutRole && context.request.method === 'POST') {
     const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
     if (context.request.headers.get('Origin') !== url.origin) {
@@ -16,7 +26,7 @@ export async function onRequest(context) {
     })().catch(error => console.error('Logout revoke gagal; semak sesi dalam Firestore:', error.message)));
     const name = logoutRole === 'admin' ? '__Host-sgm_admin' : '__Host-sgm_session';
     headers['Set-Cookie'] = `${name}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
-    headers['Clear-Site-Data'] = '"cache"';
+    // Cache eviction is not required to expire an HttpOnly cookie.
     return new Response(JSON.stringify({ success: true }), { headers });
   }
   const response = await context.next();
