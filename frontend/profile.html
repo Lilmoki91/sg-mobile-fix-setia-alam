@@ -1,0 +1,31 @@
+<section class="profile-card">
+  <div class="profile-heading">
+    <h2 id="profile-title" tabindex="-1" data-profile-text="title">Profil Saya</h2>
+    <button id="profile-back" class="profile-back" type="button" aria-label="Kembali ke Utama">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="profile-avatar" aria-hidden="true">
+    <i id="profile-avatar-fallback" class="fas fa-user"></i>
+    <img id="profile-photo" alt="" hidden referrerpolicy="no-referrer">
+  </div>
+  <dl class="profile-details">
+    <div><dt data-profile-text="name">Nama</dt><dd id="profile-name">—</dd></div>
+    <div><dt data-profile-text="email">Email</dt><dd id="profile-email">—</dd></div>
+    <div><dt data-profile-text="id">ID SG Mobile Fix</dt><dd id="profile-id">—</dd></div>
+  </dl>
+  <form id="profile-phone-form">
+    <label for="profile-phone" data-profile-text="phone">Nombor Telefon</label>
+    <div class="profile-phone-row">
+      <input id="profile-phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+60123456789" disabled aria-describedby="profile-status">
+      <button id="profile-save" class="profile-save" type="submit" disabled><span data-profile-text="save">Simpan</span></button>
+    </div>
+  </form>
+  <p id="profile-status" role="status" aria-live="polite"></p>
+  <button id="profile-retry" class="profile-back" type="button" hidden data-profile-text="retry">Cuba lagi</button>
+  <div class="profile-actions">
+    <button id="customer-logout" class="profile-logout" type="button"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span data-profile-text="logout">Log Keluar</span></button>
+    <button id="customer-delete" class="profile-delete" type="button"><i class="fas fa-trash-alt" aria-hidden="true"></i> <span data-profile-text="delete">Padam Akaun</span></button>
+    <p data-profile-text="warning">Pemadaman akaun adalah kekal dan memerlukan pengesahan Google serta CAPTCHA baharu.</p>
+  </div>
+</section>
