@@ -65,16 +65,23 @@ export async function onRequest({ request, env, waitUntil }) {
       if (!env.ADMIN_PASSWORD || env.ADMIN_PASSWORD.length < 16) fail('Tetapkan ADMIN_PASSWORD sekurang-kurangnya 16 aksara.', 503);
       if (typeof input.password !== 'string' || input.password.length > 256 || !equal(await hash(input.password), await hash(env.ADMIN_PASSWORD))) fail('Kata laluan salah.', 401);
       await env.GALLERY_KV.delete(key);
-      // Persist one random, reserved admin identity; never collide with a customer UID.
+      // Recover missing/cleared configuration only after verifying the admin password.
+      const validAdminUid = value => typeof value === 'string' && /^admin-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
       let adminConfig = await rest(env, 'authConfig/admin');
-      if (!adminConfig) {
+      for (let attempt = 0; attempt < 3 && !validAdminUid(fields(adminConfig).uid); attempt++) {
+        if (adminConfig && !adminConfig.updateTime) fail('Konfigurasi admin tidak dapat dipulihkan. Semak log Firestore.', 503);
         try {
-          await commit(env, [{ update: { name: docName(env, 'authConfig/admin'), fields: { uid: str('admin-' + crypto.randomUUID()) } }, currentDocument: { exists: false } }]);
+          await commit(env, [{
+            update: { name: docName(env, 'authConfig/admin'), fields: { uid: str('admin-' + crypto.randomUUID()) } },
+            updateMask: { fieldPaths: ['uid'] },
+            // Do not overwrite an identity repaired by another simultaneous login.
+            currentDocument: adminConfig ? { updateTime: adminConfig.updateTime } : { exists: false }
+          }]);
         } catch (e) { if (e.status !== 409) throw e; }
         adminConfig = await rest(env, 'authConfig/admin');
       }
       const adminUid = fields(adminConfig).uid;
-      if (!adminUid) fail('Konfigurasi identiti admin tidak sah.', 503);
+      if (!validAdminUid(adminUid)) fail('Konfigurasi admin sedang berubah. Cuba login semula.', 503);
       const s = await issue(env, adminUid, 'admin');
       return json(await responseSession(env, s), 200, { 'Set-Cookie': cookie('admin', s.raw, DAY / 1000) });
     }
