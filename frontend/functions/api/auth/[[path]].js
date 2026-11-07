@@ -1,6 +1,6 @@
-// functions/api/auth/[[path]].js
 import { DAY, fail, json, origin, body, hash, equal, str, stamp, docName, rest, fields, commit, session, cookie, captcha, googleIdentity, customToken, issue, revoke, queryOwned } from '../../../lib/auth-server.js';
 import { token as serviceToken } from '../../../lib/phones-store.js';
+import { ensureProfile } from '../../../lib/profile-store.js';
 
 async function responseSession(env, s, profile = null) {
   return { authenticated: true, uid: s.uid, role: s.role, profile, expiresAt: s.expiresAt, serverNow: new Date().toISOString(), customToken: await customToken(env, s) };
@@ -27,30 +27,22 @@ export async function onRequest({ request, env }) {
     if (['session', 'admin-session'].includes(route) && request.method === 'GET') {
       const s = await session(request, env, role);
       if (!s) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
-      const profile = role === 'pelanggan' ? fields(await rest(env, 'users/' + encodeURIComponent(s.uid))) : null;
+      let profile = role === 'pelanggan' ? fields(await rest(env, 'users/' + encodeURIComponent(s.uid))) : null;
       if (role === 'pelanggan' && (!profile.uid || profile.deleting || await rest(env, 'authDeletions/' + encodeURIComponent(s.uid)))) fail('Akaun tidak tersedia.', 403);
+      if (role === 'pelanggan') profile = await ensureProfile(env, s.uid);
       return json(await responseSession(env, s, profile));
     }
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
       const s = await session(request, env, role);
       if (s) await revoke(env, s.uid, role);
-      return json({ success: true }, 200, { 'Set-Cookie': cookie(role) });
+      return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
     }
     if (route === 'login' && request.method === 'POST') {
       const input = await body(request);
       const identity = await googleIdentity(env, input.idToken, true);
       await captcha(request, env, input.captchaToken, 'login');
       if (await rest(env, 'authDeletions/' + encodeURIComponent(identity.uid))) fail('UID ini telah dipadam atau sedang dipadam.', 403);
-      const path = 'users/' + encodeURIComponent(identity.uid);
-      let profileDoc = await rest(env, path);
-      if (!profileDoc) {
-        const profile = { uid: str(identity.uid), email: str(identity.email), nama: str(identity.nama), no_telefon: str(''), peranan: str('pelanggan') };
-        try {
-          await commit(env, [{ update: { name: docName(env, path), fields: profile }, updateTransforms: [{ fieldPath: 'tarikh_daftar', setToServerValue: 'REQUEST_TIME' }], currentDocument: { exists: false } }]);
-        } catch (e) { if (e.status !== 409) throw e; }
-        profileDoc = await rest(env, path);
-      }
-      const profile = fields(profileDoc);
+      const profile = await ensureProfile(env, identity.uid, identity);
       if (profile.deleting) fail('Akaun sedang dipadam. Hubungi admin jika proses terganggu.', 403);
       const old = await session(request, env);
       if (old) await revoke(env, old.uid, 'pelanggan');
@@ -93,7 +85,7 @@ export async function onRequest({ request, env }) {
       if (!r.ok && !String(result.error?.message).includes('USER_NOT_FOUND')) fail('Pemadaman Firebase Auth gagal. Hubungi admin untuk sambung pembersihan.', 502);
       await rest(env, 'users/' + encodeURIComponent(s.uid), 'DELETE');
       await revoke(env, s.uid, 'pelanggan');
-      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan') });
+      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
     }
     return json({ error: 'Endpoint atau kaedah tidak dibenarkan.' }, 404);
   } catch (e) {
