@@ -17,7 +17,7 @@
   };
   async function api(path, data) {
     const controller = new AbortController();
-    const timeout = path.includes('logout') ? 10000 : path.startsWith('delete-account') ? 150000 : 30000;
+    const timeout = path.includes('logout') ? 10000 : path === 'delete-account-status' ? 15000 : path.startsWith('delete-account') ? 150000 : 30000;
     const abortTimer = setTimeout(() => controller.abort(), timeout);
     try {
       const response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal, ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
@@ -196,6 +196,32 @@
     el('google').hidden = true; el('cancel').hidden = true; el('delete').hidden = false;
     el('delete').textContent = 'Sambung pemadaman';
   }
+  async function deletionStep() {
+    let stopped = false, pollTimer;
+    // A commit can succeed while its POST response is delayed or lost.
+    // Check the server receipt independently; a missing user document is not proof.
+    const receipt = new Promise((resolve, reject) => {
+      const check = async () => {
+        try {
+          const status = await api('delete-account-status');
+          if (stopped) return;
+          if (status.success === true) { resolve(status); return; }
+        } catch (error) {
+          if (stopped) return;
+          if (error.status === 401) { reject(error); return; }
+          // A failed status check must not interrupt an active deletion request.
+        }
+        if (!stopped) pollTimer = setTimeout(check, 3000);
+      };
+      pollTimer = setTimeout(check, 3000);
+    });
+    try {
+      return await Promise.race([api('delete-account-continue', {}), receipt]);
+    } finally {
+      stopped = true;
+      clearTimeout(pollTimer);
+    }
+  }
   async function finishDeletion() {
     if (deletionRunning) return;
     deletionRunning = true; el('delete').disabled = true;
@@ -205,16 +231,17 @@
       while (Date.now() < deadline) {
         message('Memadam akaun dan tempahan… Jangan tutup halaman ini.');
         let data;
-        try { data = await api('delete-account-continue', {}); failures = 0; }
+        try { data = await deletionStep(); failures = 0; }
         catch (e) {
           if (e.retryable && ++failures < 3) { await new Promise(resolve => setTimeout(resolve, 1500)); continue; }
           throw e;
         }
         if (data.success) {
           deletionPending = false;
-          lock(); await clearBrowser(); channel?.postMessage({ type: 'logout', role: 'pelanggan' });
+          lock();
+          message('Akaun dan tempahan anda telah dipadam. Sila login untuk meneruskan.');
+          await clearBrowser(); channel?.postMessage({ type: 'logout', role: 'pelanggan' });
           try { localStorage.setItem('sgm-logout-event', JSON.stringify({ role: 'pelanggan', nonce: crypto.randomUUID() })); } catch (_) {}
-          message('Akaun dan tempahan anda telah dipadam.');
           location.reload(); return;
         }
         if (!data.pending) throw new Error('Status pemadaman tidak sah. Hubungi admin.');
