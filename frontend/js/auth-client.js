@@ -3,13 +3,18 @@
   'use strict';
   const adminPage = !!document.getElementById('admin-dashboard');
   let current = null, sdk, auth, googleAuth, widget, siteKey, timer, deleting = false, loginFlow = false;
-  let generation = 0, deletionPending = false, deletionRunning = false;
+  let generation = 0, deletionPending = false, deletionRunning = false, loggingOut = false, logoutTask = null;
   const channel = 'BroadcastChannel' in window ? new BroadcastChannel('sgm-auth-events') : null;
   const overlay = document.getElementById('auth-overlay');
   const el = id => document.getElementById('auth-' + id);
   const message = value => { if (el('message')) el('message').textContent = value; };
   // Reject if a promise takes too long, so the UI never stays on "Menyemak sesi selamat…" forever.
-  const withTimeout = (promise, ms, text) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(text)), ms))]);
+  const withTimeout = (promise, ms, text) => {
+    let timeout;
+    return Promise.race([promise, new Promise((_, reject) => {
+      timeout = setTimeout(() => reject(new Error(text)), ms);
+    })]).finally(() => clearTimeout(timeout));
+  };
   async function api(path, data) {
     const controller = new AbortController();
     const timeout = path.startsWith('delete-account') ? 150000 : 30000;
@@ -24,7 +29,8 @@
       }
       if (!response.ok) {
         const e = new Error(result.error || 'Sesi tamat. Sila login semula.');
-        e.status = response.status; e.deletionPending = result.deletionPending === true; throw e;
+        e.status = response.status; e.deletionPending = result.deletionPending === true;
+        e.deletionCompleted = result.deletionCompleted === true; throw e;
       }
       return result;
     } catch (e) {
@@ -55,7 +61,11 @@
       el('intro').hidden = true;
     }
     if (widget !== undefined && window.turnstile) { window.turnstile.remove(widget); widget = undefined; }
-    deleting = false; loginFlow = false;
+    deleting = false; loginFlow = false; deletionPending = false;
+    if (el('delete')) { el('delete').disabled = false; el('delete').textContent = 'Sahkan Google untuk padam akaun'; }
+    if (el('cancel')) el('cancel').textContent = 'Batal pemadaman';
+    if (el('google')) el('google').disabled = false;
+    el('logout-retry')?.remove();
     window.cachedBookings = []; window.cachedBookingsReady = false;
     document.getElementById('booking-list')?.replaceChildren();
     document.getElementById('booking-form')?.reset();
@@ -81,7 +91,7 @@
   }
   let restoring = null;
   function restore() {
-    if (deleting || loginFlow) return Promise.resolve(current);
+    if (deleting || loginFlow || loggingOut) return Promise.resolve(current);
     if (restoring) return restoring;
     const version = generation;
     restoring = (async () => {
@@ -90,8 +100,8 @@
         if (version === generation) await accept(data);
       } catch (error) {
         if (version === generation) {
-          lock(); if (auth) await sdk.signOut(auth);
-          message(error.status === 401 ? 'Sila login untuk meneruskan.' : error.message);
+          lock(); if (auth) sdk.signOut(auth).catch(() => {});
+          message(error.deletionCompleted ? 'Akaun dan tempahan anda telah dipadam. Sila login untuk meneruskan.' : error.status === 401 ? 'Sila login untuk meneruskan.' : error.message);
           if (error.deletionPending) { deletionPending = true; showDeletionRetry(); }
         }
       }
@@ -102,22 +112,49 @@
   async function clearBrowser() {
     window.closeMenu?.();
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
-    if ('caches' in window) { try { await Promise.all((await caches.keys()).map(k => caches.delete(k))); } catch (_) {} }
-    // HTTP cache is cleared by Clear-Site-Data where supported; it cannot be cleared by JS everywhere.
-    await Promise.allSettled([sdk.signOut(auth), sdk.signOut(googleAuth)]);
+    const cleanup = async () => {
+      const tasks = [];
+      if ('caches' in window) tasks.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+      if (sdk && auth) tasks.push(sdk.signOut(auth));
+      if (sdk && googleAuth) tasks.push(sdk.signOut(googleAuth));
+      await Promise.allSettled(tasks);
+    };
+    // A stalled browser cache/SDK must not prevent returning to the login screen.
+    try { await withTimeout(cleanup(), 5000, 'Pembersihan pelayar mengambil masa terlalu lama.'); } catch (_) {}
   }
-  async function logout(broadcast = true) {
-    lock();
-    let error;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try { await api(adminPage ? 'admin-logout' : 'logout', {}); error = null; break; }
-      catch (e) { error = e; if (!e.retryable) break; }
-    }
-    await clearBrowser();
-    if (broadcast) { channel?.postMessage({ type: 'logout', role: adminPage ? 'admin' : 'pelanggan' }); try { localStorage.setItem('sgm-logout-event', JSON.stringify({ role: adminPage ? 'admin' : 'pelanggan', nonce: crypto.randomUUID() })); } catch (_) {} }
-    if (error) { message('Logout backend gagal. Cuba lagi untuk membatalkan cookie: ' + error.message); throw error; }
-    // Reload drops the Firebase SDK's in-memory Firestore cache as well.
-    location.reload();
+  function logout(broadcast = true) {
+    if (logoutTask) return logoutTask;
+    loggingOut = true;
+    logoutTask = (async () => {
+      lock();
+      if (!adminPage) el('google').hidden = true;
+      message('Sedang logout…');
+      const cleanup = clearBrowser();
+      let error;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const result = await api(adminPage ? 'admin-logout' : 'logout', {});
+          if (result.success !== true) throw new Error('Respons logout tidak sah. Semak deployment Pages Functions.');
+          error = null; break;
+        } catch (e) { error = e; if (!e.retryable) break; }
+      }
+      await cleanup;
+      if (error) {
+        message('Paparan telah dikunci, tetapi logout pelayan belum disahkan. Cuba logout semula. ' + error.message);
+        if (el('message')) {
+          const retry = document.createElement('button');
+          retry.id = 'auth-logout-retry'; retry.type = 'button'; retry.textContent = 'Cuba logout semula';
+          retry.addEventListener('click', () => logout(broadcast).catch(() => {}));
+          el('message').after(retry);
+        }
+        // Do not restore the still-possibly-valid cookie or reload other tabs as logged in.
+        throw error;
+      }
+      if (broadcast) { channel?.postMessage({ type: 'logout', role: adminPage ? 'admin' : 'pelanggan' }); try { localStorage.setItem('sgm-logout-event', JSON.stringify({ role: adminPage ? 'admin' : 'pelanggan', nonce: crypto.randomUUID() })); } catch (_) {} }
+      // Reload drops the Firebase SDK's in-memory Firestore cache as well.
+      location.reload();
+    })().finally(() => { logoutTask = null; });
+    return logoutTask;
   }
   async function loadTurnstile() {
     if (!siteKey) siteKey = (await api('config')).siteKey;
@@ -172,6 +209,13 @@
       }
       throw new Error('Pemadaman belum selesai. Tekan Sambung pemadaman untuk meneruskan.');
     } catch (e) {
+      if (e.status === 401) {
+        // An expired/missing deletion credential cannot be resumed. This is not proof of deletion.
+        lock();
+        await clearBrowser();
+        message('Sesi pemadaman tamat. Sila login semula. Pemadaman belum dapat disahkan; hubungi admin jika akaun tidak boleh diakses.');
+        return;
+      }
       showDeletionRetry(); message(e.message);
       if (e.status === 409) {
         deletionPending = false;
@@ -234,6 +278,7 @@
     refresh: restore
   };
   el('google')?.addEventListener('click', async () => {
+    if (loggingOut) { await logout().catch(() => {}); return; }
     const button = el('google'); button.disabled = true; message('');
     try { await ready; loginFlow = true; const user = await googleLogin(); message('Login Google berjaya. Sila lengkapkan CAPTCHA.'); await challenge(user, 'login'); }
     catch (error) { loginFlow = false; message(error.message); }
