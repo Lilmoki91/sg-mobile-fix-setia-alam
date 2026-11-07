@@ -1,6 +1,5 @@
 // All Firebase credentials stay in memory. The durable session is an HttpOnly cookie.
-// auth-client.js
-function () {
+(function () {
   'use strict';
   const adminPage = !!document.getElementById('admin-dashboard');
   let current = null, sdk, auth, googleAuth, widget, siteKey, timer, deleting = false, loginFlow = false;
@@ -9,14 +8,17 @@ function () {
   const overlay = document.getElementById('auth-overlay');
   const el = id => document.getElementById('auth-' + id);
   const message = value => { if (el('message')) el('message').textContent = value; };
-  async function api(path, data, timeoutMs = 30000) {
+  // Reject if a promise takes too long, so the UI never stays on "Menyemak sesi selamat…" forever.
+  const withTimeout = (promise, ms, text) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(text)), ms))]);
+  async function api(path, data) {
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 12000);
     let response;
     try {
-      response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(timeoutMs), ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
+      response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal, ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
     } catch (e) {
-      const err = new Error(e.name === 'TimeoutError' || e.name === 'AbortError' ? 'Pelayan lambat bertindak balas. Muat semula dan cuba lagi.' : 'Sambungan rangkaian gagal. Cuba lagi.');
-      err.retryable = true; throw err;
-    }
+      throw new Error(e.name === 'AbortError' ? 'Pelayan tidak membalas. Semak sambungan internet dan cuba lagi.' : 'Tiada sambungan ke pelayan. Semak internet anda.');
+    } finally { clearTimeout(abortTimer); }
     let result;
     try { result = await response.json(); } catch { throw new Error('Pages Functions belum tersedia. Sistem ini memerlukan deployment Cloudflare dan konfigurasi Firebase/Turnstile.'); }
     if (!response.ok) { const e = new Error(result.error || 'Sesi tamat. Sila login semula.'); e.status = response.status; throw e; }
@@ -94,15 +96,7 @@ function () {
   async function logout(broadcast = true) {
     lock();
     let error;
-    // Retry automatically: the first request to a cold backend can be slow.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try { await api(adminPage ? 'admin-logout' : 'logout', {}, 20000); error = undefined; break; }
-      catch (e) {
-        error = e;
-        if (!e.retryable && !(e.status >= 500)) break;
-        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-      }
-    }
+    try { await api(adminPage ? 'admin-logout' : 'logout', {}); } catch (e) { error = e; }
     await clearBrowser();
     if (broadcast) { channel?.postMessage({ type: 'logout', role: adminPage ? 'admin' : 'pelanggan' }); try { localStorage.setItem('sgm-logout-event', JSON.stringify({ role: adminPage ? 'admin' : 'pelanggan', nonce: crypto.randomUUID() })); } catch (_) {} }
     if (error) { message('Logout backend gagal. Cuba lagi untuk membatalkan cookie: ' + error.message); throw error; }
@@ -123,6 +117,7 @@ function () {
   }
   async function googleLogin() {
     await ready;
+    if (!sdk || !googleAuth) throw new Error('Sistem login belum sedia. Muat semula halaman dan cuba lagi.');
     const provider = new sdk.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
     return (await sdk.signInWithPopup(googleAuth, provider)).user;
   }
@@ -154,7 +149,7 @@ function () {
       'expired-callback': () => { message('CAPTCHA tamat. Sila sahkan semula.'); }
     });
   }
-  const initialized = initialize();
+  const initialized = withTimeout(initialize(), 15000, 'Firebase gagal dimuatkan (sambungan lambat atau disekat). Muat semula halaman.');
   const ready = initialized.then(restore).catch(error => { lock(); message(error.message); return null; });
   window.sgmAuth = {
     ready,
