@@ -1,4 +1,3 @@
-// lib/auth-server.js
 // Server only: Firebase REST + Web Crypto, without an Admin SDK dependency.
 import { token as serviceToken } from './phones-store.js';
 const enc = new TextEncoder();
@@ -88,7 +87,7 @@ export async function googleIdentity(env, idToken, recent = false) {
   const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(env.FIREBASE_WEB_API_KEY)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }), signal: AbortSignal.timeout(15000) });
   const user = (await r.json()).users?.[0];
   if (!r.ok || !user || user.disabled || user.localId !== claims.sub) fail('Akaun Google tidak sah.', 401);
-  return { uid: claims.sub, email: user.email, nama: user.displayName || claims.name || '' };
+  return { uid: claims.sub, email: user.email, nama: user.displayName || claims.name || '', photoURL: user.photoUrl || claims.picture || '' };
 }
 export async function captcha(request, env, value, action) {
   if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY || !env.TURNSTILE_HOSTNAME) fail('Turnstile backend belum dikonfigurasi.', 503);
