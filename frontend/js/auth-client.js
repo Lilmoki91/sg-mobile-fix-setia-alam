@@ -17,7 +17,7 @@
   };
   async function api(path, data) {
     const controller = new AbortController();
-    const timeout = path.startsWith('delete-account') ? 150000 : 30000;
+    const timeout = path.includes('logout') ? 10000 : path.startsWith('delete-account') ? 150000 : 30000;
     const abortTimer = setTimeout(() => controller.abort(), timeout);
     try {
       const response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: controller.signal, ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
@@ -109,12 +109,12 @@
     })().finally(() => { restoring = null; });
     return restoring;
   }
-  async function clearBrowser() {
+  async function clearBrowser(clearCaches = true) {
     window.closeMenu?.();
     try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
     const cleanup = async () => {
       const tasks = [];
-      if ('caches' in window) tasks.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+      if (clearCaches && 'caches' in window) tasks.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
       if (sdk && auth) tasks.push(sdk.signOut(auth));
       if (sdk && googleAuth) tasks.push(sdk.signOut(googleAuth));
       await Promise.allSettled(tasks);
@@ -129,14 +129,27 @@
       lock();
       if (!adminPage) el('google').hidden = true;
       message('Sedang logout…');
-      const cleanup = clearBrowser();
+      // Sign out Firebase immediately, without cache eviction competing with the request.
+      const cleanup = clearBrowser(false);
+      const path = adminPage ? 'admin-logout' : 'logout';
       let error;
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const result = await api(adminPage ? 'admin-logout' : 'logout', {});
+          const result = await api(path, {});
           if (result.success !== true) throw new Error('Respons logout tidak sah. Semak deployment Pages Functions.');
           error = null; break;
-        } catch (e) { error = e; if (!e.retryable) break; }
+        } catch (e) {
+          error = e;
+          if (!e.retryable) break;
+          message('Menyemak sama ada cookie logout telah dipadam…');
+          try {
+            // A lost POST response can still have expired the cookie. Never infer this from a timeout alone.
+            const status = await api(path + '-status');
+            if (status.cookieCleared === true && status.role === (adminPage ? 'admin' : 'pelanggan')) {
+              error = null; break;
+            }
+          } catch (_) { /* Keep the original error; an unavailable status endpoint is not proof of logout. */ }
+        }
       }
       await cleanup;
       if (error) {
