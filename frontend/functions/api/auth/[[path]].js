@@ -106,6 +106,14 @@ export async function onRequest({ request, env, waitUntil }) {
       }
       return json({ pending: true }, 202);
     }
+    if (route === 'delete-account-status' && request.method === 'GET') {
+      const s = await session(request, env, 'pelanggan', true);
+      if (!s) return json({ error: 'Sesi pemadaman tamat. Status pemadaman belum dapat disahkan.' }, 401, { 'Set-Cookie': cookie('pelanggan') });
+      const deletion = fields(await rest(env, 'authDeletions/' + encodeURIComponent(s.uid)));
+      if (deletion.completedAt) return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan') });
+      if (s.revoked !== false) fail('Sesi pemadaman telah dibatalkan.', 401);
+      return json({ pending: !!deletion.startedAt });
+    }
     if (route === 'delete-account-continue' && request.method === 'POST') {
       // The original HttpOnly session is the retry credential, not a reusable CAPTCHA.
       const s = await session(request, env, 'pelanggan', true);
@@ -113,7 +121,8 @@ export async function onRequest({ request, env, waitUntil }) {
       const path = 'authDeletions/' + encodeURIComponent(s.uid);
       const deletion = fields(await rest(env, path));
       if (!deletion.startedAt) fail('Sahkan Google dan CAPTCHA sebelum memadam akaun.', 409);
-      const completed = () => json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
+      // Cache eviction must not delay delivery of the completion response.
+      const completed = () => json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan') });
       if (deletion.completedAt) return completed();
       if (s.revoked !== false) fail('Sesi pemadaman telah dibatalkan. Hubungi admin.', 401);
       // One bounded batch per request; retries are safe after an uncertain network response.
