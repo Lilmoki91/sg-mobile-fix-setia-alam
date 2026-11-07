@@ -1,0 +1,28 @@
+#profile-view { padding: 24px 16px calc(32px + env(safe-area-inset-bottom)); }
+.profile-card { display: flex; flex-direction: column; align-items: center; width: min(100%, 560px); min-height: 600px; margin: 0 auto; padding: 24px; gap: 20px; border: 1px solid var(--border-color); border-radius: 20px; background: var(--card-bg); color: var(--text-color); }
+.profile-heading { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.profile-heading h2 { font-size: 24px; font-weight: 700; margin: 0; }
+.profile-card button { min-height: 44px; border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.profile-back { background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); }
+.profile-avatar { width: 104px; height: 104px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--bg-color); border: 2px solid var(--border-color); color: var(--primary-color); font-size: 44px; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-card [hidden] { display: none !important; }
+.profile-details { width: 100%; margin: 0; display: grid; gap: 16px; text-align: center; }
+.profile-details dt { font-size: 13px; opacity: .8; }
+.profile-details dd { margin: 4px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+#profile-id { font-family: ui-monospace, monospace; font-size: 13px; }
+#profile-phone-form { width: 100%; }
+#profile-phone-form label { display: block; margin-bottom: 8px; font-weight: 600; }
+.profile-phone-row { display: flex; gap: 8px; }
+#profile-phone { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 16px; }
+.profile-save { background: #047857; color: white; border: 1px solid #047857; }
+#profile-status { min-height: 24px; margin: 0; width: 100%; font-size: 14px; overflow-wrap: anywhere; }
+#profile-status[data-error="true"] { color: #b91c1c; }
+html[data-theme="dark"] #profile-status[data-error="true"] { color: #fca5a5; }
+.profile-actions { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; width: 100%; gap: 12px; border-top: 1px solid var(--border-color); }
+.profile-logout { color: #b91c1c; background: #fff; border: 1px solid #b91c1c; }
+.profile-delete { color: #fff; background: #7f1d1d; border: 1px solid #7f1d1d; }
+.profile-actions p { font-size: 12px; line-height: 1.6; margin: 0; opacity: .85; }
+.profile-card button:disabled { opacity: .6; cursor: not-allowed; }
+.profile-card button:hover:not(:disabled) { filter: brightness(.95); }
+.profile-card button:focus-visible, #profile-phone:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 3px; }
