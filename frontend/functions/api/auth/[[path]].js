@@ -25,22 +25,26 @@ export async function onRequest({ request, env, waitUntil }) {
       return json({ siteKey: env.TURNSTILE_SITE_KEY });
     }
     if (['session', 'admin-session'].includes(route) && request.method === 'GET') {
-      const s = await session(request, env, role);
+      const s = await session(request, env, role, role === 'pelanggan');
       if (!s) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
+      if (role === 'pelanggan') {
+        const deletion = await rest(env, 'authDeletions/' + encodeURIComponent(s.uid));
+        if (deletion && (s.revoked === false || fields(deletion).completedAt)) return json({ error: 'Sambung atau semak status pemadaman akaun.', deletionPending: true }, 409);
+      }
+      if (s.revoked !== false) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
       let profile = role === 'pelanggan' ? fields(await rest(env, 'users/' + encodeURIComponent(s.uid))) : null;
-      if (role === 'pelanggan' && (!profile.uid || profile.deleting || await rest(env, 'authDeletions/' + encodeURIComponent(s.uid)))) fail('Akaun tidak tersedia.', 403);
+      if (role === 'pelanggan' && (!profile.uid || profile.deleting)) fail('Akaun tidak tersedia.', 403);
       if (role === 'pelanggan') profile = await ensureProfile(env, s.uid);
       return json(await responseSession(env, s, profile));
     }
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
-      // Revoking sessions in Firestore can be slow. Wait a bounded time, then always clear the
-      // cookie; the revoke keeps running in the background (waitUntil) and sessions expire anyway.
+      // Clear the browser cookie immediately; never wait on Google to send this response.
       const work = (async () => {
         const s = await session(request, env, role);
         if (s) await revoke(env, s.uid, role);
-      })().catch(e => console.error('Logout revoke gagal:', e.message));
-      waitUntil?.(work);
-      await Promise.race([work, new Promise(resolve => setTimeout(resolve, 6000))]);
+      })().catch(e => console.error('Logout revoke gagal; semak sesi dalam Firestore:', e.message));
+      if (waitUntil) waitUntil(work);
+      else await work;
       return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
     }
     if (route === 'login' && request.method === 'POST') {
@@ -80,22 +84,63 @@ export async function onRequest({ request, env, waitUntil }) {
       if (identity.uid !== s.uid) fail('Akaun Google tidak sepadan.', 403);
       await captcha(request, env, input.captchaToken, 'delete_account');
       // A tombstone blocks in-flight login attempts from resurrecting the old UID.
+      try {
+        await commit(env, [
+          { update: { name: docName(env, 'authDeletions/' + encodeURIComponent(s.uid)), fields: { startedAt: stamp(Date.now()) } }, currentDocument: { exists: false } },
+          { update: { name: docName(env, 'users/' + encodeURIComponent(s.uid)), fields: { deleting: { booleanValue: true } } }, updateMask: { fieldPaths: ['deleting'] } }
+        ]);
+      } catch (e) {
+        if (e.status !== 409) throw e; // An earlier request already started this deletion.
+      }
+      return json({ pending: true }, 202);
+    }
+    if (route === 'delete-account-continue' && request.method === 'POST') {
+      // The original HttpOnly session is the retry credential, not a reusable CAPTCHA.
+      const s = await session(request, env, 'pelanggan', true);
+      if (!s) fail('Sesi pemadaman tamat. Hubungi admin untuk semak pembersihan.', 401);
+      const path = 'authDeletions/' + encodeURIComponent(s.uid);
+      const deletion = fields(await rest(env, path));
+      if (!deletion.startedAt) fail('Sahkan Google dan CAPTCHA sebelum memadam akaun.', 409);
+      const completed = () => json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
+      if (deletion.completedAt) return completed();
+      if (s.revoked !== false) fail('Sesi pemadaman telah dibatalkan. Hubungi admin.', 401);
+      // One bounded batch per request; retries are safe after an uncertain network response.
+      const advance = async phase => {
+        await commit(env, [{ update: { name: docName(env, path), fields: { phase: str(phase) } }, updateMask: { fieldPaths: ['phase'] } }]);
+        return json({ pending: true }, 202);
+      };
+      if (!deletion.phase || deletion.phase === 'bookings') {
+        const bookings = await queryOwned(env, 'bookings', 'ownerUid', s.uid, 400);
+        if (!bookings.length) return await advance('sessions');
+        await commit(env, bookings.map(d => ({ delete: d.name })));
+        return json({ pending: true }, 202);
+      }
+      if (deletion.phase === 'sessions') {
+        const sessions = (await queryOwned(env, 'authSessions', 'uid', s.uid, 400))
+          .filter(d => d.name !== docName(env, 'authSessions/' + s.sid));
+        if (!sessions.length) return await advance('identity');
+        await commit(env, sessions.map(d => ({ delete: d.name })));
+        return json({ pending: true }, 202);
+      }
+      if (!deletion.identityDeletedAt) {
+        const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts:delete`, { method: 'POST', headers: { Authorization: 'Bearer ' + await serviceToken(env, 'https://www.googleapis.com/auth/cloud-platform'), 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: s.uid }), signal: AbortSignal.timeout(15000) });
+        const result = await r.json();
+        if (!r.ok && !String(result.error?.message).includes('USER_NOT_FOUND')) fail('Pemadaman Firebase Auth gagal. Cuba sambung pemadaman atau hubungi admin.', 502);
+        await commit(env, [{ update: { name: docName(env, path), fields: { identityDeletedAt: stamp(Date.now()) } }, updateMask: { fieldPaths: ['identityDeletedAt'] } }]);
+        return json({ pending: true }, 202);
+      }
       await commit(env, [
-        { update: { name: docName(env, 'authDeletions/' + encodeURIComponent(s.uid)), fields: { startedAt: stamp(Date.now()) } } },
-        { update: { name: docName(env, 'users/' + encodeURIComponent(s.uid)), fields: { deleting: { booleanValue: true } } }, updateMask: { fieldPaths: ['deleting'] } }
+        { delete: docName(env, 'users/' + encodeURIComponent(s.uid)) },
+        { update: { name: docName(env, path), fields: { completedAt: stamp(Date.now()) } }, updateMask: { fieldPaths: ['completedAt'] } },
+        // Keep a revoked receipt until session expiry so a lost success response is retryable.
+        { update: { name: docName(env, 'authSessions/' + s.sid), fields: { revoked: { booleanValue: true } } }, updateMask: { fieldPaths: ['revoked'] } }
       ]);
-      const bookings = await queryOwned(env, 'bookings', 'ownerUid', s.uid);
-      for (let i = 0; i < bookings.length; i += 400) await commit(env, bookings.slice(i, i + 400).map(d => ({ delete: d.name })));
-      const r = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts:delete`, { method: 'POST', headers: { Authorization: 'Bearer ' + await serviceToken(env, 'https://www.googleapis.com/auth/cloud-platform'), 'Content-Type': 'application/json' }, body: JSON.stringify({ localId: s.uid }), signal: AbortSignal.timeout(15000) });
-      const result = await r.json();
-      if (!r.ok && !String(result.error?.message).includes('USER_NOT_FOUND')) fail('Pemadaman Firebase Auth gagal. Hubungi admin untuk sambung pembersihan.', 502);
-      await rest(env, 'users/' + encodeURIComponent(s.uid), 'DELETE');
-      await revoke(env, s.uid, 'pelanggan');
-      return json({ success: true }, 200, { 'Set-Cookie': cookie('pelanggan'), 'Clear-Site-Data': '"cache"' });
+      return completed();
     }
     return json({ error: 'Endpoint atau kaedah tidak dibenarkan.' }, 404);
   } catch (e) {
-    if (!e.status) console.error('Authentication backend:', e.message);
+    if (!e.status) console.error('Authentication backend:', route, e.message);
+    if (['AbortError', 'TimeoutError'].includes(e.name)) return json({ error: route.startsWith('delete-account') ? 'Perkhidmatan Google/Firestore mengambil masa terlalu lama. Sambung pemadaman untuk menyemak dan meneruskan proses.' : 'Perkhidmatan pengesahan mengambil masa terlalu lama. Cuba lagi.' }, 504);
     return json({ error: e.status ? e.message : 'Ralat backend. Semak log Cloudflare.' }, e.status || 500);
   }
 }
