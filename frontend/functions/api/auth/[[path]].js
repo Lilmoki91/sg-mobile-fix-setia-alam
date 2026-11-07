@@ -15,7 +15,7 @@ async function adminAttempts(request, env) {
   await env.GALLERY_KV.put(key, JSON.stringify({ since: recent ? value.since : Date.now(), count: recent ? value.count + 1 : 1 }), { expirationTtl: 900 });
   return key;
 }
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   const route = new URL(request.url).pathname.replace(/^\/api\/auth\/?/, '').replace(/\/$/, '');
   const role = route.startsWith('admin') ? 'admin' : 'pelanggan';
   try {
@@ -34,7 +34,13 @@ export async function onRequest({ request, env }) {
     }
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
       const s = await session(request, env, role);
-      if (s) await revoke(env, s.uid, role);
+      if (s) {
+        // Fast path: cancel THIS session with a single write so the response returns quickly.
+        await commit(env, [{ delete: docName(env, 'authSessions/' + s.sid) }]);
+        // Other sessions of the same UID/role are cancelled in the background (query + batch delete is slow).
+        const others = revoke(env, s.uid, role).catch(e => console.error('Logout revoke:', e.message));
+        if (typeof waitUntil === 'function') waitUntil(others); else await others;
+      }
       return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
     }
     if (route === 'login' && request.method === 'POST') {
