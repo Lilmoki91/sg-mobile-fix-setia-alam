@@ -34,17 +34,18 @@ export async function rest(env, path, method = 'GET', data) {
 export function fields(doc) {
   return Object.fromEntries(Object.entries(doc?.fields || {}).map(([k, v]) => [k, v.stringValue ?? v.booleanValue ?? (v.timestampValue ? v.timestampValue : Number(v.integerValue))]));
 }
-export async function queryOwned(env, collection, field, uid) {
-  const result = await rest(env, ':runQuery', 'POST', { structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: str(uid) } } } });
+export async function queryOwned(env, collection, field, uid, limit) {
+  const result = await rest(env, ':runQuery', 'POST', { structuredQuery: { from: [{ collectionId: collection }], where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: str(uid) } }, ...(limit ? { limit } : {}) } });
   return result.filter(x => x.document).map(x => x.document);
 }
 export async function commit(env, writes) { return rest(env, ':commit', 'POST', { writes }); }
 export function cookie(role, raw = '', age = 0) { return `${cookieNames[role]}=${raw}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`; }
-export async function session(request, env, role = 'pelanggan') {
+// allowRevoked is only for acknowledging an already completed account deletion.
+export async function session(request, env, role = 'pelanggan', allowRevoked = false) {
   const raw = (request.headers.get('Cookie') || '').split(';').map(x => x.trim()).find(x => x.startsWith(cookieNames[role] + '='))?.split('=')[1];
   if (!/^[a-f0-9]{64}$/.test(raw || '')) return null;
   const sid = await hash(raw), doc = await rest(env, 'authSessions/' + sid), s = fields(doc);
-  if (!doc || s.role !== role || !s.uid || s.revoked !== false || !Number.isFinite(Date.parse(s.expiresAt)) || Date.parse(s.expiresAt) <= Date.now()) return null;
+  if (!doc || s.role !== role || !s.uid || (!allowRevoked && s.revoked !== false) || !Number.isFinite(Date.parse(s.expiresAt)) || Date.parse(s.expiresAt) <= Date.now()) return null;
   return { ...s, sid };
 }
 export async function revoke(env, uid, role) {
