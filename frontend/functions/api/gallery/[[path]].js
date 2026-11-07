@@ -1,4 +1,3 @@
-// functions/api/gallery/[[path]].js
 // Cloudflare Pages Functions only: tidak dimuatkan sebagai skrip browser.
 import { adminAuthenticated } from '../../../lib/auth-server.js';
 const COOKIE = 'sgm_gallery_session';
@@ -139,9 +138,10 @@ export async function onRequest({ request, env }) {
       return json({ success: true, hours });
     }
     if (method === 'GET') {
-      const configured = (await env.GALLERY_KV.get('gallery:configured')) === 'true';
       const images = await records(env);
-      return json({ configured, images: admin ? images : images.filter(image => image.active).map(({ id, url, title, order }) => ({ id, url, title, order })) });
+      // Rekod sedia ada cukup untuk mengaktifkan galeri walaupun flag hilang.
+      const configured = images.length > 0 || (await env.GALLERY_KV.get('gallery:configured')) === 'true';
+      return json({ configured, images: admin ? images : images.filter(image => image.active === true).map(({ id, url, title, order }) => ({ id, url, title, order })) });
     }
     if (method === 'POST') {
       const body = await request.formData();
@@ -196,4 +196,3 @@ export async function onRequest({ request, env }) {
     return json({ error: error.status ? error.message : 'Ralat backend galeri. Semak log Pages Functions.' }, error.status || 500);
   }
 }
- 
