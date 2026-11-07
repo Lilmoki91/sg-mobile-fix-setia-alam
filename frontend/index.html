@@ -57,6 +57,7 @@
   <link rel="stylesheet" href="css/ai-chatbot.css">
   <link rel="stylesheet" href="css/phones.css">
   <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/profile.css">
   <style>html.auth-locked body > :not(#auth-overlay):not(script):not(style) { visibility: hidden !important; }</style>
 
   <!-- CDN KAD BERGAMBAR -->
@@ -169,12 +170,11 @@
     </button>
   </div>
 
-  <div class="auth-account">
-    <span id="auth-profile"></span>
-    <button id="customer-logout" type="button">Log keluar</button>
-    <button id="customer-delete" type="button">Padam akaun</button>
-  </div>
   <div class="menu-grid">
+    <a href="#profile-view" id="profile-menu-action" class="menu-link">
+      <i class="fas fa-user-circle" style="color: #60a5fa;" aria-hidden="true"></i>
+      <span data-profile-text="title">Profil Saya</span>
+    </a>
     <!-- Theme Toggle -->
     <a href="#" id="theme-toggle" class="menu-link">
       <i class="fas fa-moon text-yellow-500"></i>
@@ -227,6 +227,7 @@
 
 <!-- ==================== MAIN CONTENT TABS ==================== -->
   <main id="main-content">
+    <div id="profile-view" class="tab-content" style="display: none;" aria-labelledby="profile-title"></div>
     <!-- HOME TAB -->
     <section id="home-tab" class="tab-content active">
       <!-- ==================== HERO SECTION ==================== -->
@@ -953,6 +954,7 @@
   <script src="js/gallery-client.js" defer></script>
   <script src="js/firebase-config.js" defer></script>
   <script src="js/auth-client.js" defer></script>
+  <script src="js/profile.js" defer></script>
   <script src="js/booking-firebase.js" defer></script>
   <script src="js/shop-hours.js" defer></script>
   <script src="js/booking-ui.js" defer></script>
