@@ -1,6 +1,6 @@
-// auth-client.js
 // All Firebase credentials stay in memory. The durable session is an HttpOnly cookie.
-(function () {
+// auth-client.js
+function () {
   'use strict';
   const adminPage = !!document.getElementById('admin-dashboard');
   let current = null, sdk, auth, googleAuth, widget, siteKey, timer, deleting = false, loginFlow = false;
@@ -9,13 +9,13 @@
   const overlay = document.getElementById('auth-overlay');
   const el = id => document.getElementById('auth-' + id);
   const message = value => { if (el('message')) el('message').textContent = value; };
-  async function api(path, data) {
+  async function api(path, data, timeoutMs = 30000) {
     let response;
     try {
-      // Timeout so the overlay never stays on "Menyemak sesi selamat…" forever.
-      response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(20000), ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
+      response = await fetch('/api/auth/' + path, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(timeoutMs), ...(data !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) } : {}) });
     } catch (e) {
-      throw new Error(e.name === 'TimeoutError' ? 'Pelayan lambat bertindak balas. Muat semula dan cuba lagi.' : 'Sambungan gagal. Semak internet dan cuba lagi.');
+      const err = new Error(e.name === 'TimeoutError' || e.name === 'AbortError' ? 'Pelayan lambat bertindak balas. Muat semula dan cuba lagi.' : 'Sambungan rangkaian gagal. Cuba lagi.');
+      err.retryable = true; throw err;
     }
     let result;
     try { result = await response.json(); } catch { throw new Error('Pages Functions belum tersedia. Sistem ini memerlukan deployment Cloudflare dan konfigurasi Firebase/Turnstile.'); }
@@ -93,9 +93,16 @@
   }
   async function logout(broadcast = true) {
     lock();
-    message('Sedang log keluar…');
     let error;
-    try { await api(adminPage ? 'admin-logout' : 'logout', {}); } catch (e) { error = e; }
+    // Retry automatically: the first request to a cold backend can be slow.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { await api(adminPage ? 'admin-logout' : 'logout', {}, 20000); error = undefined; break; }
+      catch (e) {
+        error = e;
+        if (!e.retryable && !(e.status >= 500)) break;
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
     await clearBrowser();
     if (broadcast) { channel?.postMessage({ type: 'logout', role: adminPage ? 'admin' : 'pelanggan' }); try { localStorage.setItem('sgm-logout-event', JSON.stringify({ role: adminPage ? 'admin' : 'pelanggan', nonce: crypto.randomUUID() })); } catch (_) {} }
     if (error) { message('Logout backend gagal. Cuba lagi untuk membatalkan cookie: ' + error.message); throw error; }
@@ -155,6 +162,7 @@
     async require() { await ready; if (!current || !auth.currentUser) throw new Error('Login dan CAPTCHA diperlukan.'); return current; },
     async adminLogin(password) { await ready; const data = await api('admin-login', { password }); await accept(data); },
     logout,
+    requestDeletion,
     refresh: restore
   };
   el('google')?.addEventListener('click', async () => {
@@ -164,13 +172,24 @@
     finally { button.disabled = false; }
   });
   document.getElementById('customer-logout')?.addEventListener('click', () => logout().catch(() => {}));
-  document.getElementById('customer-delete')?.addEventListener('click', () => {
-    if (!current || !confirm('Padam akaun dan SEMUA tempahan anda secara kekal?')) return;
+  function requestDeletion() {
+    const english = document.documentElement.lang === 'en';
+    if (!current || !confirm(english ? 'Permanently delete your account and ALL your bookings?' : 'Padam akaun dan SEMUA tempahan anda secara kekal?')) return;
     deleting = true;
     overlay.hidden = false; document.documentElement.classList.add('auth-locked');
     el('title').textContent = 'Padam akaun'; el('intro').hidden = false; el('intro').textContent = 'Sahkan akaun Google yang sama dan selesaikan CAPTCHA baharu. Tindakan ini tidak boleh dibatalkan.';
     el('google').hidden = true; el('delete').hidden = false; el('cancel').hidden = false; message('');
-  });
+    if (english) {
+      el('title').textContent = 'Delete account';
+      el('intro').textContent = 'Verify the same Google account and complete a new CAPTCHA. This action cannot be undone.';
+      el('delete').textContent = 'Verify Google to delete account';
+      el('cancel').textContent = 'Cancel deletion';
+    } else {
+      el('delete').textContent = 'Sahkan Google untuk padam akaun';
+      el('cancel').textContent = 'Batal pemadaman';
+    }
+  }
+  document.getElementById('customer-delete')?.addEventListener('click', requestDeletion);
   el('delete')?.addEventListener('click', async () => {
     el('delete').disabled = true;
     try { const user = await googleLogin(); if (user.uid !== current?.uid) throw new Error('Pilih akaun Google yang sama.'); await challenge(user, 'delete_account'); }
