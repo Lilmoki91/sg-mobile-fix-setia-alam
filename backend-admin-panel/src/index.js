@@ -1,3 +1,4 @@
+// login admin panel dashboard
 export default {
   async fetch(request, env) {
     // 1. Tetapan CORS (Kebenaran akses dari web anda)
