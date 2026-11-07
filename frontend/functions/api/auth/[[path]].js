@@ -33,14 +33,14 @@ export async function onRequest({ request, env, waitUntil }) {
       return json(await responseSession(env, s, profile));
     }
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
-      const s = await session(request, env, role);
-      if (s) {
-        // Fast path: cancel THIS session with a single write so the response returns quickly.
-        await commit(env, [{ delete: docName(env, 'authSessions/' + s.sid) }]);
-        // Other sessions of the same UID/role are cancelled in the background (query + batch delete is slow).
-        const others = revoke(env, s.uid, role).catch(e => console.error('Logout revoke:', e.message));
-        if (typeof waitUntil === 'function') waitUntil(others); else await others;
-      }
+      // Revoking sessions in Firestore can be slow. Wait a bounded time, then always clear the
+      // cookie; the revoke keeps running in the background (waitUntil) and sessions expire anyway.
+      const work = (async () => {
+        const s = await session(request, env, role);
+        if (s) await revoke(env, s.uid, role);
+      })().catch(e => console.error('Logout revoke gagal:', e.message));
+      waitUntil?.(work);
+      await Promise.race([work, new Promise(resolve => setTimeout(resolve, 6000))]);
       return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
     }
     if (route === 'login' && request.method === 'POST') {
