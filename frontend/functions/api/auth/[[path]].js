@@ -29,7 +29,8 @@ export async function onRequest({ request, env, waitUntil }) {
       if (!s) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
       if (role === 'pelanggan') {
         const deletion = await rest(env, 'authDeletions/' + encodeURIComponent(s.uid));
-        if (deletion && (s.revoked === false || fields(deletion).completedAt)) return json({ error: 'Sambung atau semak status pemadaman akaun.', deletionPending: true }, 409);
+        if (fields(deletion).completedAt) return json({ authenticated: false, deletionCompleted: true }, 401, { 'Set-Cookie': cookie(role) });
+        if (deletion && s.revoked === false) return json({ error: 'Sambung atau semak status pemadaman akaun.', deletionPending: true }, 409);
       }
       if (s.revoked !== false) return json({ authenticated: false }, 401, { 'Set-Cookie': cookie(role) });
       let profile = role === 'pelanggan' ? fields(await rest(env, 'users/' + encodeURIComponent(s.uid))) : null;
@@ -97,7 +98,7 @@ export async function onRequest({ request, env, waitUntil }) {
     if (route === 'delete-account-continue' && request.method === 'POST') {
       // The original HttpOnly session is the retry credential, not a reusable CAPTCHA.
       const s = await session(request, env, 'pelanggan', true);
-      if (!s) fail('Sesi pemadaman tamat. Hubungi admin untuk semak pembersihan.', 401);
+      if (!s) return json({ error: 'Sesi pemadaman tamat. Status pemadaman belum dapat disahkan; hubungi admin untuk semak pembersihan.' }, 401, { 'Set-Cookie': cookie('pelanggan') });
       const path = 'authDeletions/' + encodeURIComponent(s.uid);
       const deletion = fields(await rest(env, path));
       if (!deletion.startedAt) fail('Sahkan Google dan CAPTCHA sebelum memadam akaun.', 409);
