@@ -1,4 +1,4 @@
-import { DAY, fail, json, origin, body, hash, equal, str, stamp, docName, rest, fields, commit, session, cookie, captcha, googleIdentity, customToken, issue, revoke, queryOwned } from '../../../lib/auth-server.js';
+import { DAY, fail, json, origin, body, hash, equal, str, stamp, docName, rest, fields, commit, session, cookie, cookieNames, captcha, googleIdentity, customToken, issue, revoke, queryOwned } from '../../../lib/auth-server.js';
 import { token as serviceToken } from '../../../lib/phones-store.js';
 import { ensureProfile } from '../../../lib/profile-store.js';
 
@@ -38,6 +38,10 @@ export async function onRequest({ request, env, waitUntil }) {
       if (role === 'pelanggan') profile = await ensureProfile(env, s.uid);
       return json(await responseSession(env, s, profile));
     }
+    if (['logout-status', 'admin-logout-status'].includes(route) && request.method === 'GET') {
+      const present = (request.headers.get('Cookie') || '').split(';').some(part => part.trim().startsWith(cookieNames[role] + '='));
+      return json({ cookieCleared: !present, role });
+    }
     if (['logout', 'admin-logout'].includes(route) && request.method === 'POST') {
       // Clear the browser cookie immediately; never wait on Google to send this response.
       const work = (async () => {
@@ -46,7 +50,7 @@ export async function onRequest({ request, env, waitUntil }) {
       })().catch(e => console.error('Logout revoke gagal; semak sesi dalam Firestore:', e.message));
       if (waitUntil) waitUntil(work);
       else await work;
-      return json({ success: true }, 200, { 'Set-Cookie': cookie(role), 'Clear-Site-Data': '"cache"' });
+      return json({ success: true }, 200, { 'Set-Cookie': cookie(role) });
     }
     if (route === 'login' && request.method === 'POST') {
       const input = await body(request);
