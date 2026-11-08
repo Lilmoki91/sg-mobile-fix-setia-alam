@@ -71,10 +71,7 @@
     font-size: 15px;
     cursor: pointer; 
     transition: all 0.2s ease-in-out;
-}
-
-.profile-card button:hover:not(:disabled) { 
-    filter: brightness(0.9); 
+    border: 1px solid transparent;
 }
 
 .profile-card button:active:not(:disabled) {
@@ -189,15 +186,27 @@
    6. GAYA SPESIFIK BUTANG (WARNA & AKSI)
    ========================================================================== */
 
-/* --- FIX: BUTANG (X) KAT ATAS TU (GUNA !IMPORTANT) --- */
+/* --- FIX TOTAL: BUTANG (X) IKUT GAYA ADMIN PANEL --- */
 #profile-back { 
-    background: transparent !important; 
-    color: #ef4444 !important; 
-    border: 1.5px solid #ef4444 !important; 
+    background-color: #fee2e2 !important; /* Merah cair (pastel) */
+    color: #b91c1c !important; /* Ikon merah gelap */
+    border: none !important; /* Tiada border */
+    border-radius: 12px !important; /* Bucu bulat macam kotak */
+    width: 48px !important; 
+    height: 48px !important; 
+    padding: 0 !important;
+    font-size: 24px !important; /* Ikon besar & tebal */
+    font-weight: 900 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-#profile-back:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.1) !important; 
+/* Bila diklik atau hover - Merah Pekat, Ikon Putih */
+#profile-back:hover, 
+#profile-back:active {
+    background-color: #dc2626 !important; /* Merah menyala */
+    color: #ffffff !important; /* Ikon putih */
 }
 
 /* Butang Umum (Kembali/Cuba Lagi) */
@@ -241,15 +250,15 @@
     border-top: 1px solid var(--border-color); 
 }
 
-/* --- FIX: BUTANG LOGOUT (GUNA !IMPORTANT) --- */
+/* --- FIX: BUTANG LOGOUT (BORDER MERAH TERANG) --- */
 .profile-logout { 
     background: transparent !important; 
-    color: #ef4444 !important; 
-    border: 1.5px solid #ef4444 !important; 
+    color: #ef4444 !important; /* Teks merah */
+    border: 1.5px solid #ef4444 !important; /* BORDER MERAH */
 }
 
 .profile-logout:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.1) !important; 
+    background: rgba(239, 68, 68, 0.1) !important; /* Latar merah pudar */
 }
 
 /* Butang Padam Akaun (Merah Gelap Solid) */
