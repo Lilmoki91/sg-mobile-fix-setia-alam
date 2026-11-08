@@ -25,14 +25,22 @@
       <button id="btn-edit-phone" type="button" class="btn-edit"><i class="fas fa-edit"></i> <span data-profile-text="edit">Edit</span></button>
     </div>
 
+  
     <!-- Mod Edit (Edit Mode) -->
-    <form id="profile-phone-form" style="display: none;">
-      <div class="profile-phone-row">
-        <input id="profile-phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+60123456789" aria-describedby="profile-status">
-        <button id="profile-save" class="profile-save" type="submit"><span data-profile-text="save">Simpan</span></button>
-        <button id="btn-cancel-phone" class="profile-back" type="button" style="padding: 10px; min-height: 44px;"><span data-profile-text="cancel">Batal</span></button>
-      </div>
-    </form>
+<form id="profile-phone-form" style="display: none; flex-direction: column; gap: 8px;">
+  
+  <!-- Baris Pertama: Input & Simpan -->
+  <div class="profile-phone-row" style="display: flex; gap: 8px;">
+    <input id="profile-phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+60123456789" aria-describedby="profile-status">
+    <button id="profile-save" class="profile-save" type="submit"><span data-profile-text="save">Simpan</span></button>
+  </div>
+
+  <!-- Baris Kedua: Butang Batal (Kuning) -->
+  <button id="btn-cancel-phone" class="profile-cancel" type="button">
+    <span data-profile-text="cancel">Batal</span>
+  </button>
+
+</form>
   </div>
 
   <p id="profile-status" role="status" aria-live="polite"></p>
