@@ -35,3 +35,21 @@ html[data-theme="dark"] #profile-status[data-error="true"] { color: #fca5a5; }
 .btn-edit { background: #2563eb; color: white; border: 1px solid #2563eb; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; white-space: nowrap; }
 .btn-edit:hover { filter: brightness(0.9); }
 #profile-phone-form { display: flex; flex-direction: column; gap: 10px; }
+
+/* Gaya untuk butang Batal (Kuning) */
+.profile-cancel {
+    background-color: #facc15; /* Warna kuning */
+    color: #000000; /* Teks hitam supaya senang baca */
+    border: 1px solid #eab308;
+    width: 100%; /* Ambil lebar penuh */
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-cancel:hover {
+    background-color: #eab308; /* Kuning gelap sikit bila hover */
+}
