@@ -39,7 +39,7 @@ html[data-theme="dark"] #profile-status[data-error="true"] { color: #fca5a5; }
 /* Gaya untuk butang Batal (Kuning) */
 .profile-cancel {
     background-color: #facc15; /* Warna kuning */
-    color: white; /* Teks hitam supaya senang baca */
+    color: silver; /* Teks hitam supaya senang baca */
     border: 1px solid #eab308;
     width: 100%; /* Ambil lebar penuh */
     min-height: 44px;
