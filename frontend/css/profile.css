@@ -21,7 +21,28 @@
 html[data-theme="dark"] #profile-status[data-error="true"] { color: #fca5a5; }
 .profile-actions { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; width: 100%; gap: 12px; border-top: 1px solid var(--border-color); }
 .profile-logout { color: #b91c1c; background: #fff; border: 1px solid #b91c1c; }
-.profile-delete { color: #fff; background: #7f1d1d; border: 1px solid #7f1d1d; }
+
+/* Gaya asal butang Padam Akaun */
+.profile-delete { 
+    color: #fff; 
+    background: #7f1d1d; /* Merah gelap asal */
+    border: 1px solid #7f1d1d; 
+    transition: all 0.2s ease-in-out; /* Supaya pertukaran warna lancar */
+}
+
+/* Bila tetikus (atau jari) berada di atas butang */
+.profile-delete:hover { 
+    background: #b91c1c; /* Merah lebih terang */
+    border-color: #b91c1c;
+}
+
+/* Bila butang DITEKAN (active) */
+.profile-delete:active { 
+    background: #dc2626; /* Merah menyala */
+    border-color: #dc2626;
+    transform: scale(0.98); /* Kesan butang tertekan sedikit */
+}
+
 .profile-actions p { font-size: 12px; line-height: 1.6; margin: 0; opacity: .85; }
 .profile-card button:disabled { opacity: .6; cursor: not-allowed; }
 .profile-card button:hover:not(:disabled) { filter: brightness(.95); }
