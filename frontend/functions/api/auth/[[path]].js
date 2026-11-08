@@ -1,3 +1,6 @@
+// functions/api/auth/[[path]].js
+// code sistem backend login logout firebase
+
 import { DAY, fail, json, origin, body, hash, equal, str, stamp, docName, rest, fields, commit, session, cookie, cookieNames, captcha, googleIdentity, customToken, issue, revoke, queryOwned } from '../../../lib/auth-server.js';
 import { token as serviceToken } from '../../../lib/phones-store.js';
 import { ensureProfile } from '../../../lib/profile-store.js';
