@@ -12,6 +12,24 @@
 
 <!-- Theme Color (Mobile & Desktop) -->
 <meta name="theme-color" content="#0088CC">
+<script>
+  // Tetapkan tema sebelum paparan pertama untuk mengelakkan kilatan putih.
+  (() => {
+    let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    try {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') theme = saved;
+    } catch (_) {}
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#111827' : '#0088CC';
+  })();
+</script>
+<style>
+  html { margin: 0; min-height: 100%; background: #fff; }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; }
+  html[data-theme="dark"], html[data-theme="dark"] body { background-color: #111827; }
+</style>
 
 <!-- Apple iOS / iPadOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
