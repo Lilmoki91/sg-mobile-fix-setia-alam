@@ -59,7 +59,6 @@
 /* ==========================================================================
    3. BUTANG ASAS (BASE BUTTON)
    ========================================================================== */
-/* Menggabungkan gaya asas untuk semua butang supaya konsisten */
 .profile-card button { 
     display: inline-flex;
     align-items: center;
@@ -72,27 +71,22 @@
     font-size: 15px;
     cursor: pointer; 
     transition: all 0.2s ease-in-out;
-    border: 1px solid transparent; /* Default border */
 }
 
-/* Kesan Hover Umum (Kecuali kalau butang disabled) */
 .profile-card button:hover:not(:disabled) { 
     filter: brightness(0.9); 
 }
 
-/* Kesan Tekan Umum */
 .profile-card button:active:not(:disabled) {
     transform: scale(0.97);
 }
 
-/* Fokus untuk Aksesibiliti */
 .profile-card button:focus-visible, 
 #profile-phone:focus-visible { 
     outline: 3px solid var(--primary-color); 
     outline-offset: 3px; 
 }
 
-/* Butang Disabled */
 .profile-card button:disabled { 
     opacity: .6; 
     cursor: not-allowed; 
@@ -140,7 +134,6 @@
     text-align: center; 
 }
 
-/* --- Mod Lihat (View Mode) --- */
 #phone-view-mode { 
     display: flex; 
     gap: 10px; 
@@ -163,16 +156,15 @@
 .btn-edit { 
     background: #2563eb; 
     color: white; 
-    border-color: #2563eb; 
+    border: 1px solid #2563eb; 
     white-space: nowrap; 
 }
 
-/* --- Mod Edit (Edit Mode) --- */
 #profile-phone-form { 
     width: 100%;
     display: flex; 
     flex-direction: column; 
-    gap: 12px; /* Jarak seragam antara baris input dan butang batal */
+    gap: 12px; 
 }
 
 .profile-phone-row { 
@@ -197,34 +189,45 @@
    6. GAYA SPESIFIK BUTANG (WARNA & AKSI)
    ========================================================================== */
 
-/* Butang Tutup (X) / Batal Umum */
+/* --- FIX: BUTANG (X) KAT ATAS TU (GUNA !IMPORTANT) --- */
+#profile-back { 
+    background: transparent !important; 
+    color: #ef4444 !important; 
+    border: 1.5px solid #ef4444 !important; 
+}
+
+#profile-back:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1) !important; 
+}
+
+/* Butang Umum (Kembali/Cuba Lagi) */
 .profile-back { 
     background: var(--bg-color); 
     color: var(--text-color); 
-    border-color: var(--border-color); 
+    border: 1px solid var(--border-color); 
 }
 
 /* Butang Simpan (Hijau) */
 .profile-save { 
     background: #047857; 
     color: white; 
-    border-color: #047857; 
+    border: 1px solid #047857; 
 }
 .profile-save:hover:not(:disabled) { 
-    background: #065f46; /* Hijau lebih gelap */
-    border-color: #065f46;
+    background: #065f46; 
+    border: 1px solid #065f46;
 }
 
-/* Butang Batal (Kuning) - Telah dibaiki jaraknya */
+/* Butang Batal (Kuning) */
 .profile-cancel {
     background-color: #facc15; 
     color: #000000; 
-    border-color: #eab308;
+    border: 1px solid #eab308;
     width: 100%; 
 }
 .profile-cancel:hover:not(:disabled) {
     background-color: #eab308; 
-    border-color: #ca8a04;
+    border: 1px solid #ca8a04;
 }
 
 /* Kawasan Tindakan (Logout & Padam) */
@@ -238,35 +241,30 @@
     border-top: 1px solid var(--border-color); 
 }
 
-/* Butang Log Keluar (Merah Outline) */
+/* --- FIX: BUTANG LOGOUT (GUNA !IMPORTANT) --- */
 .profile-logout { 
-    color: #b91c1c; 
-    background: #fff; 
-    border-color: #b91c1c; 
-}
-html[data-theme="dark"] .profile-logout {
-    background: transparent;
-}
-.profile-logout:hover:not(:disabled) {
-    background: #fef2f2;
-}
-html[data-theme="dark"] .profile-logout:hover:not(:disabled) {
-    background: rgba(185, 28, 28, 0.1);
+    background: transparent !important; 
+    color: #ef4444 !important; 
+    border: 1.5px solid #ef4444 !important; 
 }
 
-/* Butang Padam Akaun (Merah Gelap) */
+.profile-logout:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1) !important; 
+}
+
+/* Butang Padam Akaun (Merah Gelap Solid) */
 .profile-delete { 
     color: #fff; 
     background: #7f1d1d; 
-    border-color: #7f1d1d; 
+    border: 1px solid #7f1d1d; 
 }
 .profile-delete:hover:not(:disabled) { 
     background: #b91c1c; 
-    border-color: #b91c1c;
+    border: 1px solid #b91c1c;
 }
 .profile-delete:active:not(:disabled) { 
     background: #dc2626; 
-    border-color: #dc2626;
+    border: 1px solid #dc2626;
 }
 
 .profile-actions p { 
