@@ -664,6 +664,8 @@ function applyTheme(theme) {
   root.setAttribute("data-theme", selectedTheme);
   document.body?.setAttribute("data-theme", selectedTheme);
   root.style.colorScheme = selectedTheme;
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = selectedTheme === "dark" ? "#111827" : "#0088CC";
 
   const toggle = document.getElementById("theme-toggle");
   const icon = toggle?.querySelector("i");
