@@ -192,10 +192,10 @@
     color: #b91c1c !important; /* Ikon merah gelap */
     border: none !important; /* Tiada border */
     border-radius: 12px !important; /* Bucu bulat macam kotak */
-    width: 48px !important; 
-    height: 48px !important; 
+    width: 46px !important; 
+    height: 46px !important; 
     padding: 0 !important;
-    font-size: 24px !important; /* Ikon besar & tebal */
+    font-size: 22px !important; /* Ikon besar & tebal */
     font-weight: 900 !important;
     display: flex !important;
     align-items: center !important;
