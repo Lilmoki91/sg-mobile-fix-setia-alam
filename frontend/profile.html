@@ -14,15 +14,30 @@
     <div><dt data-profile-text="email">Email</dt><dd id="profile-email">—</dd></div>
     <div><dt data-profile-text="id">ID SG Mobile Fix</dt><dd id="profile-id">—</dd></div>
   </dl>
-  <form id="profile-phone-form">
-    <label for="profile-phone" data-profile-text="phone">Nombor Telefon</label>
-    <div class="profile-phone-row">
-      <input id="profile-phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+60123456789" disabled aria-describedby="profile-status">
-      <button id="profile-save" class="profile-save" type="submit" disabled><span data-profile-text="save">Simpan</span></button>
+
+  <!-- BAHAGIAN NOMBOR TELEFON -->
+  <div class="profile-phone-section">
+    <label data-profile-text="phone">Nombor Telefon</label>
+    
+    <!-- Mod Lihat (View Mode) -->
+    <div id="phone-view-mode">
+      <span id="phone-display" class="phone-display">Tiada nombor</span>
+      <button id="btn-edit-phone" type="button" class="btn-edit"><i class="fas fa-edit"></i> <span data-profile-text="edit">Edit</span></button>
     </div>
-  </form>
+
+    <!-- Mod Edit (Edit Mode) -->
+    <form id="profile-phone-form" style="display: none;">
+      <div class="profile-phone-row">
+        <input id="profile-phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+60123456789" aria-describedby="profile-status">
+        <button id="profile-save" class="profile-save" type="submit"><span data-profile-text="save">Simpan</span></button>
+        <button id="btn-cancel-phone" class="profile-back" type="button" style="padding: 10px; min-height: 44px;"><span data-profile-text="cancel">Batal</span></button>
+      </div>
+    </form>
+  </div>
+
   <p id="profile-status" role="status" aria-live="polite"></p>
   <button id="profile-retry" class="profile-back" type="button" hidden data-profile-text="retry">Cuba lagi</button>
+  
   <div class="profile-actions">
     <button id="customer-logout" class="profile-logout" type="button"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span data-profile-text="logout">Log Keluar</span></button>
     <button id="customer-delete" class="profile-delete" type="button"><i class="fas fa-trash-alt" aria-hidden="true"></i> <span data-profile-text="delete">Padam Akaun</span></button>
