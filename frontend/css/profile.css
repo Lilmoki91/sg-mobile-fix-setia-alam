@@ -26,3 +26,12 @@ html[data-theme="dark"] #profile-status[data-error="true"] { color: #fca5a5; }
 .profile-card button:disabled { opacity: .6; cursor: not-allowed; }
 .profile-card button:hover:not(:disabled) { filter: brightness(.95); }
 .profile-card button:focus-visible, #profile-phone:focus-visible { outline: 3px solid var(--primary-color); outline-offset: 3px; }
+
+/* Tambahan untuk UI Toggle Edit/Simpan */
+.profile-phone-section { width: 100%; text-align: left; }
+.profile-phone-section label { display: block; margin-bottom: 8px; font-weight: 600; text-align: center; }
+#phone-view-mode { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.phone-display { flex: 1; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-color); display: flex; align-items: center; font-weight: 500; }
+.btn-edit { background: #2563eb; color: white; border: 1px solid #2563eb; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn-edit:hover { filter: brightness(0.9); }
+#profile-phone-form { display: flex; flex-direction: column; gap: 10px; }
