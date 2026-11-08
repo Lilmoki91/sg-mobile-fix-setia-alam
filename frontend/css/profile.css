@@ -233,6 +233,7 @@
     color: #000000; 
     border: 1px solid #eab308;
     width: 100%; 
+    margin-top: 6px !important;
 }
 .profile-cancel:hover:not(:disabled) {
     background-color: #eab308; 
