@@ -1,3 +1,4 @@
+// lib/auth-server.js
 // Server only: Firebase REST + Web Crypto, without an Admin SDK dependency.
 import { token as serviceToken } from './phones-store.js';
 const enc = new TextEncoder();
