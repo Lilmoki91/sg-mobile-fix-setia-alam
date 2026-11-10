@@ -111,27 +111,19 @@ body.chatbot-open #chatbot-toggle {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid #ffffff50;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: #ffffff18;
-  color: white;
-  font-size: 26px;
-  line-height: 1;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background .15s, border-color .15s, transform .15s;
+  transition: filter .15s;
 }
-#chatbot-close:hover,
-#chatbot-close:focus-visible {
-  background: #ef4444;
-  border-color: #fca5a5;
-}
-#chatbot-close:active {
-  background: #dc2626;
-  border-color: #fca5a5;
-  transform: scale(.94);
+#chatbot-close:hover:not(:disabled) {
+  filter: brightness(.95);
 }
 
 #chatbot-messages {
