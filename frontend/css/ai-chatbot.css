@@ -17,7 +17,7 @@ body.chatbot-open {
   color: white;
   /* background: linear-gradient(135deg, #22d3ee, #4f46e5, #9333ea); */   
   background: linear-gradient(135deg, cyan, #2563eb, purple);
-  border: 1px solid rgba(255, 255, 255, .5);
+  /* border: 1px solid rgba(255, 255, 255, .5); */
   border-radius: 50%;
   box-shadow: 0 8px 24px #6366f166;
   cursor: pointer;
