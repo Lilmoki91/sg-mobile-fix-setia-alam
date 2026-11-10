@@ -186,29 +186,7 @@
    6. GAYA SPESIFIK BUTANG (WARNA & AKSI)
    ========================================================================== */
 
-/* --- FIX TOTAL: BUTANG (X) IKUT GAYA ADMIN PANEL --- */
-#profile-back { 
-    background-color: #fee2e2 !important; /* Merah cair (pastel) */
-    color: #b91c1c !important; /* Ikon merah gelap */
-    border: none !important; /* Tiada border */
-    border-radius: 12px !important; /* Bucu bulat macam kotak */
-    width: 44px !important; 
-    height: 44px !important; 
-    padding: 0 !important;
-    font-size: 20px !important; /* Ikon besar & tebal */
-    font-weight: 900 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Bila diklik atau hover - Merah Pekat, Ikon Putih */
-#profile-back:hover, 
-#profile-back:active {
-    background-color: #dc2626 !important; /* Merah menyala */
-    color: #ffffff !important; /* Ikon putih */
-}
-
+/* Butang Umum (Cuba Lagi) */
 /* Butang Umum (Kembali/Cuba Lagi) */
 .profile-back { 
     background: var(--bg-color); 
