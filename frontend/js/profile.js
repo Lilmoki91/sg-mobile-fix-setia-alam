@@ -1,3 +1,4 @@
+// profile.js
 (function () {
   'use strict';
   const view = document.getElementById('profile-view');
@@ -5,17 +6,24 @@
   if (!view || !menu) return;
   
   const labels = {
-    ms: { title: 'Profil Saya', name: 'Nama', email: 'Email', id: 'ID SG Mobile Fix', phone: 'Nombor Telefon', save: 'Simpan', saving: 'Menyimpan…', logout: 'Log Keluar', delete: 'Padam Akaun', back: 'Kembali ke Utama', retry: 'Cuba lagi', loading: 'Memuatkan profil…', saved: 'Nombor telefon berjaya dikemas kini', invalid: 'Masukkan nombor telefon yang sah (6–15 digit), atau kosongkan untuk membuangnya.', failed: 'Profil gagal dimuatkan. Sila cuba lagi.', saveFailed: 'Nombor telefon gagal disimpan. Sila cuba lagi.', login: 'Sila login untuk melihat profil.', warning: 'Pemadaman akaun adalah kekal dan memerlukan pengesahan Google serta CAPTCHA baharu.', edit: 'Edit', cancel: 'Batal' },
-    en: { title: 'My Profile', name: 'Name', email: 'Email', id: 'SG Mobile Fix ID', phone: 'Phone Number', save: 'Save', saving: 'Saving…', logout: 'Log Out', delete: 'Delete Account', back: 'Back to Home', retry: 'Try again', loading: 'Loading profile…', saved: 'Phone number updated successfully', invalid: 'Enter a valid phone number (6–15 digits), or leave blank to remove it.', failed: 'Unable to load profile. Please try again.', saveFailed: 'Unable to save phone number. Please try again.', login: 'Please log in to view your profile.', warning: 'Account deletion is permanent and requires Google verification and a new CAPTCHA.', edit: 'Edit', cancel: 'Cancel' }
+    ms: { title: 'Profil Saya', name: 'Nama', email: 'Email', id: 'ID SG Mobile Fix', phone: 'Nombor Telefon', noPhone: 'Tiada nombor', save: 'Simpan', saving: 'Menyimpan…', logout: 'Log Keluar', delete: 'Padam Akaun', back: 'Kembali ke Utama', retry: 'Cuba lagi', loading: 'Memuatkan profil…', saved: 'Nombor telefon berjaya dikemas kini', invalid: 'Masukkan nombor telefon yang sah (6–15 digit), atau kosongkan untuk membuangnya.', failed: 'Profil gagal dimuatkan. Sila cuba lagi.', saveFailed: 'Nombor telefon gagal disimpan. Sila cuba lagi.', login: 'Sila login untuk melihat profil.', warning: 'Pemadaman akaun adalah kekal dan memerlukan pengesahan Google serta CAPTCHA baharu.', edit: 'Edit', cancel: 'Batal' },
+    en: { title: 'My Profile', name: 'Name', email: 'Email', id: 'SG Mobile Fix ID', phone: 'Phone Number', noPhone: 'No phone number', save: 'Save', saving: 'Saving…', logout: 'Log Out', delete: 'Delete Account', back: 'Back to Home', retry: 'Try again', loading: 'Loading profile…', saved: 'Phone number updated successfully', invalid: 'Enter a valid phone number (6–15 digits), or leave blank to remove it.', failed: 'Unable to load profile. Please try again.', saveFailed: 'Unable to save phone number. Please try again.', login: 'Please log in to view your profile.', warning: 'Account deletion is permanent and requires Google verification and a new CAPTCHA.', edit: 'Edit', cancel: 'Cancel' }
   };
   
   const el = id => document.getElementById('profile-' + id);
   const text = key => (labels[document.documentElement.lang] || labels.ms)[key];
   let statusKey = '', statusError = false, saving = false, loaded = false;
+  let currentPhone = '';
   let auth, sdk, fns, unsubscribe, activeUid = null, version = 0;
+
+  function renderPhone() {
+    const display = document.getElementById('phone-display');
+    if (display) display.textContent = currentPhone || text('noPhone');
+  }
 
   function translate() {
     document.querySelectorAll('[data-profile-text]').forEach(node => { node.textContent = text(node.dataset.profileText); });
+    renderPhone();
     if (el('status')) { el('status').textContent = text(statusKey) || ''; el('status').dataset.error = String(statusError); }
     if (saving && el('save')) el('save').textContent = text('saving');
   }
@@ -53,7 +61,8 @@
     const mine = ++version;
     unsubscribe?.(); unsubscribe = null; activeUid = null;
     
-    document.getElementById('phone-display').textContent = 'Tiada nombor';
+    currentPhone = '';
+    renderPhone();
     el('phone').value = '';
     el('id').textContent = '—';
     renderIdentity(null, null); el('retry').hidden = true;
@@ -75,10 +84,10 @@
       const data = snapshot.data();
       el('id').textContent = data.sgmfId || '—';
       
-      const currentPhone = data.phoneNumber ?? data.no_telefon ?? '';
-      
-      // Kemas kini paparan teks
-      document.getElementById('phone-display').textContent = currentPhone || 'Tiada nombor';
+      currentPhone = data.phoneNumber ?? data.no_telefon ?? '';
+
+      // Kemas kini paparan teks mengikut bahasa semasa
+      renderPhone();
       
       // Masukkan ke dalam input (tapi jangan kacau kalau tengah taip)
       if (!saving && document.activeElement !== el('phone')) {
@@ -108,13 +117,11 @@
     });
 
     document.getElementById('btn-cancel-phone').addEventListener('click', () => {
-        const currentDisplay = document.getElementById('phone-display').textContent;
-        el('phone').value = currentDisplay === 'Tiada nombor' ? '' : currentDisplay;
-        status(''); 
+        el('phone').value = currentPhone;
+        status('');
         togglePhoneMode(false);
     });
 
-    el('back').addEventListener('click', () => window.showTab('home-tab'));
     document.getElementById('customer-logout').addEventListener('click', () => window.sgmAuth.logout().catch(() => {}));
     document.getElementById('customer-delete').addEventListener('click', () => window.sgmAuth.requestDeletion());
     el('retry').addEventListener('click', () => connect(true));
@@ -147,8 +154,9 @@
         });
         
         if (mine === version) { 
-            // Kemas kini UI
-            document.getElementById('phone-display').textContent = phone || 'Tiada nombor';
+            // Kemas kini UI mengikut bahasa semasa
+            currentPhone = phone;
+            renderPhone();
             status('saved'); 
             togglePhoneMode(false); // TUTUP MOD EDIT
         }
