@@ -1,54 +1,54 @@
-const CACHE_NAME = 'sg-mobile-fix-V12';
+const CACHE_NAME = 'sg-mobile-fix-V14';
 
+// Hanya aset awam. Jangan cache shell login, respons API atau data pengguna.
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/css/styles.css',
-  '/js/script.js',
-  '/json/manifest.json',
-  '/assets/icon_apps/sg-mobile-fix-icon-192.png',
-  '/assets/icon_apps/sg-mobile-fix-icon-512.png'
+  '/styles.css',
+  '/script.js',
+  '/auth.css',
+  '/auth-client.js',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(urlsToCache);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames
+      .filter(name => name.startsWith('sg-mobile-fix-') && name !== CACHE_NAME)
+      .map(name => caches.delete(name)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) return response;
-        const fetchRequest = event.request.clone();
-        return fetch(fetchRequest).then(response => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-          return response;
-        });
-      })
-  );
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Sesi mesti datang daripada pelayan supaya cookie/logout/expiry sentiasa dipatuhi.
+  // Navigasi juga tidak dibalas daripada HTML lama yang mungkin mengandungi auth lama.
+  if (url.pathname.startsWith('/api/') || request.mode === 'navigate') return;
+
+  event.respondWith((async () => {
+    try {
+      const response = await fetch(request);
+      const cacheControl = response.headers.get('Cache-Control') || '';
+      if (response.ok && response.type === 'basic' && !cacheControl.includes('no-store')) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      }
+      return response;
+    } catch (_) {
+      return (await caches.match(request)) || Response.error();
+    }
+  })());
 });
