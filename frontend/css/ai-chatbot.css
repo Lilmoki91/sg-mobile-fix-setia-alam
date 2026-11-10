@@ -199,6 +199,7 @@ body.chatbot-open #chatbot-toggle {
   background: var(--chat-surface);
   border-top: 1px solid var(--chat-border);
 }
+
 #chatbot-reset {
   display: grid;
   place-items: center;
@@ -213,14 +214,24 @@ body.chatbot-open #chatbot-toggle {
   font: inherit;
   font-size: 12px;
   cursor: pointer;
-  transition: color .15s, background .15s, border-color .15s;
+  transition: all 0.15s ease-in-out; /* Tambah 'all' untuk efek transform & opacity */
 }
-#chatbot-reset:hover,
-#chatbot-reset:active {
+
+#chatbot-reset:hover {
   color: #b91c1c;
   background: #fef2f2;
   border-color: #fca5a5;
 }
+
+/* Kesan bila butang DITEKAN (Active) */
+#chatbot-reset:active {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fca5a5;
+  transform: scale(0.92); /* Butang mengecil */
+  opacity: 0.7; /* Jadi lutsinar */
+}
+
 html[data-theme="dark"] #chatbot-reset:hover,
 html[data-theme="dark"] #chatbot-reset:active {
   color: #fecaca;
