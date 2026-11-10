@@ -9,7 +9,12 @@
   const el = id => document.getElementById('auth-' + id);
   const message = value => { if (el('message')) el('message').textContent = value; };
   // Prevents the "checking session" screen from hanging forever on a slow/resumed mobile connection.
-  const withTimeout = (promise, ms, text) => Promise.race([promise, new Promise((_, reject) => setTimeout(() => { const e = new Error(text); e.status = 0; reject(e); }, ms))]);
+  function withTimeout(promise, ms, text) {
+    let timeout;
+    return Promise.race([promise, new Promise((_, reject) => {
+      timeout = setTimeout(() => { const e = new Error(text); e.status = 0; reject(e); }, ms);
+    })]).finally(() => clearTimeout(timeout));
+  }
   const NETWORK_MESSAGE = 'Sambungan lambat atau terputus. Sesi anda masih disimpan. Sila cuba semula.';
   async function api(path, data) {
     let response;
@@ -58,10 +63,10 @@
     if (el('profile')) el('profile').textContent = '';
     notify();
   }
-  async function accept(data) {
-    const version = ++generation;
+  async function accept(data, version = ++generation) {
+    if (version !== generation) return;
     await withTimeout(sdk.signInWithCustomToken(auth, data.customToken), 20000, NETWORK_MESSAGE);
-    if (version !== generation) { await sdk.signOut(auth); return; }
+    if (version !== generation) return;
     // Do not retain the custom token returned by the backend.
     current = { uid: data.uid, role: data.role, profile: data.profile, expiresAt: data.expiresAt };
     if (!adminPage) {
@@ -85,15 +90,19 @@
     restoring = (async () => {
       try {
         await initialize();
+        if (version !== generation) return current;
         const data = await api(adminPage ? 'admin-session' : 'session');
-        if (version === generation) { await accept(data); retries = 0; }
+        // Keep the same attempt ID through Firebase sign-in so its errors reach this catch.
+        if (version === generation) { await accept(data, version); retries = 0; }
       } catch (error) {
         if (version === generation) {
           // Only 401/403 mean the session is really invalid; everything else is a transient problem
           // (the HttpOnly cookie is still on the device), so offer a retry instead of getting stuck.
           const invalid = error.status === 401 || error.status === 403;
           if (!invalid && current) return current; // already signed in; a brief network drop must not log the user out
-          lock(); if (auth) { try { await sdk.signOut(auth); } catch (_) {} }
+          lock();
+          // Show recovery immediately, even if Firebase cleanup is slow.
+          if (auth) sdk.signOut(auth).catch(() => {});
           message(error.status === 401 ? 'Sila login untuk meneruskan.' : error.message);
           if (!invalid && !adminPage) {
             if (retryButton()) retryButton().hidden = false;
@@ -222,5 +231,13 @@
   // Network came back after the app was reopened offline/slow: re-check the saved session automatically.
   window.addEventListener('online', () => { if (!current && !deleting && !loginFlow) { retries = 0; restore(); } });
   retryButton()?.addEventListener('click', () => { retries = 0; message('Menyemak sesi selamat…'); restore(); });
-  window.addEventListener('pageshow', event => { if (event.persisted) { lock(); ready.then(restore); } });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) {
+      const pending = restoring || ready;
+      lock();
+      message('Menyemak sesi selamat…');
+      // Wait for the invalidated attempt to finish before starting a fresh one.
+      pending.then(restore);
+    }
+  });
 })();
