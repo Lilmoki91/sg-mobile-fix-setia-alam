@@ -112,18 +112,24 @@ body.chatbot-open #chatbot-toggle {
   place-items: center;
   flex-shrink: 0;
   min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--border-color);
+  min-width: 44px;
+  padding: 0;
+  border: none;
   border-radius: 10px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  font-size: 16px;
-  font-weight: 600;
+  background-color: #fee2e2; /* Merah cair (pastel) */
+  color: #b91c1c; /* Ikon merah gelap */
+  font-size: 20px;
+  font-weight: 900;
   cursor: pointer;
-  transition: filter .15s;
+  transition: all 0.2s ease-in-out;
 }
-#chatbot-close:hover:not(:disabled) {
-  filter: brightness(.95);
+
+/* Bila hover atau klik (active) - Merah pekat & ikon putih */
+#chatbot-close:hover:not(:disabled),
+#chatbot-close:active:not(:disabled) {
+  background-color: #dc2626; /* Merah menyala */
+  color: #ffffff; /* Ikon putih */
+  transform: scale(0.95); /* Kesan butang tertekan sikit */
 }
 
 #chatbot-messages {
