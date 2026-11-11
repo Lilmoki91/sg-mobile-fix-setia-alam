@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initShareLocation();
   initLightboxControls();
   initSocialDots();
+  initServiceWorker();
   initPwaInstall();
   initBooking();
 
@@ -1243,26 +1244,28 @@ function initTestimonials() {
     // 1. Cipta Kad Video
     const card = document.createElement("div");
     card.className = "snap-center flex-shrink-0 cursor-pointer";
-    // Mengekalkan gaya asal anda
+    // Nisbah video menggantikan tinggi 105vh yang menghasilkan ruang kosong.
     card.style.cssText = `
       flex: 0 0 auto;
-      height: 105vh;
       width: 100%;
       max-width: 420px;
-      background: transparent;
+      aspect-ratio: 9 / 16;
+      background: #000;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 8px 30px rgba(0,0,0,0.15);
     `;
 
     const iframe = document.createElement("iframe");
-    iframe.src = `https://www.tiktok.com/embed/v2/${id}?lang=ms-MY`;
+    iframe.src = `https://www.tiktok.com/player/v1/${id}?controls=1&description=0&music_info=0&rel=0`;
     iframe.title = title;
     iframe.loading = "lazy";
+    iframe.allow = "fullscreen";
     iframe.allowFullscreen = true;
     iframe.style.cssText = `
+      display: block;
       width: 100%;
-      height: 105vh;
+      height: 100%;
       border: none;
       border-radius: 16px;
     `;
@@ -1779,6 +1782,15 @@ window.addEventListener('beforeinstallprompt', (event) => {
   removeStorage('pwa-installed-hint');
   refreshPwaInstall();
 });
+
+async function initServiceWorker() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  try {
+    await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  } catch (error) {
+    console.warn('Service worker tidak dapat didaftarkan:', error);
+  }
+}
 
 function initPwaInstall() {
   const overlay = document.getElementById('install-overlay');
