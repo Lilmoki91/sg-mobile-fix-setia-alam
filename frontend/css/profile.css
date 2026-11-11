@@ -35,6 +35,15 @@
     font-size: 24px; 
     font-weight: 700; 
     margin: 0; 
+    color: #1e40af;
+}
+
+html[data-theme="dark"] .profile-heading h2 {
+    background: linear-gradient(90deg, #00d2ff, #3a7bd5) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
 }
 
 .profile-avatar { 
