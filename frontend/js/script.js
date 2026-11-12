@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
     containerId: 'phoneVideoScrollContainer',
     dotsId: 'phoneVideoDotsContainer',
     videos: [
-      ['7705292294714428690', 'Video telefon 1 / Phone video 1'],
-      ['7704535984691547399', 'Video telefon 2 / Phone video 2'],
-      ['7706824674767949064', 'Video telefon 3 / Phone video 3']
+      ['7705292294714428690', 'PhoneVideo1'],
+      ['7704535984691547399', 'PhoneVideo2'],
+      ['7706824674767949064', 'PhoneVideo3']
     ]
   });
   initTranslation();
@@ -288,6 +288,15 @@ PwaLater: "Tidak sekarang",
 
 // ============ KONGSIKAN LOKASI ===========
 ShareLocation: "Kongsikan Lokasi",
+
+// ===== VIDEO TIKTOK =====
+VideoOpenTikTok: "Tak dapat main? Buka di TikTok",
+PhoneVideo1: "Video telefon 1",
+PhoneVideo2: "Video telefon 2",
+PhoneVideo3: "Video telefon 3",
+TestimonialVideo1: "Testimoni 1",
+TestimonialVideo2: "Testimoni 2",
+TestimonialVideo3: "Testimoni 3",
       },
 
 // =====================
@@ -510,7 +519,16 @@ PwaInstall: "Install App",
 PwaLater: "Not now",
 
 // ============ SHARE LOKASI ===========
-ShareLocation: "Share Location",    
+ShareLocation: "Share Location",
+
+// ===== TIKTOK VIDEOS =====
+VideoOpenTikTok: "Can't play? Open on TikTok",
+PhoneVideo1: "Phone video 1",
+PhoneVideo2: "Phone video 2",
+PhoneVideo3: "Phone video 3",
+TestimonialVideo1: "Testimonial 1",
+TestimonialVideo2: "Testimonial 2",
+TestimonialVideo3: "Testimonial 3",
   }
 };
 
@@ -1242,10 +1260,17 @@ function initTestimonials(options = {}) {
   if (!container || !dotsContainer) return;
 
   const videos = options.videos || [
-    ["7640849215236705544", "Testimoni 1"],
-    ["7637524923703037202", "Testimoni 2"],
-    ["7668308481039977735", "Testimoni 3"]
+    ["7640849215236705544", "TestimonialVideo1"],
+    ["7637524923703037202", "TestimonialVideo2"],
+    ["7668308481039977735", "TestimonialVideo3"]
   ];
+
+  // Dapatkan teks mengikut bahasa semasa (kunci tidak dijumpai = guna teks asal)
+  const tr = (key) => {
+    const lang = document.documentElement.lang || "ms";
+    const dict = window.translations[lang] || window.translations.ms;
+    return dict[key] || key;
+  };
 
   container.replaceChildren();
   dotsContainer.replaceChildren();
@@ -1253,9 +1278,8 @@ function initTestimonials(options = {}) {
   // Array untuk menyimpan rujukan kad video dan titik yang sepadan
   const dotElements = [];
 
-  videos.forEach(([id, title], index) => {
+  videos.forEach(([id, titleKey], index) => {
     // 1. Cipta Kad Video
-    const isEn = (document.documentElement.lang || "ms") === "en";
     const videoUrl = `https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`;
 
     const card = document.createElement("div");
@@ -1279,7 +1303,6 @@ function initTestimonials(options = {}) {
     // supaya tidak terkena had permintaan (429) dan lebih laju pada telefon.
     const poster = document.createElement("button");
     poster.type = "button";
-    poster.setAttribute("aria-label", (isEn ? "Play video: " : "Main video: ") + title);
     poster.style.cssText = `
       position: absolute; inset: 0; width: 100%; height: 100%;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
@@ -1294,7 +1317,9 @@ function initTestimonials(options = {}) {
       </span>
       <span style="font-size:14px;font-weight:600;"></span>
     `;
-    poster.lastElementChild.textContent = title;
+    // Tajuk poster diterjemah automatik oleh applyTranslations melalui data-i18n-key
+    poster.lastElementChild.setAttribute("data-i18n-key", titleKey);
+    poster.lastElementChild.textContent = tr(titleKey);
     frame.appendChild(poster);
 
     poster.addEventListener("click", () => {
@@ -1303,7 +1328,7 @@ function initTestimonials(options = {}) {
 
       const iframe = document.createElement("iframe");
       iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
-      iframe.title = title;
+      iframe.title = tr(titleKey);
       iframe.allow = "autoplay; fullscreen; encrypted-media; picture-in-picture";
       iframe.setAttribute("allowfullscreen", "");
       iframe.referrerPolicy = "strict-origin-when-cross-origin";
@@ -1324,7 +1349,8 @@ function initTestimonials(options = {}) {
     fallback.target = "_blank";
     fallback.rel = "noopener noreferrer";
     fallback.style.cssText = "display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:#0ea5e9;text-decoration:underline;";
-    fallback.textContent = isEn ? "Can't play? Open on TikTok" : "Tak dapat main? Buka di TikTok";
+    fallback.setAttribute("data-i18n-key", "VideoOpenTikTok");
+    fallback.textContent = tr("VideoOpenTikTok");
 
     card.append(frame, fallback);
     container.appendChild(card);
