@@ -102,6 +102,7 @@
       <div class="auth-mark" aria-hidden="true"><img src="https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/logo/logo-sg-mobile.webp" alt=""></div>
       <h1 id="auth-title" hidden></h1>
       <p id="auth-intro" hidden></p>
+      <button id="auth-retry" class="auth-secondary" type="button" hidden>Cuba semula sambungan</button>
       <button id="auth-google" type="button">
         <svg class="auth-google-icon" width="24" height="24" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
           <path fill="#4285F4" d="M43.61 24.46c0-1.36-.12-2.66-.35-3.92H24v7.42h11a9.4 9.4 0 0 1-4.08 6.18v5.14h6.61c3.87-3.56 6.08-8.8 6.08-14.82z"/>
@@ -489,6 +490,22 @@
         <div id="phones-grid" class="phone-grid"></div>
         <p class="phone-note" data-phone-text="purchaseNote">Pertanyaan melalui WhatsApp bukan pengesahan pembelian. Harga dan stok perlu disahkan dengan kedai.</p>
       </div>
+      <section class="phone-sales-videos" aria-labelledby="phone-videos-title">
+        <h2 id="phone-videos-title" data-i18n-key="PhoneVideosTitle">Video Telefon di Kedai</h2>
+        <p class="phone-video-description" data-i18n-key="PhoneVideosDesc">Lihat telefon jualan SG Mobile Fix dengan lebih dekat. Sahkan harga dan stok terkini melalui WhatsApp.</p>
+        <div id="phoneVideoScrollContainer" class="phone-video-scroll no-scrollbar"></div>
+        <div id="phoneVideoDotsContainer" class="phone-video-dots"></div>
+        <div class="phone-video-hints text-center mt-3 text-gray-500 text-sm">
+          <p class="hidden md:block" data-i18n-key="GalleryScrollDesktop">Gunakan mouse wheel atau scroll horizontal</p>
+          <p class="md:hidden" data-i18n-key="GalleryScrollMobile">Scroll ke kiri atau kanan untuk melihat lebih banyak</p>
+        </div>
+        <div class="text-center mt-4">
+          <a href="https://www.tiktok.com/@sgmobilesetiaalam" target="_blank" rel="noopener noreferrer" class="phone-tiktok-badge">
+            <i class="fab fa-tiktok" aria-hidden="true"></i>
+            @sgmobilesetiaalam
+          </a>
+        </div>
+      </section>
       <div class="mt-10 mb-4 text-center">
         <div class="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-semibold">
           <i class="fas fa-clock" style="font-size:18px;"></i>
