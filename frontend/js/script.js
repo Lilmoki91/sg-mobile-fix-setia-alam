@@ -25,6 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initGallery();
   initTestimonials();
+  initTestimonials({
+    containerId: 'phoneVideoScrollContainer',
+    dotsId: 'phoneVideoDotsContainer',
+    videos: [
+      ['7705292294714428690', 'Video telefon 1 / Phone video 1'],
+      ['7704535984691547399', 'Video telefon 2 / Phone video 2'],
+      ['7706824674767949064', 'Video telefon 3 / Phone video 3']
+    ]
+  });
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -79,6 +88,8 @@ window.translations = window.translations || {
     SearchResultNone: "Tiada perkhidmatan dijumpai.",
     OperatingHours: "",
     GalleryTitle: "Gambar Kedai",
+    PhoneVideosTitle: "Video Telefon di Kedai",
+    PhoneVideosDesc: "Lihat telefon jualan SG Mobile Fix dengan lebih dekat. Sahkan harga dan stok terkini melalui WhatsApp.",
     GalleryScrollDesktop: "Gunakan mouse wheel atau scroll horizontal",
     GalleryScrollMobile: "Scroll ke kiri atau kanan untuk melihat lebih banyak",
     TestimonialTitle: "Testimoni Pelanggan",
@@ -298,6 +309,8 @@ ShareLocation: "Kongsikan Lokasi",
     SearchResultNone: "No services found.",
     OperatingHours: "",
     GalleryTitle: "Shop Gallery",
+    PhoneVideosTitle: "Phones for Sale — Videos",
+    PhoneVideosDesc: "Take a closer look at phones sold at SG Mobile Fix. Confirm current prices and stock via WhatsApp.",
     GalleryScrollDesktop: "Use mouse wheel or horizontal scroll",
     GalleryScrollMobile: "Scroll left or right to see more",
     TestimonialTitle: "Customer Testimonials",
@@ -1221,14 +1234,14 @@ function initLightboxControls() {
 
 // ==================== TESTIMONIALS WITH DOTS ====================
 
-function initTestimonials() {
-  const container = document.getElementById("videoScrollContainer");
-  const dotsContainer = document.getElementById("videoDotsContainer");
+function initTestimonials(options = {}) {
+  const container = document.getElementById(options.containerId || "videoScrollContainer");
+  const dotsContainer = document.getElementById(options.dotsId || "videoDotsContainer");
   
-  // Pastikan kedua-dua container wujud
+  // Pemain yang sama digunakan untuk testimoni dan video jualan telefon.
   if (!container || !dotsContainer) return;
 
-  const videos = [
+  const videos = options.videos || [
     ["7640849215236705544", "Testimoni 1"],
     ["7637524923703037202", "Testimoni 2"],
     ["7668308481039977735", "Testimoni 3"]
@@ -1277,7 +1290,9 @@ function initTestimonials() {
     const dot = document.createElement("button");
     // Titik pertama akan aktif (panjang) secara lalai
     dot.className = `h-2.5 rounded-full transition-all duration-300 ${index === 0 ? "w-7 bg-blue-600" : "w-2.5 bg-gray-300 hover:bg-gray-400"}`;
-    dot.setAttribute("aria-label", `Pergi ke testimoni ${index + 1}`);
+    dot.type = 'button';
+    dot.setAttribute("aria-label", options.videos ?
+      `Pergi ke video telefon / Go to phone video ${index + 1}` : `Pergi ke testimoni ${index + 1}`);
 
     // Fungsi klik titik untuk scroll ke video berkenaan
     dot.addEventListener("click", () => {
