@@ -1,6 +1,7 @@
+// functions/api/phones/[[path]].js
 // Cloudflare Pages Functions only. All product writes require a signed server session.
 import { authenticated, cloudinary, validateFile } from '../gallery/[[path]].js';
-import { getPhone, listPhones, savePhone, deletePhone } from '../../../lib/phones-store.js';
+import { getPhone, listPhones, savePhone, deletePhone, getPhoneVideos, savePhoneVideos } from '../../../lib/phones-store.js';
 const PREFIX = 'shop-phones/';
 const MAX_REQUEST = 31 * 1024 * 1024;
 function json(data, status = 200) {
@@ -84,7 +85,8 @@ async function readBody(request) {
 export async function onRequest({ request, env }) {
   try {
     const url = new URL(request.url), method = request.method;
-    if (url.pathname.replace(/\/$/, '') !== '/api/phones/products') return json({ error: 'Not found' }, 404);
+    const route = url.pathname.replace(/\/$/, '');
+    if (!['/api/phones/products', '/api/phones/videos'].includes(route)) return json({ error: 'Not found' }, 404);
     if (!['GET', 'POST', 'DELETE'].includes(method)) return json({ error: 'Method not allowed' }, 405);
     const admin = url.searchParams.get('admin') === '1';
     if (method !== 'GET') {
@@ -92,6 +94,26 @@ export async function onRequest({ request, env }) {
       if (Number(request.headers.get('Content-Length') || 0) > MAX_REQUEST) fail('Permintaan terlalu besar. / Request too large.', 413);
     }
     if ((method !== 'GET' || admin) && !await authenticated(request, env)) fail('Sesi tamat. Sahkan kata laluan galeri semula. / Session expired; verify the gallery password.', 401);
+    if (route === '/api/phones/videos') {
+      if (method === 'GET') {
+        const config = await getPhoneVideos(env);
+        return json(admin ? { videos: config.videos, updateTime: config.updateTime } : { videos: config.videos.filter(v => v.active).map(({ id, titleMs, titleEn }) => ({ id, titleMs, titleEn })) });
+      }
+      if (method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+      const body = await readBody(request);
+      const raw = await body.text();
+      if (raw.length > 30000) fail('Permintaan terlalu besar. / Request too large.', 413);
+      let input; try { input = JSON.parse(raw); } catch { fail('JSON tidak sah. / Invalid JSON.'); }
+      if (!input || !Array.isArray(input.videos) || input.videos.length > 30 || typeof input.updateTime !== 'string') fail('Maksimum 30 video. / Maximum 30 videos.');
+      const ids = new Set();
+      const videos = input.videos.map(v => {
+        if (!v || typeof v.id !== 'string' || !/^\d{19}$/.test(v.id) || ids.has(v.id) || typeof v.active !== 'boolean') fail('ID TikTok tidak sah atau berulang. / Invalid or duplicate TikTok ID.');
+        ids.add(v.id);
+        return { id: v.id, titleMs: text(v, 'titleMs', 120, true), titleEn: text(v, 'titleEn', 120, true), active: v.active };
+      });
+      await savePhoneVideos(env, videos, input.updateTime);
+      return json({ success: true });
+    }
     if (method === 'GET') {
       const products = await listPhones(env, admin);
       return json({ products: admin ? products : products.filter(p => p.published === true).map(publicProduct) });
