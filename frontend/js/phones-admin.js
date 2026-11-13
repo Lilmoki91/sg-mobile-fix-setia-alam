@@ -54,7 +54,6 @@
     return data;
   }
   async function load() {
-    window.PhoneVideosAdmin?.refresh();
     products = (await api('/api/phones/products?admin=1')).products; renderList();
   }
   window.refreshAdminPhones = async () => {
