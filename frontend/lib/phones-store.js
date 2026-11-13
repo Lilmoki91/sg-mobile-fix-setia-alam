@@ -50,7 +50,7 @@ async function request(env, path, method = 'GET', body) {
   const response = await fetch(`https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents${path}`, {
     method, headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(20000)
   });
-  if (response.status === 404 && method === 'GET' && path.startsWith('/phones/')) return null;
+  if (response.status === 404 && method === 'GET' && (path.startsWith('/phones/') || path === '/phoneVideos/config')) return null;
   let data; try { data = await response.json(); } catch { data = {}; }
   if (!response.ok) {
     console.error('Phones Firestore REST:', response.status, data.error?.status);
@@ -58,6 +58,17 @@ async function request(env, path, method = 'GET', body) {
     fail('Operasi Firestore gagal. Semak IAM dan database. / Firestore operation failed; check IAM and database.', 502);
   }
   return data;
+}
+export const DEFAULT_PHONE_VIDEOS = ['7705292294714428690', '7704535984691547399', '7706824674767949064'].map((id, index) => ({ id, titleMs: `Video telefon ${index + 1}`, titleEn: `Phone video ${index + 1}`, active: true }));
+export async function getPhoneVideos(env) {
+  const doc = await request(env, '/phoneVideos/config');
+  return doc ? documentValue(doc) : { videos: DEFAULT_PHONE_VIDEOS, updateTime: '' };
+}
+export async function savePhoneVideos(env, videos, updateTime) {
+  await request(env, ':commit', 'POST', { writes: [{
+    update: { name: `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/phoneVideos/config`, fields: { videos: encode(videos) } },
+    currentDocument: updateTime ? { updateTime } : { exists: false }
+  }] });
 }
 export async function getPhone(env, id) { const doc = await request(env, '/phones/' + id); return doc ? documentValue(doc) : null; }
 export async function listPhones(env, admin) {
