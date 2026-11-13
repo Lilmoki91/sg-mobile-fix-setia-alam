@@ -1,12 +1,12 @@
-// phone-videos-admin.js
 //phone-videos-admin.js
 // ID TikTok disimpan sebagai string supaya ketepatan 19 digit dikekalkan.
 (function () {
   'use strict';
-  const U = window.PhoneUI, $ = id => document.getElementById('phone-video-' + id);
+  function initVideoAdmin(prefix, endpoint, globalName) {
+  const U = window.PhoneUI, $ = id => document.getElementById(prefix + id);
   const form = $('form');
   if (!form) return;
-  let videos = [], updateTime = '', busy = false, loaded = false, dirty = false, lastMessage = '';
+  let videos = [], updateTime = '', busy = false, loaded = false, dirty = false, lastMessage = '', sessionRevision = 0;
   function message(key) { lastMessage = key; $('message').textContent = U.t(key); }
   function setBusy(value) {
     busy = value;
@@ -14,9 +14,15 @@
     $('admin-list').querySelectorAll('button').forEach(el => { el.disabled = value; });
   }
   async function api(options = {}) {
-    const response = await fetch('/api/phones/videos?admin=1', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(45000), ...options });
+    const revision = sessionRevision;
+    const response = await fetch(endpoint + '?admin=1', { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(45000), ...options });
     let data; try { data = await response.json(); } catch { throw new Error('videoFailed'); }
-    if (!response.ok) throw new Error(response.status === 401 ? 'sessionExpired' : response.status === 409 ? 'videoConflict' : 'videoFailed');
+    if (revision !== sessionRevision) throw new Error('sessionExpired');
+    if (!response.ok) {
+      if (response.status === 401) window[globalName].clear();
+      throw new Error(response.status === 401 ? 'sessionExpired' : response.status === 409 ? 'videoConflict' : 'videoFailed');
+    }
+    if (!options.method && (!data || !Array.isArray(data.videos) || data.videos.length > 30 || typeof data.updateTime !== 'string' || data.videos.some(v => !v || typeof v.id !== 'string' || !/^\d{19}$/.test(v.id) || typeof v.titleMs !== 'string' || typeof v.titleEn !== 'string' || typeof v.active !== 'boolean'))) throw new Error('videoFailed');
     return data;
   }
   function reset() {
@@ -74,9 +80,12 @@
   });
   $('cancel').addEventListener('click', () => { if (!dirty || confirm(U.t('unsaved'))) reset(); });
   $('refresh').addEventListener('click', () => { if (!dirty || confirm(U.t('unsaved'))) { dirty = false; refresh(); } });
-  window.PhoneVideosAdmin = { refresh, clear() { videos = []; loaded = false; updateTime = ''; reset(); $('admin-list').replaceChildren(); message(''); } };
+  window[globalName] = { refresh, clear() { sessionRevision++; videos = []; loaded = false; updateTime = ''; reset(); $('admin-list').replaceChildren(); message(''); } };
   window.addEventListener('phones-language', () => { render(); message(lastMessage); });
   window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
-  document.addEventListener('sgm-auth-changed', event => { if (!event.detail) window.PhoneVideosAdmin.clear(); });
+  document.addEventListener('sgm-auth-changed', event => { if (!event.detail || event.detail.role !== 'admin') window[globalName].clear(); });
   reset();
+  }
+  initVideoAdmin('phone-video-', '/api/phones/videos', 'PhoneVideosAdmin');
+  initVideoAdmin('testimonial-video-', '/api/phones/testimonials', 'TestimonialVideosAdmin');
 })();
