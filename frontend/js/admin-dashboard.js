@@ -181,6 +181,8 @@
     if (tab === 'hours') window.refreshAdminHours?.();
     document.getElementById('admin-phones-panel')?.classList.toggle('hidden', tab !== 'phones');
     if (tab === 'phones') window.refreshAdminPhones?.();
+    document.getElementById('admin-phone-videos-panel')?.classList.toggle('hidden', tab !== 'phone-videos');
+    if (tab === 'phone-videos') window.PhoneVideosAdmin?.refresh();
 
     // Scroll to top of panels
     const panels = document.getElementById('admin-panels');
