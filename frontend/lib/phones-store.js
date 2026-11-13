@@ -50,7 +50,7 @@ async function request(env, path, method = 'GET', body) {
   const response = await fetch(`https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents${path}`, {
     method, headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(20000)
   });
-  if (response.status === 404 && method === 'GET' && (path.startsWith('/phones/') || path === '/phoneVideos/config')) return null;
+  if (response.status === 404 && method === 'GET' && (path.startsWith('/phones/') || ['/phoneVideos/config', '/testimonialVideos/config'].includes(path))) return null;
   let data; try { data = await response.json(); } catch { data = {}; }
   if (!response.ok) {
     console.error('Phones Firestore REST:', response.status, data.error?.status);
@@ -67,6 +67,17 @@ export async function getPhoneVideos(env) {
 export async function savePhoneVideos(env, videos, updateTime) {
   await request(env, ':commit', 'POST', { writes: [{
     update: { name: `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/phoneVideos/config`, fields: { videos: encode(videos) } },
+    currentDocument: updateTime ? { updateTime } : { exists: false }
+  }] });
+}
+export const DEFAULT_TESTIMONIAL_VIDEOS = ['7640849215236705544', '7637524923703037202', '7668308481039977735'].map((id, index) => ({ id, titleMs: `Testimoni ${index + 1}`, titleEn: `Testimonial ${index + 1}`, active: true }));
+export async function getTestimonialVideos(env) {
+  const doc = await request(env, '/testimonialVideos/config');
+  return doc ? documentValue(doc) : { videos: DEFAULT_TESTIMONIAL_VIDEOS, updateTime: '' };
+}
+export async function saveTestimonialVideos(env, videos, updateTime) {
+  await request(env, ':commit', 'POST', { writes: [{
+    update: { name: `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/testimonialVideos/config`, fields: { videos: encode(videos) } },
     currentDocument: updateTime ? { updateTime } : { exists: false }
   }] });
 }
