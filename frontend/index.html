@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ms" class="auth-locked">
 <head>
@@ -477,44 +476,8 @@
 </section>
     </section>
 
-    <section id="phones-tab" class="tab-content">
-      <section class="phone-sales-videos" aria-labelledby="phone-videos-title">
-        <h2 id="phone-videos-title" data-i18n-key="PhoneVideosTitle">Video Telefon di Kedai</h2>
-        <p class="phone-video-description" data-i18n-key="PhoneVideosDesc">Lihat telefon jualan SG Mobile Fix dengan lebih dekat. Sahkan harga dan stok terkini melalui WhatsApp.</p>
-        <div id="phoneVideoScrollContainer" class="phone-video-scroll no-scrollbar"></div>
-        <div id="phoneVideoDotsContainer" class="phone-video-dots"></div>
-        <div class="phone-video-hints text-center mt-3 text-gray-500 text-sm">
-          <p class="hidden md:block" data-i18n-key="GalleryScrollDesktop">Gunakan mouse wheel atau scroll horizontal</p>
-          <p class="md:hidden" data-i18n-key="GalleryScrollMobile">Scroll ke kiri atau kanan untuk melihat lebih banyak</p>
-        </div>
-        <div class="text-center mt-4">
-          <a href="https://www.tiktok.com/@sgmobilesetiaalam" target="_blank" rel="noopener noreferrer" class="phone-tiktok-badge">
-            <i class="fab fa-tiktok" aria-hidden="true"></i>
-            @sgmobilesetiaalam
-          </a>
-        </div>
-      </section>
-      <div class="phone-shell">
-        <header class="phone-heading"><span class="phone-eyebrow">SG MOBILE FIX</span><h2 data-phone-text="catalog">Telefon Dijual</h2><p data-phone-text="catalogDesc">Cari telefon pilihan anda. Semak ketersediaan melalui WhatsApp.</p></header>
-        <div class="phone-filters">
-          <label><span data-phone-text="search">Carian</span><input id="phones-search" type="search" maxlength="120"></label>
-          <label><span data-phone-text="brand">Jenama</span><select id="phones-brand"></select></label>
-          <label><span data-phone-text="condition">Keadaan</span><select id="phones-condition"></select></label>
-          <label><span data-phone-text="sort">Susunan</span><select id="phones-sort"></select></label>
-          <button id="phones-retry" type="button" data-phone-text="refresh">Muat semula</button>
-        </div>
-        <p id="phones-state" role="status" aria-live="polite"></p>
-        <div id="phones-grid" class="phone-grid"></div>
-        <p class="phone-note" data-phone-text="purchaseNote">Pertanyaan melalui WhatsApp bukan pengesahan pembelian. Harga dan stok perlu disahkan dengan kedai.</p>
-      </div>
-      <div class="mt-10 mb-4 text-center">
-        <div class="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm font-semibold">
-          <i class="fas fa-clock" style="font-size:18px;"></i>
-          <span data-i18n-key="OperatingHours" aria-live="polite"></span>
-        </div>
-      </div>
-    </section>
-    <dialog id="phone-detail" class="phone-dialog" aria-labelledby="phone-detail-title"><button id="phone-detail-close" type="button" class="phone-close" aria-label="Tutup / Close">×</button><div id="phone-detail-content"></div></dialog>
+    <!-- Kandungan jualan dimuatkan daripada phones.html oleh phones.js. -->
+    <section id="phones-tab" class="tab-content" data-phones-module></section>
 
     <!-- CTA SERVICES TAB -->
     <section id="services-tab" class="tab-content">
@@ -997,8 +960,7 @@
   <script src="js/services-firebase.js" defer></script>
   <script src="js/services-ui.js" defer></script>
   <script src="js/ai-chatbot.js" defer></script>
-  <script src="js/phones-common.js" defer></script>
-  <script src="js/phones-client.js" defer></script>
+  <script src="js/phones.js" defer></script>
 </body>
 </html>
 <!-- =============================================== -->
