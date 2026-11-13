@@ -336,6 +336,23 @@
                 <div class="phone-actions"><button type="submit" data-phone-text="save">Simpan produk</button><button id="phone-cancel" type="button" data-phone-text="cancel">Batal edit</button></div>
               </form>
               <div id="phone-admin-list" class="phone-grid"></div>
+              <section class="phone-video-admin" aria-labelledby="phone-video-admin-title">
+                <h3 id="phone-video-admin-title" data-phone-text="videoManage">Pengurusan Video TikTok</h3>
+                <p class="phone-note" data-phone-text="videoHelp">Masukkan ID 19 digit daripada pautan TikTok /video/ID. Ini menambah video sedia ada, bukan memuat naik fail. Maksimum 30 video.</p>
+                <p id="phone-video-message" role="status" aria-live="polite"></p>
+                <form id="phone-video-form">
+                  <input id="phone-video-edit-id" type="hidden">
+                  <div class="phone-form-grid">
+                    <label><span data-phone-text="videoId">ID video TikTok</span><input id="phone-video-id" type="text" inputmode="numeric" pattern="[0-9]{19}" maxlength="19" required placeholder="7705292294714428690"></label>
+                    <label><span data-phone-text="videoOrder">Susunan (1 = pertama)</span><input id="phone-video-order" type="number" min="1" max="30" value="1" required></label>
+                    <label><span data-phone-text="videoTitleMs">Tajuk (BM)</span><input id="phone-video-title-ms" maxlength="120" required></label>
+                    <label><span data-phone-text="videoTitleEn">Tajuk (EN)</span><input id="phone-video-title-en" maxlength="120" required></label>
+                  </div>
+                  <label class="phone-check"><input id="phone-video-active" type="checkbox" checked><span data-phone-text="videoActive">Paparkan kepada pelanggan</span></label>
+                  <div class="phone-actions"><button type="submit" data-phone-text="videoSave">Simpan video</button><button id="phone-video-cancel" type="button" data-phone-text="cancel">Batal suntingan</button><button id="phone-video-refresh" type="button" data-phone-text="refresh">Muat semula</button></div>
+                </form>
+                <div id="phone-video-admin-list" class="phone-grid"></div>
+              </section>
             </div>
           </div>
         </section>
@@ -415,6 +432,7 @@
   <script src="js/gallery-admin.js" defer></script>
   <script src="js/shop-hours.js" defer></script>
   <script src="js/phones.js" defer></script>
+  <script src="js/phone-videos-admin.js" defer></script>
   <script src="js/phones-admin.js" defer></script>
   <script src="js/admin-dashboard.js" defer></script>
 </body>
