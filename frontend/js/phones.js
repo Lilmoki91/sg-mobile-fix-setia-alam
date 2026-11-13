@@ -25,6 +25,10 @@
       confirmDelete: 'Padam produk ini dan gambarnya?', imageMissing: 'Gambar belum ditambah', invalidFiles: 'Pilih maksimum 6 gambar JPEG, PNG atau WebP, setiap satu tidak melebihi 5 MB.',
       error: 'Operasi gagal. Semak sesi atau konfigurasi backend.', sessionExpired: 'Sesi tamat. Sila sahkan akses semula.', cleanup: 'Rekod disimpan, tetapi ada gambar yang belum dipadam. Semak log Cloudflare.',
       enquiry: 'Hai, saya berminat dengan', availability: 'Boleh sahkan harga dan ketersediaan?', unsaved: 'Buang perubahan yang belum disimpan?',
+      videoManage: 'Pengurusan Video TikTok', videoHelp: 'Masukkan ID 19 digit daripada pautan TikTok /video/ID. Ini menambah video sedia ada, bukan memuat naik fail. Maksimum 30 video.',
+      videoId: 'ID video TikTok', videoOrder: 'Susunan (1 = pertama)', videoTitleMs: 'Tajuk (BM)', videoTitleEn: 'Tajuk (EN)', videoActive: 'Paparkan kepada pelanggan', videoSave: 'Simpan video',
+      videoSaved: 'Video disimpan. Paparan pelanggan dikemas kini pada muat semula berikutnya.', videoDeleted: 'Video dipadam daripada laman (video asal di TikTok tidak dipadam).', videoEmpty: 'Tiada video untuk dipaparkan.',
+      videoInvalid: 'Masukkan ID TikTok 19 digit yang unik dan tajuk BM/EN. Maksimum 30 video.', videoConfirmDelete: 'Buang video ini daripada laman?', videoFailed: 'Video tidak dapat dimuatkan. Cuba muat semula.', videoConflict: 'Data telah berubah. Muat semula sebelum menyimpan.',
       videosTitle: 'Video Telefon di Kedai', videosDesc: 'Lihat telefon jualan SG Mobile Fix dengan lebih dekat. Sahkan harga dan stok terkini melalui WhatsApp.',
       video1: 'Video telefon 1', video2: 'Video telefon 2', video3: 'Video telefon 3', openTikTok: 'Tak dapat main? Buka di TikTok',
       scrollDesktop: 'Gunakan mouse wheel atau scroll horizontal', scrollMobile: 'Scroll ke kiri atau kanan untuk melihat lebih banyak',
@@ -49,6 +53,10 @@
       invalidFiles: 'Select up to 6 JPEG, PNG or WebP images, no larger than 5 MB each.', error: 'Operation failed. Check your session or backend configuration.',
       sessionExpired: 'Session expired. Please verify access again.', cleanup: 'Record saved, but some images could not be removed. Check Cloudflare logs.',
       enquiry: 'Hi, I am interested in', availability: 'Could you confirm the price and availability?', unsaved: 'Discard unsaved changes?',
+      videoManage: 'TikTok Video Management', videoHelp: 'Enter the 19-digit ID from a TikTok /video/ID link. This adds an existing video, not a video file upload. Maximum 30 videos.',
+      videoId: 'TikTok video ID', videoOrder: 'Order (1 = first)', videoTitleMs: 'Title (BM)', videoTitleEn: 'Title (EN)', videoActive: 'Show to customers', videoSave: 'Save video',
+      videoSaved: 'Video saved. The customer view updates on its next refresh.', videoDeleted: 'Video removed from the website (the original on TikTok is not deleted).', videoEmpty: 'No videos to display.',
+      videoInvalid: 'Enter a unique 19-digit TikTok ID and BM/EN titles. Maximum 30 videos.', videoConfirmDelete: 'Remove this video from the website?', videoFailed: 'Unable to load videos. Please refresh.', videoConflict: 'Data changed. Refresh before saving.',
       videosTitle: 'Phones for Sale — Videos', videosDesc: 'Take a closer look at phones sold at SG Mobile Fix. Confirm current prices and stock via WhatsApp.',
       video1: 'Phone video 1', video2: 'Phone video 2', video3: 'Phone video 3', openTikTok: "Can't play? Open on TikTok",
       scrollDesktop: 'Use mouse wheel or horizontal scroll', scrollMobile: 'Scroll left or right to see more',
@@ -114,11 +122,8 @@
       return await response[format]();
     } finally { clearTimeout(timeout); }
   }
-  const videos = [
-    ['7705292294714428690', 'video1'],
-    ['7704535984691547399', 'video2'],
-    ['7706824674767949064', 'video3']
-  ];
+  let videos = [], videosLoading = false, videosLoaded = false;
+  const videoTitle = video => U.localized(video, 'title');
   let ready = false, modulePromise = null;
   let products = [], loaded = false, failed = false, loading = false, selectedId = null;
   let dialog, videoItems = [], activeVideo = null;
@@ -198,6 +203,7 @@
   }
   async function refresh() {
     if (!ready || loading || document.hidden) return;
+    refreshVideos();
     loading = true; $('phones-retry').disabled = true;
     $('phones-state').textContent = U.t('loading');
     try {
@@ -207,23 +213,48 @@
     } catch { failed = true; }
     finally { loading = false; $('phones-retry').disabled = false; render(); }
   }
+  async function refreshVideos() {
+    if (videosLoading || !ready) return;
+    videosLoading = true;
+    try {
+      const data = await fetchContent('/api/phones/videos', 'json');
+      if (!Array.isArray(data.videos) || data.videos.some(v => !/^\d{19}$/.test(v.id))) throw new Error('videos');
+      if (!videosLoaded || JSON.stringify(data.videos) !== JSON.stringify(videos)) {
+        videos = data.videos; videosLoaded = true; initVideos(); updateLanguage();
+      }
+    } catch {
+      if (!videosLoaded) {
+        const text = U.node('p', U.t('videoFailed'), 'phone-note'); text.dataset.phoneText = 'videoFailed';
+        $('phoneVideoScrollContainer').replaceChildren(text);
+      }
+    } finally { videosLoading = false; }
+  }
+  let videoObserver = null;
   function initVideos() {
+    if (activeVideo) window.__tiktokStop?.();
+    videoObserver?.disconnect();
     const container = $('phoneVideoScrollContainer'), dots = $('phoneVideoDotsContainer');
-    videos.forEach(([id, key], index) => {
+    container.replaceChildren(); dots.replaceChildren(); videoItems = [];
+    if (!videos.length) {
+      const text = U.node('p', U.t(videosLoaded ? 'videoEmpty' : 'loading'), 'phone-note');
+      text.dataset.phoneText = videosLoaded ? 'videoEmpty' : 'loading'; container.append(text);
+    }
+    videos.forEach((video, index) => {
+      const { id } = video;
       const card = U.node('div', undefined, 'phone-video-card');
       const frame = U.node('div', undefined, 'phone-video-frame');
       const poster = U.node('button', undefined, 'phone-video-poster'); poster.type = 'button';
       const logo = U.node('i', undefined, 'fab fa-tiktok'); logo.setAttribute('aria-hidden', 'true');
       const play = U.node('span', '▶', 'phone-video-play'); play.setAttribute('aria-hidden', 'true');
-      const title = U.node('span', U.t(key)); title.dataset.phoneText = key;
+      const title = U.node('span', videoTitle(video));
       poster.append(logo, play, title); frame.append(poster);
       poster.addEventListener('click', () => {
         window.__tiktokStop?.();
         const iframe = U.node('iframe');
         iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
-        iframe.title = U.t(key); iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+        iframe.title = videoTitle(video); iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
         iframe.setAttribute('allowfullscreen', ''); iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        frame.replaceChildren(iframe); activeVideo = { iframe, key };
+        frame.replaceChildren(iframe); activeVideo = { iframe, video };
         const stop = () => {
           frame.replaceChildren(poster); activeVideo = null;
           if (window.__tiktokStop === stop) window.__tiktokStop = null;
@@ -235,7 +266,7 @@
       card.append(frame, fallback); container.append(card);
       const dot = U.node('button'); dot.type = 'button'; dots.append(dot);
       dot.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
-      videoItems.push({ card, dot, index, title, key });
+      videoItems.push({ card, dot, index, title, video });
     });
     function mark(index) {
       videoItems.forEach(item => {
@@ -245,12 +276,14 @@
     }
     mark(0);
     if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(entries => {
+      videoObserver = new IntersectionObserver(entries => {
         const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
         if (visible.length) mark(videoItems.findIndex(item => item.card === visible[0].target));
       }, { root: container, threshold: 0.6 });
-      videoItems.forEach(item => observer.observe(item.card));
+      videoItems.forEach(item => videoObserver.observe(item.card));
     }
+  }
+  function observeVideoTab() {
     new MutationObserver(() => {
       if (!host.classList.contains('active')) {
         if (activeVideo) window.__tiktokStop?.();
@@ -262,11 +295,11 @@
     U.translate();
     if (!ready) return;
     filters(); render();
-    videoItems.forEach(({ dot, index, title, key }) => {
+    videoItems.forEach(({ dot, index, title, video }) => {
       dot.setAttribute('aria-label', `${U.t('goVideo')} ${index + 1}`);
-      title.textContent = U.t(key);
+      title.textContent = videoTitle(video);
     });
-    if (activeVideo) activeVideo.iframe.title = U.t(activeVideo.key);
+    if (activeVideo) activeVideo.iframe.title = videoTitle(activeVideo.video);
     // Waktu operasi kekal menggunakan sistem bersama laman utama.
     host.querySelectorAll('[data-i18n-key="OperatingHours"]').forEach(el => {
       el.textContent = window.shopHours ? window.shopHours.text(U.lang()) : '';
@@ -284,7 +317,7 @@
     });
     ['phones-search', 'phones-brand', 'phones-condition', 'phones-sort'].forEach(id => $(id).addEventListener(id === 'phones-search' ? 'input' : 'change', render));
     $('phones-retry').addEventListener('click', refresh);
-    initVideos();
+    initVideos(); observeVideoTab();
     setInterval(() => { if (host.classList.contains('active')) refresh(); }, 60000);
   }
   $('phones-menu-action')?.addEventListener('click', async event => {
