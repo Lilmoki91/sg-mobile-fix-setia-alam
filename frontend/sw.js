@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sg-mobile-fix-V14';
+const CACHE_NAME = 'sg-mobile-fix-V15';
 
 // Hanya aset awam. Jangan cache shell login, respons API atau data pengguna.
 const urlsToCache = [
