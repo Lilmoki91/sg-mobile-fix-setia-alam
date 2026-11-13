@@ -769,6 +769,12 @@ html[data-theme="dark"] section.bg-slate-50 {
   background-color: #111827 !important;
 }
 
+/* Body mempunyai kelas bg-gray-50; tanpa ini ia menjadi #1f2937 dan nampak
+   sebagai jalur warna tidak sekata di luar <main> (#111827). */
+html[data-theme="dark"] body.bg-gray-50 {
+  background-color: #111827 !important;
+}
+
 html[data-theme="dark"] .bg-white,
 html[data-theme="dark"] .bg-gray-50,
 html[data-theme="dark"] .bg-gray-100,
