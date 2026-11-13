@@ -25,15 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initGallery();
   initTestimonials();
-  initTestimonials({
-    containerId: 'phoneVideoScrollContainer',
-    dotsId: 'phoneVideoDotsContainer',
-    videos: [
-      ['7705292294714428690', 'PhoneVideo1'],
-      ['7704535984691547399', 'PhoneVideo2'],
-      ['7706824674767949064', 'PhoneVideo3']
-    ]
-  });
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -88,8 +79,6 @@ window.translations = window.translations || {
     SearchResultNone: "Tiada perkhidmatan dijumpai.",
     OperatingHours: "",
     GalleryTitle: "Gambar Kedai",
-    PhoneVideosTitle: "Video Telefon di Kedai",
-    PhoneVideosDesc: "Lihat telefon jualan SG Mobile Fix dengan lebih dekat. Sahkan harga dan stok terkini melalui WhatsApp.",
     GalleryScrollDesktop: "Gunakan mouse wheel atau scroll horizontal",
     GalleryScrollMobile: "Scroll ke kiri atau kanan untuk melihat lebih banyak",
     TestimonialTitle: "Testimoni Pelanggan",
@@ -291,9 +280,6 @@ ShareLocation: "Kongsikan Lokasi",
 
 // ===== VIDEO TIKTOK =====
 VideoOpenTikTok: "Tak dapat main? Buka di TikTok",
-PhoneVideo1: "Video telefon 1",
-PhoneVideo2: "Video telefon 2",
-PhoneVideo3: "Video telefon 3",
 TestimonialVideo1: "Testimoni 1",
 TestimonialVideo2: "Testimoni 2",
 TestimonialVideo3: "Testimoni 3",
@@ -318,8 +304,6 @@ TestimonialVideo3: "Testimoni 3",
     SearchResultNone: "No services found.",
     OperatingHours: "",
     GalleryTitle: "Shop Gallery",
-    PhoneVideosTitle: "Phones for Sale — Videos",
-    PhoneVideosDesc: "Take a closer look at phones sold at SG Mobile Fix. Confirm current prices and stock via WhatsApp.",
     GalleryScrollDesktop: "Use mouse wheel or horizontal scroll",
     GalleryScrollMobile: "Scroll left or right to see more",
     TestimonialTitle: "Customer Testimonials",
@@ -523,9 +507,6 @@ ShareLocation: "Share Location",
 
 // ===== TIKTOK VIDEOS =====
 VideoOpenTikTok: "Can't play? Open on TikTok",
-PhoneVideo1: "Phone video 1",
-PhoneVideo2: "Phone video 2",
-PhoneVideo3: "Phone video 3",
 TestimonialVideo1: "Testimonial 1",
 TestimonialVideo2: "Testimonial 2",
 TestimonialVideo3: "Testimonial 3",
@@ -1252,14 +1233,14 @@ function initLightboxControls() {
 
 // ==================== TESTIMONIALS WITH DOTS ====================
 
-function initTestimonials(options = {}) {
-  const container = document.getElementById(options.containerId || "videoScrollContainer");
-  const dotsContainer = document.getElementById(options.dotsId || "videoDotsContainer");
+function initTestimonials() {
+  const container = document.getElementById("videoScrollContainer");
+  const dotsContainer = document.getElementById("videoDotsContainer");
   
-  // Pemain yang sama digunakan untuk testimoni dan video jualan telefon.
+  // Video jualan telefon diuruskan secara berasingan dalam phones.js.
   if (!container || !dotsContainer) return;
 
-  const videos = options.videos || [
+  const videos = [
     ["7640849215236705544", "TestimonialVideo1"],
     ["7637524923703037202", "TestimonialVideo2"],
     ["7668308481039977735", "TestimonialVideo3"]
@@ -1360,8 +1341,7 @@ function initTestimonials(options = {}) {
     // Titik pertama akan aktif (panjang) secara lalai
     dot.className = `h-2.5 rounded-full transition-all duration-300 ${index === 0 ? "w-7 bg-blue-600" : "w-2.5 bg-gray-300 hover:bg-gray-400"}`;
     dot.type = 'button';
-    dot.setAttribute("aria-label", options.videos ?
-      `Pergi ke video telefon / Go to phone video ${index + 1}` : `Pergi ke testimoni ${index + 1}`);
+    dot.setAttribute("aria-label", `Pergi ke testimoni ${index + 1}`);
 
     // Fungsi klik titik untuk scroll ke video berkenaan
     dot.addEventListener("click", () => {
