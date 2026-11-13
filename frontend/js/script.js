@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initChatbot();
   }
   initGallery();
-  initTestimonials();
+  // Testimoni dimuatkan oleh testimonial-videos.js melalui API.
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -1233,18 +1233,18 @@ function initLightboxControls() {
 
 // ==================== TESTIMONIALS WITH DOTS ====================
 
-function initTestimonials() {
+let testimonialObserver = null;
+let stopTestimonialVideo = null;
+function initTestimonials(managedVideos = []) {
   const container = document.getElementById("videoScrollContainer");
   const dotsContainer = document.getElementById("videoDotsContainer");
   
   // Video jualan telefon diuruskan secara berasingan dalam phones.js.
   if (!container || !dotsContainer) return;
 
-  const videos = [
-    ["7640849215236705544", "TestimonialVideo1"],
-    ["7637524923703037202", "TestimonialVideo2"],
-    ["7668308481039977735", "TestimonialVideo3"]
-  ];
+  testimonialObserver?.disconnect();
+  stopTestimonialVideo?.();
+  const videos = managedVideos.map(v => [v.id, document.documentElement.lang === 'en' ? v.titleEn : v.titleMs]);
 
   // Dapatkan teks mengikut bahasa semasa (kunci tidak dijumpai = guna teks asal)
   const tr = (key) => {
@@ -1298,9 +1298,8 @@ function initTestimonials() {
       </span>
       <span style="font-size:14px;font-weight:600;"></span>
     `;
-    // Tajuk poster diterjemah automatik oleh applyTranslations melalui data-i18n-key
-    poster.lastElementChild.setAttribute("data-i18n-key", titleKey);
-    poster.lastElementChild.textContent = tr(titleKey);
+    // Tajuk admin ialah teks biasa, bukan HTML atau kunci terjemahan.
+    poster.lastElementChild.textContent = titleKey;
     frame.appendChild(poster);
 
     poster.addEventListener("click", () => {
@@ -1309,7 +1308,7 @@ function initTestimonials() {
 
       const iframe = document.createElement("iframe");
       iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
-      iframe.title = tr(titleKey);
+      iframe.title = titleKey;
       iframe.allow = "autoplay; fullscreen; encrypted-media; picture-in-picture";
       iframe.setAttribute("allowfullscreen", "");
       iframe.referrerPolicy = "strict-origin-when-cross-origin";
@@ -1318,10 +1317,13 @@ function initTestimonials() {
         width: 100%; height: 100%; border: none; border-radius: 16px;
       `;
       frame.replaceChildren(iframe);
-      window.__tiktokStop = () => {
+      const stop = () => {
         frame.replaceChildren(poster);
-        window.__tiktokStop = null;
+        if (window.__tiktokStop === stop) window.__tiktokStop = null;
+        if (stopTestimonialVideo === stop) stopTestimonialVideo = null;
       };
+      stopTestimonialVideo = stop;
+      window.__tiktokStop = stop;
     });
 
     // Pautan sandaran: buka di aplikasi/laman TikTok (Android, iOS, komputer)
@@ -1341,7 +1343,7 @@ function initTestimonials() {
     // Titik pertama akan aktif (panjang) secara lalai
     dot.className = `h-2.5 rounded-full transition-all duration-300 ${index === 0 ? "w-7 bg-blue-600" : "w-2.5 bg-gray-300 hover:bg-gray-400"}`;
     dot.type = 'button';
-    dot.setAttribute("aria-label", `Pergi ke testimoni ${index + 1}`);
+    dot.setAttribute("aria-label", `${document.documentElement.lang === 'en' ? 'Go to testimonial' : 'Pergi ke testimoni'} ${index + 1}`);
 
     // Fungsi klik titik untuk scroll ke video berkenaan
     dot.addEventListener("click", () => {
@@ -1376,7 +1378,8 @@ function initTestimonials() {
     });
   }, observerOptions);
 
-  // Mula perhatikan setiap kad video
+  // Hentikan pemerhati lama sebelum senarai dimuat semula.
+  testimonialObserver = observer;
   dotElements.forEach(item => observer.observe(item.card));
 }
 
