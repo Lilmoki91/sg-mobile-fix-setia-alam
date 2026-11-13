@@ -41,7 +41,7 @@
   function access(allowed) {
     $('phone-login-form').classList.toggle('hidden', allowed);
     $('phone-admin-controls').classList.toggle('hidden', !allowed);
-    if (!allowed) { products = []; renderList(); }
+    if (!allowed) { products = []; renderList(); window.PhoneVideosAdmin?.clear(); }
   }
   async function api(path, options = {}) {
     const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(240000), ...options });
@@ -53,7 +53,10 @@
     }
     return data;
   }
-  async function load() { products = (await api('/api/phones/products?admin=1')).products; renderList(); }
+  async function load() {
+    window.PhoneVideosAdmin?.refresh();
+    products = (await api('/api/phones/products?admin=1')).products; renderList();
+  }
   window.refreshAdminPhones = async () => {
     if (busy) return;
     try {
@@ -119,7 +122,9 @@
   }
   function setBusy(value) {
     busy = value;
-    $('phone-admin-controls').querySelectorAll('input,textarea,select,button').forEach(el => { el.disabled = value; });
+    $('phone-admin-controls').querySelectorAll('input,textarea,select,button').forEach(el => {
+      if (!el.closest('.phone-video-admin')) el.disabled = value;
+    });
     renderImages(); renderList();
   }
   form.addEventListener('input', () => { dirty = true; });
