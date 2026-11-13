@@ -104,7 +104,16 @@
   const host = $('phones-tab');
   // Admin hanya menggunakan utiliti bersama; jangan muat fragmen pelanggan.
   if (!host || !host.hasAttribute('data-phones-module')) return;
-  const fragmentUrl = new URL('phones.html', document.currentScript.src);
+  const fragmentUrl = new URL('phones.html', document.currentScript?.src || document.baseURI);
+  async function fetchContent(url, format) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response[format]();
+    } finally { clearTimeout(timeout); }
+  }
   const videos = [
     ['7705292294714428690', 'video1'],
     ['7704535984691547399', 'video2'],
@@ -127,21 +136,25 @@
   function ensureModule() {
     if (ready) return Promise.resolve(true);
     if (modulePromise) return modulePromise;
-    modulePromise = (async () => {
-      host.setAttribute('aria-busy', 'true'); moduleState('moduleLoading');
+    modulePromise = Promise.resolve().then(async () => {
+      host.setAttribute('aria-busy', 'true');
       try {
-        const response = await fetch(fragmentUrl, { cache: 'no-store', signal: AbortSignal.timeout(45000) });
-        if (!response.ok) throw new Error('phones fragment');
-        const template = document.createElement('template'); template.innerHTML = await response.text();
-        if (!template.content.querySelector('#phones-grid') || !template.content.querySelector('#phone-detail')) throw new Error('invalid phones fragment');
-        host.replaceChildren(template.content);
+        // Gunakan HTML sedia ada; fetch hanya untuk shell lama yang masih kosong.
+        if (!host.querySelector('#phones-grid') || !host.querySelector('#phone-detail')) {
+          moduleState('moduleLoading');
+          const template = document.createElement('template');
+          template.innerHTML = await fetchContent(fragmentUrl, 'text');
+          if (!template.content.querySelector('#phones-grid') || !template.content.querySelector('#phone-detail')) throw new Error('invalid phones fragment');
+          host.replaceChildren(template.content);
+        }
         initClient(); ready = true; updateLanguage();
         return true;
       } catch (error) {
+        ready = false;
         console.warn('Modul jualan tidak dapat dimuatkan:', error);
         moduleState('moduleFailed', true); return false;
       } finally { host.removeAttribute('aria-busy'); modulePromise = null; }
-    })();
+    });
     return modulePromise;
   }
   function filters() {
@@ -186,10 +199,9 @@
   async function refresh() {
     if (!ready || loading || document.hidden) return;
     loading = true; $('phones-retry').disabled = true;
+    $('phones-state').textContent = U.t('loading');
     try {
-      const response = await fetch('/api/phones/products', { cache: 'no-store', signal: AbortSignal.timeout(45000) });
-      if (!response.ok) throw new Error('catalog');
-      const data = await response.json();
+      const data = await fetchContent('/api/phones/products', 'json');
       if (!Array.isArray(data.products)) throw new Error('catalog');
       products = data.products; loaded = true; failed = false; filters();
     } catch { failed = true; }
@@ -285,5 +297,17 @@
     if (document.hidden && activeVideo) window.__tiktokStop?.();
     if (host.classList.contains('active')) refresh();
   });
-  document.addEventListener('DOMContentLoaded', ensureModule);
+  async function activate() {
+    if (await ensureModule()) {
+      if (host.classList.contains('active') && (!loaded || failed)) refresh();
+    }
+  }
+  new MutationObserver(() => {
+    if (host.classList.contains('active')) activate();
+  }).observe(host, { attributes: true, attributeFilter: ['class'] });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', activate, { once: true });
+  } else {
+    activate();
+  }
 })();
