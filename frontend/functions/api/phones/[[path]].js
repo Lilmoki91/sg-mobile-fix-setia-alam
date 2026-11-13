@@ -1,7 +1,7 @@
 // functions/api/phones/[[path]].js
 // Cloudflare Pages Functions only. All product writes require a signed server session.
 import { authenticated, cloudinary, validateFile } from '../gallery/[[path]].js';
-import { getPhone, listPhones, savePhone, deletePhone, getPhoneVideos, savePhoneVideos } from '../../../lib/phones-store.js';
+import { getPhone, listPhones, savePhone, deletePhone, getPhoneVideos, savePhoneVideos, getTestimonialVideos, saveTestimonialVideos } from '../../../lib/phones-store.js';
 const PREFIX = 'shop-phones/';
 const MAX_REQUEST = 31 * 1024 * 1024;
 function json(data, status = 200) {
@@ -86,7 +86,7 @@ export async function onRequest({ request, env }) {
   try {
     const url = new URL(request.url), method = request.method;
     const route = url.pathname.replace(/\/$/, '');
-    if (!['/api/phones/products', '/api/phones/videos'].includes(route)) return json({ error: 'Not found' }, 404);
+    if (!['/api/phones/products', '/api/phones/videos', '/api/phones/testimonials'].includes(route)) return json({ error: 'Not found' }, 404);
     if (!['GET', 'POST', 'DELETE'].includes(method)) return json({ error: 'Method not allowed' }, 405);
     const admin = url.searchParams.get('admin') === '1';
     if (method !== 'GET') {
@@ -94,9 +94,10 @@ export async function onRequest({ request, env }) {
       if (Number(request.headers.get('Content-Length') || 0) > MAX_REQUEST) fail('Permintaan terlalu besar. / Request too large.', 413);
     }
     if ((method !== 'GET' || admin) && !await authenticated(request, env)) fail('Sesi tamat. Sahkan kata laluan galeri semula. / Session expired; verify the gallery password.', 401);
-    if (route === '/api/phones/videos') {
+    if (route === '/api/phones/videos' || route === '/api/phones/testimonials') {
+      const testimonials = route === '/api/phones/testimonials';
       if (method === 'GET') {
-        const config = await getPhoneVideos(env);
+        const config = await (testimonials ? getTestimonialVideos(env) : getPhoneVideos(env));
         return json(admin ? { videos: config.videos, updateTime: config.updateTime } : { videos: config.videos.filter(v => v.active).map(({ id, titleMs, titleEn }) => ({ id, titleMs, titleEn })) });
       }
       if (method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -111,7 +112,7 @@ export async function onRequest({ request, env }) {
         ids.add(v.id);
         return { id: v.id, titleMs: text(v, 'titleMs', 120, true), titleEn: text(v, 'titleEn', 120, true), active: v.active };
       });
-      await savePhoneVideos(env, videos, input.updateTime);
+      await (testimonials ? saveTestimonialVideos(env, videos, input.updateTime) : savePhoneVideos(env, videos, input.updateTime));
       return json({ success: true });
     }
     if (method === 'GET') {
