@@ -37,7 +37,7 @@ html[data-theme=dark] .phone-video-dots button.is-active{background:#2563eb}
 .phone-video-poster:focus-visible,.phone-module-state button:focus-visible{outline:2px solid #38bdf8;outline-offset:-4px}
 
 .phone-video-admin{margin-top:36px;padding-top:24px;border-top:1px solid #cbd5e1;color:#0f172a}
-#admin-phone-videos-panel .phone-video-admin{margin-top:0;border-top:0}
+#admin-phone-videos-panel .phone-video-admin,#admin-testimonial-videos-panel .phone-video-admin{margin-top:0;border-top:0}
 .phone-video-admin h3{font-size:22px;font-weight:750;margin-bottom:12px}
 .phone-video-admin .phone-form-grid label>span{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
 .phone-video-admin .phone-card p{overflow-wrap:anywhere}
