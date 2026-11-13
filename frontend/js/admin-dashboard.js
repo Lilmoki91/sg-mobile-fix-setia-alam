@@ -183,6 +183,8 @@
     if (tab === 'phones') window.refreshAdminPhones?.();
     document.getElementById('admin-phone-videos-panel')?.classList.toggle('hidden', tab !== 'phone-videos');
     if (tab === 'phone-videos') window.PhoneVideosAdmin?.refresh();
+    document.getElementById('admin-testimonial-videos-panel')?.classList.toggle('hidden', tab !== 'testimonial-videos');
+    if (tab === 'testimonial-videos') window.TestimonialVideosAdmin?.refresh();
 
     // Scroll to top of panels
     const panels = document.getElementById('admin-panels');
