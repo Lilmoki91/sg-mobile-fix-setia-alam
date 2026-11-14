@@ -1,4 +1,4 @@
-// gellery-admin.js
+// gallery-admin.js
 (function () {
   'use strict';
   const form = document.getElementById('gallery-form');
@@ -10,7 +10,7 @@
   if (!form || !loginForm) return;
   let images = [], busy = false, previewUrl = null, authenticated = false;
   const field = name => document.getElementById(`gallery-${name}`);
-  const t = (ms, en) => window.AdminI18n.t(ms, en);
+  const t = (ms, en) => window.AdminI18n?.t?.(ms, en) ?? (document.documentElement.lang === 'en' ? (en || ms) : ms);
   let lastStatus = '';
 
   function status(text, error = false) {
@@ -50,7 +50,11 @@
     list.replaceChildren();
     if (!images.length) {
       const empty = document.createElement('p');
-      empty.textContent = t('Tiada gambar Cloudinary. Tambah gambar pertama untuk mengaktifkan galeri baharu.');
+      empty.className = 'admin-card p-4 text-sm';
+      empty.textContent = t(
+        'Tiada gambar dalam galeri Cloudinary. Gambar asal di laman utama tidak disenaraikan dalam panel ini. Muat naik gambar pertama untuk mengaktifkan galeri baharu yang menggantikan gambar asal di laman utama.',
+        'No images in the Cloudinary gallery. The original homepage images are not listed in this panel. Upload the first image to activate a new gallery that replaces the original homepage images.'
+      );
       list.append(empty);
     }
     images.forEach(image => {
