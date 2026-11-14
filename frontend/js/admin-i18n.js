@@ -1,5 +1,5 @@
-// admin-i18.js
-(function () {
+// Eksport ESM; alias window dikekalkan untuk panel lama.
+export const AdminI18n = (() => {
   'use strict';
   const words = {
     'Kembali': 'Back', 'Panel Admin': 'Admin Panel', 'Admin Panel': 'Admin Panel',
@@ -78,10 +78,16 @@
     if (empty) empty.textContent = t('Tiada tempahan untuk ditunjukkan.');
     document.title = t('Panel Admin') + ' - SG Mobile Fix Setia Alam';
   }
-  window.AdminI18n = { t, translate };
   new MutationObserver(() => {
     translate();
     window.dispatchEvent(new Event('admin-language'));
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
-  document.addEventListener('DOMContentLoaded', translate);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', translate, { once: true });
+  } else {
+    translate();
+  }
+  return { t, translate };
 })();
+
+window.AdminI18n = AdminI18n;
