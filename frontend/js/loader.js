@@ -1,28 +1,28 @@
 // tranlatiob on.js
 // Titik masuk pelanggan. Import statik memastikan modul siap sebelum DOMContentLoaded.
-import './script.js';
-import { initMenu, initBottomNavigation } from './navigation.js';
-import { initTheme } from './theme.js';
-import { initLanguage, applyTranslations } from './i18n.js';
-import { initGallery, initLightboxControls, initSocialDots } from './gallery-ui.js';
-import { initServiceFilters } from './service-filters.js';
-import { initShareButton, initShareSocial, initShareLocation } from './social-share.js';
-import { initBusinessCard } from './business-card.js';
-import { initServiceWorker, initPwaInstall } from './pwa-install.js';
+import './js/script.js';
+import { initMenu, initBottomNavigation } from './js/navigation.js';
+import { initTheme } from './js/theme.js';
+import { initLanguage, applyTranslations } from './js/i18n.js';
+import { initGallery, initLightboxControls, initSocialDots } from './js/gallery-ui.js';
+import { initServiceFilters } from './js/service-filters.js';
+import { initShareButton, initShareSocial, initShareLocation } from './js/social-share.js';
+import { initBusinessCard } from './js/business-card.js';
+import { initServiceWorker, initPwaInstall } from './js/pwa-install.js';
 
 // Modul sedia ada dikekalkan; kebergantungan Firebase/Auth dimuat mengikut susunan.
-import './firebase-config.js';
-import './auth-client.js';
-import './profile.js';
-import './booking-firebase.js';
-import './shop-hours.js';
-import './services-firebase.js';
-import './booking-ui.js';
-import './services-ui.js';
-import './gallery-client.js';
-import './phones.js';
-import './testimonial-videos.js';
-import './ai-chatbot.js';
+import './js/firebase-config.js';
+import './js/auth-client.js';
+import './js/profile.js';
+import './js/booking-firebase.js';
+import './js/shop-hours.js';
+import './js/services-firebase.js';
+import './js/booking-ui.js';
+import './js/services-ui.js';
+import './js/gallery-client.js';
+import './js/phones.js';
+import './js/testimonial-videos.js';
+import './js/ai-chatbot.js';
 
 let started = false;
 function start() {
