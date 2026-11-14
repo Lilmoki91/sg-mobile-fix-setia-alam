@@ -7,6 +7,29 @@
     'Kata Laluan': 'Password',
     'Masukkan kata laluan': 'Enter your password',
     'Log Masuk': 'Log In',
+    'Sedang log masuk': 'Logging in',
+    'Sila login untuk meneruskan.': 'Please log in to continue.',
+    'Kata laluan salah.': 'Incorrect password.',
+    'Sesi tamat. Sila login semula.': 'Your session has expired. Please log in again.',
+    'Sesi 24 jam telah tamat. Sila login semula.': 'Your 24-hour session has expired. Please log in again.',
+    'Sila login semula.': 'Please log in again.',
+    'Menyemak sesi selamat…': 'Checking your secure session…',
+    'Sambungan lambat atau terputus. Sesi anda masih disimpan. Sila cuba semula.': 'The connection is slow or disconnected. Your session is still saved. Please try again.',
+    'Terlalu banyak percubaan. Tunggu 15 minit.': 'Too many attempts. Please wait 15 minutes.',
+    'Pages Functions belum tersedia. Sistem ini memerlukan deployment Cloudflare dan konfigurasi Firebase/Turnstile.': 'Pages Functions are not available. This system requires a Cloudflare deployment and Firebase/Turnstile configuration.',
+    'GALLERY_KV diperlukan untuk had percubaan admin.': 'GALLERY_KV is required to limit admin login attempts.',
+    'Tetapkan ADMIN_PASSWORD sekurang-kurangnya 16 aksara.': 'Set ADMIN_PASSWORD to at least 16 characters.',
+    'Konfigurasi identiti admin tidak sah.': 'Invalid admin identity configuration.',
+    'Service account belum ditetapkan.': 'The service account has not been configured.',
+    'Rekod sudah berubah. Cuba lagi.': 'The record has changed. Please try again.',
+    'Operasi database gagal.': 'The database operation failed.',
+    'Origin tidak dibenarkan.': 'This origin is not allowed.',
+    'JSON diperlukan.': 'JSON is required.',
+    'Body diperlukan.': 'A request body is required.',
+    'Permintaan terlalu besar.': 'The request is too large.',
+    'JSON tidak sah.': 'Invalid JSON.',
+    'Endpoint atau kaedah tidak dibenarkan.': 'The endpoint or method is not allowed.',
+    'Ralat backend. Semak log Cloudflare.': 'Backend error. Check the Cloudflare logs.',
     'Pengurusan Servis': 'Service Management',
     'Import ke Firebase': 'Import to Firebase',
     'Reset Default': 'Reset to Defaults',
@@ -130,6 +153,17 @@
     attributes.forEach(([id, attribute, ms]) => document.getElementById(id)?.setAttribute(attribute, t(ms)));
     const loginButton = document.querySelector('#login-form button[type="submit"]');
     if (loginButton && !loginButton.disabled) loginButton.textContent = t('Log Masuk');
+    if (loginButton?.getAttribute('aria-busy') === 'true') {
+      loginButton.setAttribute('aria-label', t('Sedang log masuk'));
+    }
+    // Session messages may arrive before this script or remain visible during a language change.
+    const loginMessage = document.getElementById('login-error');
+    if (loginMessage) {
+      const current = loginMessage.textContent;
+      const source = Object.prototype.hasOwnProperty.call(words, current)
+        ? current : Object.keys(words).find(key => words[key] === current);
+      if (source) loginMessage.textContent = t(source);
+    }
   }
   window.AdminI18n = { t, translate };
 })();
