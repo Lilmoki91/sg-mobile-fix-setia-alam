@@ -1,4 +1,3 @@
-// sistem cookies
 // All Firebase credentials stay in memory. The durable session is an HttpOnly cookie.
 (function () {
   'use strict';
@@ -8,7 +7,12 @@
   const channel = 'BroadcastChannel' in window ? new BroadcastChannel('sgm-auth-events') : null;
   const overlay = document.getElementById('auth-overlay');
   const el = id => document.getElementById('auth-' + id);
-  const message = value => { if (el('message')) el('message').textContent = value; };
+  const message = value => {
+    const target = adminPage ? document.getElementById('login-error') : el('message');
+    if (!target) return;
+    target.textContent = value;
+    if (adminPage) target.classList.toggle('hidden', !value);
+  };
   // Prevents the "checking session" screen from hanging forever on a slow/resumed mobile connection.
   function withTimeout(promise, ms, text) {
     let timeout;
@@ -182,7 +186,17 @@
     ready,
     get current() { return current; },
     async require() { await ready; if (!current || !auth.currentUser) throw new Error('Login dan CAPTCHA diperlukan.'); return current; },
-    async adminLogin(password) { await ready; const data = await api('admin-login', { password }); await accept(data); },
+    async adminLogin(password) {
+      await ready;
+      if (restoring) await restoring;
+      loginFlow = true;
+      try {
+        // Retry SDK initialization if the initial session check failed offline.
+        await initialize();
+        const data = await api('admin-login', { password });
+        await accept(data);
+      } finally { loginFlow = false; }
+    },
     logout,
     requestDeletion,
     refresh: restore
