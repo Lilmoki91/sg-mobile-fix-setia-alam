@@ -6,7 +6,7 @@ import '/auth-client.js';
 import '/booking-firebase.js';
 import '/services-firebase.js';
 import '/gallery-admin.js';
-import './shop-hours.js';
+import '/shop-hours.js';
 import '/phones.js';
 import '/phone-videos-admin.js';
 import '/phones-admin.js';
