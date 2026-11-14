@@ -7,7 +7,7 @@
   };
   let hours = null;
   let loading = null;
-  const t = (ms, en) => window.AdminI18n ? window.AdminI18n.t(ms, en) : (document.documentElement.lang === 'en' ? (en || ms) : ms);
+  const t = (ms, en) => window.AdminI18n?.t?.(ms, en) ?? (document.documentElement.lang === 'en' ? (en || ms) : ms);
   const minutes = time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
   function format(time) {
     const [h, m] = time.split(':').map(Number);
@@ -165,10 +165,12 @@
       finally { busy = false; form.querySelectorAll('input, button').forEach(control => { control.disabled = false; }); }
     });
   } else {
-    document.addEventListener('DOMContentLoaded', () => {
+    function start() {
       render();
       setInterval(() => { if (!document.hidden) refresh().catch(() => {}); }, 60000);
-    });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh().catch(() => {}); });
   }
 })();
