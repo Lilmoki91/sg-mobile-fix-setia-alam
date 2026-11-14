@@ -1,10 +1,9 @@
-// i18n.js 
 import { translations } from './translations.js';
 import { getStorage, setStorage } from './utils.js';
 import { applyTheme } from './theme.js';
 
 export function applyTranslations(lang) {
-  const dictionary = window.translations?.[lang] || translations.ms;
+  const dictionary = translations[lang] || translations.ms;
   document.querySelectorAll('[data-i18n-key]').forEach(element => {
     const key = element.dataset.i18nKey;
     if (key === 'OperatingHours' && window.shopHours) {
@@ -20,7 +19,7 @@ export function applyTranslations(lang) {
 }
 
 export function updateWhatsAppLinks() {
-  const t = window.translations[document.documentElement.lang] || translations.ms;
+  const t = translations[document.documentElement.lang] || translations.ms;
   const keys = {
     battery: 'Battery', camera: 'Camera', casing: 'Casing', charging: 'Charging', diagnostic: 'Diagnostic',
     speaker: 'Speaker', power: 'Power', screen: 'Screen', software: 'Software', tablet: 'Tablet', water: 'Water',
@@ -36,7 +35,7 @@ export function updateWhatsAppLinks() {
 export function updateEmailLink() {
   const element = document.getElementById('email-shop');
   if (!element) return;
-  const t = window.translations[document.documentElement.lang] || translations.ms;
+  const t = translations[document.documentElement.lang] || translations.ms;
   element.href = `mailto:sgmobile@yahoo.com?subject=${encodeURIComponent(t.EmailSubject || '')}&body=${encodeURIComponent(t.EmailBody || '')}`;
 }
 
