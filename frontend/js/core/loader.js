@@ -1,3 +1,4 @@
+// tranlatiob on.js
 // Titik masuk pelanggan. Import statik memastikan modul siap sebelum DOMContentLoaded.
 import './script.js';
 import { initMenu, initBottomNavigation } from './navigation.js';
