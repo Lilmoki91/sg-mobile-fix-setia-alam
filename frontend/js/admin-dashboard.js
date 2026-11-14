@@ -692,7 +692,7 @@
       showDashboard();
     } catch (err) {
       console.error("Ralat Login:", err);
-      loginError.textContent = err.message || t('Ralat sambungan ke server. Sila cuba lagi.');
+      loginError.textContent = t(err.message || 'Ralat sambungan ke server. Sila cuba lagi.');
       loginError.classList.remove('hidden');
     } finally {
       if (submitBtn) {
@@ -903,7 +903,30 @@
   const adminLangToggle = document.getElementById('admin-language-toggle');
   const adminLangText = document.getElementById('admin-lang-text');
 
+  function updateAdminMenuLanguage(lang) {
+    const en = lang === 'en';
+    const labels = {
+      bookings: ['Tempahan', 'Bookings'],
+      services: ['Servis', 'Services'],
+      hours: ['Waktu Operasi', 'Operating Hours'],
+      phones: ['Telefon Dijual', 'Phones for Sale'],
+      'phone-videos': ['Video Telefon Dijual', 'Phone Sales Videos'],
+      'testimonial-videos': ['Video Testimoni', 'Testimonial Videos'],
+      gallery: ['Gambar Kedai', 'Shop Gallery']
+    };
+
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      const label = labels[btn.dataset.tab];
+      const text = btn.querySelector('span');
+      if (label && text) text.textContent = label[en ? 1 : 0];
+    });
+    const title = document.getElementById('admin-sidebar-title');
+    if (title) title.textContent = en ? 'Admin Panel' : 'Panel Admin';
+    document.getElementById('admin-tab-nav')?.setAttribute('aria-label', en ? 'Admin menu' : 'Menu admin');
+  }
+
   function applyAdminLanguage(lang) {
+    lang = lang === 'en' ? 'en' : 'ms';
     document.documentElement.lang = lang;
     if (adminLangText) adminLangText.textContent = 'MS / EN';
     adminLangToggle?.setAttribute('aria-label', lang === 'en' ? 'Switch language to Malay' : 'Tukar bahasa kepada Inggeris');
@@ -911,10 +934,13 @@
     menuClose?.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Tutup menu');
     if (typeof applyTranslations === 'function') applyTranslations(lang);
     window.AdminI18n?.translate?.();
+    updateAdminMenuLanguage(lang);
     updateAdminThemeButton();
     renderBookings(allBookings);
     renderServices(allServices);
     updateServiceLabels();
+    // Bubble to window so gallery/hours listeners also refresh without resetting forms.
+    document.dispatchEvent(new CustomEvent('admin-language', { detail: { lang }, bubbles: true }));
   }
 
   // Initialize language on admin page load
