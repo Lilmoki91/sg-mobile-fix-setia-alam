@@ -681,7 +681,9 @@
     try {
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = t('Menyemak...', 'Checking...');
+        submitBtn.setAttribute('aria-busy', 'true');
+        submitBtn.setAttribute('aria-label', t('Sedang log masuk', 'Logging in'));
+        submitBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;min-height:1.5em"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i></span>';
       }
       if (!window.sgmAuth?.adminLogin) throw new Error('Skrip pengesahan gagal dimuatkan. Muat semula halaman dan cuba lagi.');
       await window.sgmAuth.adminLogin(input);
@@ -695,6 +697,8 @@
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
+        submitBtn.removeAttribute('aria-label');
         submitBtn.innerHTML = originalBtnText;
       }
     }
