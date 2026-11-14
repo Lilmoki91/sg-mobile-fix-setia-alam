@@ -1,3 +1,4 @@
+// sistem cookies
 // All Firebase credentials stay in memory. The durable session is an HttpOnly cookie.
 (function () {
   'use strict';
