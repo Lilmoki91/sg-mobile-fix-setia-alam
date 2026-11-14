@@ -883,10 +883,10 @@
       <div class="text-3xl font-semibold text-blue-800 mt-1 mb-8" data-i18n-key="VsCard"></div>
       <div class="text-center text-sm">
         <div class="actions flex gap-6 justify-center mt-2">
-          <button class="share bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition" onclick="shareCard()">
+          <button id="share-card-btn" type="button" class="share bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition">
             <i class="fas fa-share mr-2"></i> <span data-i18n-key="ShareCard"></span>
           </button>
-          <button class="pdf bg-lime-500 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition" onclick="saveCard()">
+          <button id="save-card-btn" type="button" class="pdf bg-lime-500 text-white px-6 py-2 rounded-full font-bold hover:scale-105 transition">
             <i class="fas fa-download mr-2"></i> <span data-i18n-key="SaveCard"></span>
           </button>
         </div>
@@ -986,23 +986,9 @@
   </div>
 </div>
 
-
-  <!-- 📌 java script acsess 📌  -->
-  <script src="js/script.js" defer></script>
-  <script src="js/gallery-client.js" defer></script>
-  <script src="js/firebase-config.js" defer></script>
-  <script src="js/auth-client.js" defer></script>
-  <script src="js/profile.js" defer></script>
-  <script src="js/booking-firebase.js" defer></script>
-  <script src="js/shop-hours.js" defer></script>
-  <script src="js/booking-ui.js" defer></script>
-  <script src="js/services-firebase.js" defer></script>
-  <script src="js/services-ui.js" defer></script>
-  <script src="js/ai-chatbot.js" defer></script>
-  <script src="js/phones.js" defer></script>
-  <script src="js/testimonial-videos.js" defer></script>
-</body>
-</html>
+  <!-- acsess javascript -->
+  <!-- Satu titik masuk untuk modul JavaScript pelanggan. -->
+  <script type="module" src="js/core/loader.js"></script>
 <!-- =============================================== -->
 <!-- 🚀 OVERLAY DWIBAHASA INSTALL APP (Popup Tengah) -->
 <!-- =============================================== -->
@@ -1057,4 +1043,5 @@
   to { transform: translateY(0); opacity: 1; }
 }
 </style>
+</body>
 </html>
