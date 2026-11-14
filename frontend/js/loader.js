@@ -1,18 +1,18 @@
 // tranlatiob on.js
 // Titik masuk pelanggan. Import statik memastikan modul siap sebelum DOMContentLoaded.
-import './js/script.js';
+import '/js/script.js';
 import { initMenu, initBottomNavigation } from './js/navigation.js';
-import { initTheme } from './js/theme.js';
+import { initTheme } from '/js/theme.js';
 import { initLanguage, applyTranslations } from './js/i18n.js';
 import { initGallery, initLightboxControls, initSocialDots } from './js/gallery-ui.js';
 import { initServiceFilters } from './js/service-filters.js';
 import { initShareButton, initShareSocial, initShareLocation } from './js/social-share.js';
 import { initBusinessCard } from './js/business-card.js';
-import { initServiceWorker, initPwaInstall } from './js/pwa-install.js';
+import { initServiceWorker, initPwaInstall } from '/js/pwa-install.js';
 
 // Modul sedia ada dikekalkan; kebergantungan Firebase/Auth dimuat mengikut susunan.
 import './js/firebase-config.js';
-import './js/auth-client.js';
+import '/js/auth-client.js';
 import './js/profile.js';
 import './js/booking-firebase.js';
 import './js/shop-hours.js';
