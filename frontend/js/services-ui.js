@@ -170,13 +170,7 @@
     }
   }
 
-  // Pendedahan global untuk loader dan modul carian.
-  let initialized = false;
-  window.initDynamicServices = () => {
-    if (initialized) return;
-    initialized = true;
-    initDynamicServices();
-  };
-  window.refreshServiceLanguage = () => renderServices(servicesCache);
+  // Pendedahan global
+  window.initDynamicServices = initDynamicServices;
   window.servicesCache = servicesCache;
 })();
