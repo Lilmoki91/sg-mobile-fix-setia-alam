@@ -36,7 +36,8 @@
   let allBookings = [];
   let allServices = [];
   let currentAdminTab = 'bookings';
-  const t = (ms, en) => window.AdminI18n.t(ms, en);
+  // Translation helpers must never prevent authentication if an optional script is missing.
+  const t = (ms, en) => window.AdminI18n?.t?.(ms, en) ?? (document.documentElement.lang === 'en' ? (en || ms) : ms);
 
   function updateServiceLabels() {
     const editing = !!document.getElementById('service-id').value;
@@ -670,16 +671,19 @@
   // LOGIN BAHARU (Guna Cloudflare Worker)
   loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = document.getElementById('admin-password').value.trim();
+    const input = document.getElementById('admin-password').value;
 
     const submitBtn = loginForm.querySelector('button[type="submit"]');
+    if (submitBtn?.disabled) return;
     const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Log Masuk';
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('Menyemak...')}`;
-    }
+    loginError.classList.add('hidden');
 
     try {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = t('Menyemak...', 'Checking...');
+      }
+      if (!window.sgmAuth?.adminLogin) throw new Error('Skrip pengesahan gagal dimuatkan. Muat semula halaman dan cuba lagi.');
       await window.sgmAuth.adminLogin(input);
       document.getElementById('admin-password').value = '';
       loginError.classList.add('hidden');
@@ -902,7 +906,7 @@
     menuToggle?.setAttribute('aria-label', lang === 'en' ? 'Open menu' : 'Buka menu');
     menuClose?.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Tutup menu');
     if (typeof applyTranslations === 'function') applyTranslations(lang);
-    window.AdminI18n.translate();
+    window.AdminI18n?.translate?.();
     updateAdminThemeButton();
     renderBookings(allBookings);
     renderServices(allServices);
