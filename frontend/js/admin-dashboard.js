@@ -1,13 +1,17 @@
 // ============================================================
 // 🛡️ ADMIN DASHBOARD - Firebase Firestore Edition
 // ============================================================
-// Fail ini menggantikan skrip inline dalam admin.html.
-// Pastikan booking-firebase.js & services-firebase.js dimuat sebelum fail ini.
-// admin-dashboard.js
-import { applyTheme, applyTranslations } from './script.js';
+// Dimulakan oleh admin-loader.js selepas kebergantungan lama dimuatkan.
+import { applyTheme } from './theme.js';
+import { applyTranslations } from './i18n.js';
+import { translations } from './translations.js';
+import { escapeHtml, getStorage, setStorage } from './utils.js';
+import { AdminI18n } from './admin-i18n.js';
 
-(function() {
-  'use strict';
+let initialized = false;
+export function initAdminDashboard() {
+  if (initialized || !document.getElementById('admin-dashboard')) return;
+  initialized = true;
 
   // Kuasa admin disahkan oleh cookie backend + Firebase custom session.
   const SHOP_PHONE = '60122626434';
@@ -37,7 +41,7 @@ import { applyTheme, applyTranslations } from './script.js';
   let allBookings = [];
   let allServices = [];
   let currentAdminTab = 'bookings';
-  const t = (ms, en) => window.AdminI18n.t(ms, en);
+  const t = (ms, en) => AdminI18n.t(ms, en);
 
   function updateServiceLabels() {
     const editing = !!document.getElementById('service-id').value;
@@ -51,28 +55,11 @@ import { applyTheme, applyTranslations } from './script.js';
 
   function getTranslation(key, fallbackEn, fallbackMs) {
     const lang = document.documentElement.lang || 'ms';
-    const val = window.translations?.[lang]?.[key];
+    const val = translations?.[lang]?.[key];
     if (val) return val;
     if (lang === 'en' && fallbackEn) return fallbackEn;
     if (fallbackMs) return fallbackMs;
     return '';
-  }
-
-  // Helper storage (reused from script.js)
-  function getStorage(key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function setStorage(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      // ignore storage errors
-    }
   }
 
   // Theme uses the same preference and styling as the main page.
@@ -96,7 +83,7 @@ import { applyTheme, applyTranslations } from './script.js';
     setStorage('theme', next);
     updateAdminThemeButton();
   });
-  document.addEventListener('admin-language', updateAdminThemeButton);
+  window.addEventListener('admin-language', updateAdminThemeButton);
 
   // ============================================================
   // ADMIN TAB NAVIGATION
@@ -198,7 +185,7 @@ import { applyTheme, applyTranslations } from './script.js';
   // ============================================================
   function formatStatusLabel(status, booking) {
     const lang = (booking ? booking.lang : document.documentElement.lang) || 'ms';
-    const t = window.translations?.[lang] || window.translations?.ms || {};
+    const t = translations?.[lang] || translations?.ms || {};
     const labels = {
       pending: t.BookingStatusPending || (lang === 'en' ? 'Pending Confirmation' : 'Menunggu Pengesahan'),
       confirmed: t.BookingStatusConfirmed || (lang === 'en' ? 'Confirmed' : 'Disahkan'),
@@ -209,7 +196,7 @@ import { applyTheme, applyTranslations } from './script.js';
 
   function getAdminTranslations(booking) {
     const lang = (booking ? booking.lang : document.documentElement.lang) || 'ms';
-    const t = window.translations?.[lang] || window.translations?.ms || {};
+    const t = translations?.[lang] || translations?.ms || {};
     return {
       BookingTitle: t.BookingTitle || (lang === 'en' ? 'Appointment Booking' : 'Tempahan Appointment'),
       BookingCode: t.BookingCode || (lang === 'en' ? 'Booking Code' : 'Kod Tempahan'),
@@ -339,7 +326,7 @@ import { applyTheme, applyTranslations } from './script.js';
 
     filtered.forEach(rawBooking => {
       const booking = { ...rawBooking };
-      ['id', 'code', 'name', 'phone', 'device', 'service', 'date', 'time', 'notes'].forEach(k => { booking[k] = window.escapeHtml(booking[k]); });
+      ['id', 'code', 'name', 'phone', 'device', 'service', 'date', 'time', 'notes'].forEach(k => { booking[k] = escapeHtml(booking[k]); });
       const card = document.createElement('div');
       card.className = 'admin-card p-5';
       card.innerHTML = `
@@ -405,7 +392,7 @@ import { applyTheme, applyTranslations } from './script.js';
     const booking = allBookings.find(b => b.id === id);
     if (!booking) return;
     const lang = document.documentElement.lang || 'ms';
-    const msg = window.translations?.[lang]?.BookingConfirmDelete || (lang === 'en' ? 'Delete this booking?' : 'Padam tempahan ini?');
+    const msg = translations?.[lang]?.BookingConfirmDelete || (lang === 'en' ? 'Delete this booking?' : 'Padam tempahan ini?');
     if (!confirm(`${msg}\n${booking.code}`)) return;
 
     const result = await window.deleteBookingFromFirebase(id);
@@ -897,13 +884,14 @@ import { applyTheme, applyTranslations } from './script.js';
   const adminLangText = document.getElementById('admin-lang-text');
 
   function applyAdminLanguage(lang) {
+    lang = lang === 'en' ? 'en' : 'ms';
     document.documentElement.lang = lang;
     if (adminLangText) adminLangText.textContent = 'MS / EN';
     adminLangToggle?.setAttribute('aria-label', lang === 'en' ? 'Switch language to Malay' : 'Tukar bahasa kepada Inggeris');
     menuToggle?.setAttribute('aria-label', lang === 'en' ? 'Open menu' : 'Buka menu');
     menuClose?.setAttribute('aria-label', lang === 'en' ? 'Close menu' : 'Tutup menu');
     if (typeof applyTranslations === 'function') applyTranslations(lang);
-    window.AdminI18n.translate();
+    AdminI18n.translate();
     updateAdminThemeButton();
     renderBookings(allBookings);
     renderServices(allServices);
@@ -927,4 +915,4 @@ import { applyTheme, applyTranslations } from './script.js';
     setStorage('language', nextLang);
     applyAdminLanguage(nextLang);
   });
-})();
+}
