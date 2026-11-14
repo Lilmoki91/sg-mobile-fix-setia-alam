@@ -1,16 +1,12 @@
-const CACHE_NAME = 'sg-mobile-fix-V17';
+const CACHE_NAME = 'sg-mobile-fix-V18';
 
 // Hanya aset awam. Jangan cache shell login, respons API atau data pengguna.
 const urlsToCache = [
-  '/styles.css', '/auth.css', '/manifest.json',
-  '/loader.js', '/script.js', '/utils.js', '/translations.js', '/i18n.js',
-  '/theme.js', '/navigation.js', '/scroll-dots.js', '/gallery-ui.js',
-  '/testimonials-ui.js', '/service-filters.js', '/social-share.js',
-  '/business-card.js', '/pwa-install.js',
-  '/firebase-config.js', '/auth-client.js', '/profile.js',
-  '/booking-firebase.js', '/shop-hours.js', '/services-firebase.js',
-  '/booking-ui.js', '/services-ui.js', '/gallery-client.js',
-  '/phones.js', '/testimonial-videos.js', '/ai-chatbot.js'
+  '/styles.css',
+  '/script.js',
+  '/auth.css',
+  '/auth-client.js',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', event => {
