@@ -4,6 +4,7 @@
 // Fail ini menggantikan skrip inline dalam admin.html.
 // Pastikan booking-firebase.js & services-firebase.js dimuat sebelum fail ini.
 // admin-dashboard.js
+import { applyTheme, applyTranslations } from './script.js';
 
 (function() {
   'use strict';
