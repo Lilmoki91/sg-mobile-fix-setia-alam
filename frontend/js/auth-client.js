@@ -10,7 +10,7 @@
   const message = value => {
     const target = adminPage ? document.getElementById('login-error') : el('message');
     if (!target) return;
-    target.textContent = value;
+    target.textContent = adminPage ? (window.AdminI18n?.t?.(value) ?? value) : value;
     if (adminPage) target.classList.toggle('hidden', !value);
   };
   // Prevents the "checking session" screen from hanging forever on a slow/resumed mobile connection.
