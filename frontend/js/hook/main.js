@@ -1,7 +1,7 @@
 /**
  * main.js — Entry Point ESM
  * Lokasi: js/hook/main.js
- * Semua modul ESM dalam js/hook/esm/ (Berdasarkan struktur GitHub)
+ * Semua modul ESM dalam js/hook/esm/
  */
 
 // ===== CORE =====
@@ -14,7 +14,7 @@ import { initTranslation } from './esm/i18n/index.js';
 import { initTheme, applyTheme } from './esm/features/theme.js';
 import { initLanguage } from './esm/features/language.js';
 import { initMenu } from './esm/features/menu.js';
-import { initBottomNavigation } from './esm/features/nav.js';
+import { initBottomNavigation, showTab } from './esm/features/nav.js'; // 🔥 TAMBAH showTab
 import { initServiceFilters } from './esm/features/filters.js';
 import { initGallery, initLightboxControls } from './esm/features/gallery.js';
 import { initTestimonials } from './esm/features/testimonials.js';
@@ -32,12 +32,14 @@ window.saveCard = saveCard;
 window.initTestimonials = initTestimonials;
 window.initGallery = initGallery;
 window.applyTheme = applyTheme;
+window.showTab = showTab; // 🔥 TAMBAH INI: Supaya menu legacy boleh tukar tab
 
 // Fallback initBooking
 function initBooking() {}
 
 // ===== DOMContentLoaded =====
 document.addEventListener('DOMContentLoaded', () => {
+  // 1. Jalankan init UI asas
   initMenu();
   initShareButton();
   initTheme();
@@ -45,9 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
   initBottomNavigation();
   initServiceFilters();
 
-  if (typeof window.initDynamicServices === 'function') window.initDynamicServices();
-  if (typeof window.initChatbot === 'function') window.initChatbot();
+  // 2. Jalankan fungsi dari fail legacy dengan sedikit delay
+  // Ini memastikan fail legacy seperti services-ui.js dan profile.js sudah didaftarkan ke window
+  setTimeout(() => {
+    if (typeof window.initDynamicServices === 'function') {
+      window.initDynamicServices();
+    } else {
+      console.warn('⚠️ initDynamicServices tidak dijumpai');
+    }
+    
+    if (typeof window.initChatbot === 'function') {
+      window.initChatbot();
+    }
+  }, 300); // Tunggu 300ms
 
+  // 3. Jalankan modul ESM yang lain
   initGallery();
   initTranslation();
   initShareLocation();
@@ -63,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initShareSocial();
   }
 
+  // Auto buka side menu
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('menu') === 'open') {
     setTimeout(() => {
