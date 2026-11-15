@@ -130,7 +130,10 @@
   }
 
   function renderServices(services) {
-    const container = document.getElementById('cardsContainer');
+    // sistem baru esm
+    const container = document.getElementById('serviceScrollContainer') || document.getElementById('cardsContainer');
+    // sistem lama 
+    // const container = document.getElementById('cardsContainer');
     const counter = document.getElementById('visibleCount');
     if (!container) return;
 
