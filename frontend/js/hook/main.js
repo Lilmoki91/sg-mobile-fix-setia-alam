@@ -1,6 +1,7 @@
 /**
  * main.js — Entry Point ESM
  * Lokasi: js/hook/main.js
+ * Semua modul ESM dalam js/hook/esm/
  */
 
 // ===== CORE =====
@@ -33,33 +34,34 @@ window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
 
-
 // Fallback initBooking
 function initBooking() {}
 
+// ===== FUNGSI UNTUK TARIK SERVIS (DENGAN RETRY) =====
+function loadServicesWithRetry(retries = 5) {
+  if (typeof window.initDynamicServices === 'function') {
+    // Jika fail services-ui.js sudah sedia, jalankan
+    window.initDynamicServices();
+    console.log("✅ Servis berjaya dimuatkan dari Firebase.");
+  } else if (retries > 0) {
+    // Jika belum sedia, tunggu 300ms dan cuba lagi
+    console.warn(`⏳ Menunggu services-ui.js siap... (Baki cubaan: ${retries})`);
+    setTimeout(() => loadServicesWithRetry(retries - 1), 300);
+  } else {
+    console.error("❌ Gagal: window.initDynamicServices tidak dijumpai dalam fail legacy!");
+  }
+}
+
 // ===== GUNA 'LOAD' BUKAN 'DOMContentLoaded' =====
-// 'load' menunggu SEMUA script (termasuk defer) selesai dimuatkan
 window.addEventListener('load', () => {
   
+  // 1. Init UI ESM
   initMenu();
   initShareButton();
   initTheme();
   initLanguage();
   initBottomNavigation();
   initServiceFilters();
-
-  // Jalankan servis dari fail legacy
-  if (typeof window.initDynamicServices === 'function') {
-    window.initDynamicServices();
-  } else {
-    console.error('❌ window.initDynamicServices tidak wujud!');
-  }
-
-  if (typeof window.initChatbot === 'function') {
-    window.initChatbot();
-  }
-
-  initGallery();
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -68,12 +70,22 @@ window.addEventListener('load', () => {
   initPwaInstall();
   initBooking();
 
+  // 2. Jalankan tarik servis (Firebase)
+  loadServicesWithRetry();
+
+  // 3. Jalankan Chatbot jika ada
+  if (typeof window.initChatbot === 'function') {
+    window.initChatbot();
+  }
+
+  // 4. Facebook Overlay
   const fbOverlay = document.getElementById('fb-overlay');
   if (fbOverlay) {
     window.facebookOverlay = initFacebookOverlay();
     initShareSocial();
   }
 
+  // 5. Auto buka side menu
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('menu') === 'open') {
     setTimeout(() => {
@@ -83,6 +95,10 @@ window.addEventListener('load', () => {
     }, 300);
   }
 
+  // 6. Set Tahun Semasa
   const currentYear = document.getElementById('current-year');
   if (currentYear) currentYear.textContent = new Date().getFullYear();
+
+  // 7. Dedahkan fungsi untuk membolehkan Admin refresh data tanpa reload page
+  window.refreshMainServices = loadServicesWithRetry;
 });
