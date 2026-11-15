@@ -1,5 +1,5 @@
 /**
- * main.js — Entry Point ESM (Pembetulan Render Data)
+ * main.js — Entry Point ESM (Final)
  */
 
 import { escapeHtml, showToast } from './esm/core/utils.js';
@@ -17,6 +17,7 @@ import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
 import { initSocialDots } from './esm/features/social-dots.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
 
+// ===== BRIDGE ke window.* (untuk fail legacy) =====
 window.escapeHtml = escapeHtml;
 window.showToast = showToast;
 window.shareCard = shareCard;
@@ -26,10 +27,11 @@ window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
 
+// Fallback initBooking
 function initBooking() {}
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. Init UI
+  // 1. Init UI ESM
   initMenu();
   initShareButton();
   initTheme();
@@ -44,41 +46,26 @@ document.addEventListener("DOMContentLoaded", () => {
   initPwaInstall();
   initBooking();
 
-  // 2. Paksa Tarik dan Render Data Firebase
+  // 2. Panggil data Firebase (Beri masa 500ms untuk pastikan legacy JS sedia)
   setTimeout(() => {
-    if (typeof window.startServicesListener === 'function') {
-      
-      // Dengar data dari Firebase
-      window.startServicesListener((services) => {
-        console.log("Data diterima dari listener:", services.length);
-        
-        // Panggil initDynamicServices untuk trigger render (jika elemen wujud)
-        if (typeof window.initDynamicServices === 'function') {
-           window.initDynamicServices();
-        }
-
-        // Paksa semak jika elemen container wujud
-        const container = document.getElementById('cardsContainer') || document.getElementById('serviceScrollContainer');
-        if (!container) {
-           console.error("❌ Gagal papar: ID 'cardsContainer' tiada dalam HTML.");
-           alert("Ralat: Elemen ID 'cardsContainer' tiada dalam HTML. Sila semak fail index.html.");
-        } else {
-           console.log("✅ Container dijumpai. Kad patut muncul.");
-        }
-      });
-
-    } else {
-      console.error("❌ Fail services-ui.js masih tidak dapat dijumpai.");
+    if (typeof window.initDynamicServices === 'function') {
+      window.initDynamicServices();
     }
-  }, 1000);
+  }, 500);
 
-  // Baki init
+  // 3. Chatbot
+  if (typeof window.initChatbot === 'function') {
+    window.initChatbot();
+  }
+
+  // 4. Facebook Overlay
   const fbOverlay = document.getElementById('fb-overlay');
   if (fbOverlay) {
     window.facebookOverlay = initFacebookOverlay();
     initShareSocial();
   }
 
+  // 5. Auto buka side menu
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('menu') === 'open') {
     setTimeout(() => {
@@ -87,6 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
   }
 
+  // 6. Set Tahun
   const currentYear = document.getElementById('current-year');
-  if (currentYear) currentYear.textContent = new Date().getFullYear();
+  if (currentYear) {
+    currentYear.textContent = new Date().getFullYear();
+  }
 });
