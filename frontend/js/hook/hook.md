@@ -3,7 +3,7 @@
 Projek ini menggunakan **ESM (ES Modules)** dengan satu entry point dan folder khas untuk modul.
 
 ## 🗂️ Struktur
-
+```
 js/
 ├── hook/
 │   └── main.js              ⭐ entry point (tag HTML)
@@ -31,6 +31,7 @@ js/
         ├── facebook-overlay.js
         ├── social-dots.js
         └── pwa.js
+```
 
 PENTING: Fail legacy (gallery-client.js, auth-client.js, dll.) kekal dalam js/ kerana HTML masih panggil mereka melalui script defer dengan path asal.
 
@@ -52,6 +53,7 @@ Fail dalam esm/ pula TIDAK perlu diubah — import relatif mereka kekal (../core
 
 ## 📄 js/hook/main.js — Kod Pembaikan Penuh
 
+```javascript
 /**
  * main.js — Entry Point ESM
  * Lokasi: js/hook/main.js
@@ -144,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentYear.textContent = new Date().getFullYear();
   }
 });
-
+```
 ---
 
 ## 🔧 Path Import Dalam Fail esm/ — KEKAL SAMA
@@ -153,6 +155,7 @@ Fail-fail ini tidak perlu diubah kerana mereka semua dalam esm/ dan path relatif
 
 js/esm/features/theme.js
 
+```javascript
 import { translations } from '../i18n/translations.js';
 import { getStorage, setStorage } from '../core/storage.js';
 
@@ -172,6 +175,7 @@ js/esm/i18n/index.js
 import { translations } from './translations.js';
 import { getStorage } from '../core/storage.js';
 import { WA_NUMBER, EMAIL_SHOP } from '../core/config.js';
+```
 
 Kesimpulan: Semua fail dalam esm/ tak perlu diubah. Hanya main.js yang kena sesuaikan path sebab ia berada di js/hook/.
 
@@ -179,6 +183,7 @@ Kesimpulan: Semua fail dalam esm/ tak perlu diubah. Hanya main.js yang kena sesu
 
 ## 📄 index.html — Satu-satunya Perubahan
 
+```html
   <!-- SATU TAG MODULE SAHAJA -->
   <script type="module" src="js/hook/main.js"></script>
 
@@ -197,11 +202,12 @@ Kesimpulan: Semua fail dalam esm/ tak perlu diubah. Hanya main.js yang kena sesu
   <script src="js/testimonial-videos.js" defer></script>
 </body>
 </html>
+```
 
 ---
 
-## 🎯 Peta Pemuatan (Runtime)
-
+### 🎯 Peta Pemuatan (Runtime)
+```
 index.html
     │
     ├── script type="module" src="js/hook/main.js"
@@ -214,6 +220,7 @@ index.html
     ├── script defer src="js/gallery-client.js"
     ├── script defer src="js/auth-client.js"
     └── ... (12 fail legacy)
+```
 
 Urutan browser resolve:
 
@@ -227,20 +234,20 @@ Urutan browser resolve:
 
 ## 🧪 Cara Test
 
-# 1. Backup
+### 1. Backup
 cp -r js js.backup
 cp index.html index.html.backup
 
-# 2. Buat struktur folder
+### 2. Buat struktur folder
 mkdir -p js/hook
 mkdir -p js/esm/core js/esm/i18n js/esm/features
 
-# 3. Copy semua fail ESM ke lokasi baharu
-# 4. Jalankan server
+### 3. Copy semua fail ESM ke lokasi baharu
+### 4. Jalankan server
 python -m http.server 8000
 
-# 5. Buka http://localhost:8000
-# 6. DevTools → Console → pastikan tiada error
+### 5. Buka http://localhost:8000
+### 6. DevTools → Console → pastikan tiada error
 
 Console yang betul:
 
