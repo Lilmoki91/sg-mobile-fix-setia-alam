@@ -4,7 +4,7 @@ Projek ini menggunakan **ESM (ES Modules)** dengan satu entry point dan folder k
 
 ## 🗂️ Struktur
 
-```ascii.css
+```ascii.js
 js/
 ├── hook/
 │   └── main.js              ⭐ entry point (tag HTML)
@@ -208,7 +208,8 @@ Kesimpulan: Semua fail dalam esm/ tak perlu diubah. Hanya main.js yang kena sesu
 ---
 
 ### 🎯 Peta Pemuatan (Runtime)
-```
+
+```ascii.js
 index.html
     │
     ├── script type="module" src="js/hook/main.js"
@@ -283,7 +284,7 @@ Buang script.js daripada HTML (dah tak dipanggil), tapi fail itu boleh kekal dal
 
 ## 🎁 Fail js/hook/README.md (dokumentasi)
 
-# 📁 js/hook/ — Entry Point ESM
+### 📁 js/hook/ — Entry Point ESM
 
 Folder ini HANYA mengandungi main.js sebagai entry point.
 
