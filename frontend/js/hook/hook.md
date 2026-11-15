@@ -53,7 +53,7 @@ Fail dalam esm/ pula TIDAK perlu diubah — import relatif mereka kekal (../core
 
 ## 📄 js/hook/main.js — Kod Pembaikan Penuh
 
-```javascript
+```javascript.js
 /**
  * main.js — Entry Point ESM
  * Lokasi: js/hook/main.js
@@ -155,7 +155,7 @@ Fail-fail ini tidak perlu diubah kerana mereka semua dalam esm/ dan path relatif
 
 js/esm/features/theme.js
 
-```javascript
+```javascript.js
 import { translations } from '../i18n/translations.js';
 import { getStorage, setStorage } from '../core/storage.js';
 
@@ -183,7 +183,7 @@ Kesimpulan: Semua fail dalam esm/ tak perlu diubah. Hanya main.js yang kena sesu
 
 ## 📄 index.html — Satu-satunya Perubahan
 
-```html
+```index.html
   <!-- SATU TAG MODULE SAHAJA -->
   <script type="module" src="js/hook/main.js"></script>
 
