@@ -54,68 +54,49 @@ Fail dalam esm/ pula TIDAK perlu diubah — import relatif mereka kekal (../core
 
 ## 📄 js/hook/main.js — Kod Pembaikan Penuh
 
-```javascript.js
+```main.js
 /**
- * main.js — Entry Point ESM
- * Lokasi: js/hook/main.js
- * Semua modul ESM berada dalam js/esm/
+ * main.js — Entry Point ESM (Final)
  */
 
-// ===== CORE =====
-import { escapeHtml, showToast } from '../esm/core/utils.js';
+import { escapeHtml, showToast } from './esm/core/utils.js';
+import { initTranslation } from './esm/i18n/index.js';
+import { initTheme, applyTheme } from './esm/features/theme.js';
+import { initLanguage } from './esm/features/language.js';
+import { initMenu } from './esm/features/menu.js';
+import { initBottomNavigation, showTab } from './esm/features/nav.js';
+import { initServiceFilters } from './esm/features/filters.js';
+import { initGallery, initLightboxControls } from './esm/features/gallery.js';
+import { initTestimonials } from './esm/features/testimonials.js';
+import { shareCard, saveCard } from './esm/features/card.js';
+import { initShareButton, initShareSocial, initShareLocation } from './esm/features/share.js';
+import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
+import { initSocialDots } from './esm/features/social-dots.js';
+import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
+import { translations } from './esm/i18n/translations.js';
 
-// ===== I18N =====
-import { initTranslation } from '../esm/i18n/index.js';
-
-// ===== FEATURES =====
-import { initTheme, applyTheme } from '../esm/features/theme.js';
-import { initLanguage } from '../esm/features/language.js';
-import { initMenu } from '../esm/features/menu.js';
-import { initBottomNavigation } from '../esm/features/nav.js';
-import { initServiceFilters } from '../esm/features/filters.js';
-import { initGallery, initLightboxControls } from '../esm/features/gallery.js';
-import { initTestimonials } from '../esm/features/testimonials.js';
-import { shareCard, saveCard } from '../esm/features/card.js';
-import { initShareButton, initShareSocial, initShareLocation } from '../esm/features/share.js';
-import { initFacebookOverlay } from '../esm/features/facebook-overlay.js';
-import { initSocialDots } from '../esm/features/social-dots.js';
-import { initServiceWorker, initPwaInstall } from '../esm/features/pwa.js';
-
-// ===== BRIDGE ke window.* (untuk fail legacy yang belum migrate) =====
+// ===== BRIDGE ke window.* (untuk fail legacy) =====
 window.escapeHtml = escapeHtml;
 window.showToast = showToast;
 window.shareCard = shareCard;
 window.saveCard = saveCard;
-
-// Fungsi ESM yang dipanggil oleh fail legacy (gallery-client.js, testimonial-videos.js)
 window.initTestimonials = initTestimonials;
 window.initGallery = initGallery;
 window.applyTheme = applyTheme;
+window.showTab = showTab;
+window.translations = translations;
 
-// Fallback initBooking (biasanya di-override oleh booking-ui.js legacy)
+// Fallback initBooking
 function initBooking() {}
 
-// ===== DOMContentLoaded — Init semua modul =====
-document.addEventListener('DOMContentLoaded', () => {
-  // --- Modul ESM ---
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Init UI ESM
   initMenu();
   initShareButton();
   initTheme();
   initLanguage();
   initBottomNavigation();
   initServiceFilters();
-
-  // --- Fungsi legacy (dari fail script defer) ---
-  if (typeof window.initDynamicServices === 'function') {
-    window.initDynamicServices();
-  }
-
-  if (typeof window.initChatbot === 'function') {
-    window.initChatbot();
-  }
-
-  // --- Modul ESM (susulan) ---
-  initGallery();
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -124,24 +105,35 @@ document.addEventListener('DOMContentLoaded', () => {
   initPwaInstall();
   initBooking();
 
-  // Facebook overlay
+  // 2. Panggil data Firebase (Beri masa 500ms untuk pastikan legacy JS sedia)
+  setTimeout(() => {
+    if (typeof window.initDynamicServices === 'function') {
+      window.initDynamicServices();
+    }
+  }, 500);
+
+  // 3. Chatbot
+  if (typeof window.initChatbot === 'function') {
+    window.initChatbot();
+  }
+
+  // 4. Facebook Overlay
   const fbOverlay = document.getElementById('fb-overlay');
   if (fbOverlay) {
     window.facebookOverlay = initFacebookOverlay();
     initShareSocial();
   }
 
-  // Auto-buka side menu via ?menu=open
+  // 5. Auto buka side menu
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('menu') === 'open') {
     setTimeout(() => {
       window.openMenu?.();
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
     }, 300);
   }
 
-  // Tahun copyright footer
+  // 6. Set Tahun
   const currentYear = document.getElementById('current-year');
   if (currentYear) {
     currentYear.textContent = new Date().getFullYear();
