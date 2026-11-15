@@ -36,7 +36,7 @@ window.showTab = showTab;
 // Fallback initBooking
 function initBooking() {}
 
-// ===== DOMContentLoaded (SAMA MACAM SCRIPT.JS ASAL) =====
+// ===== DOMContentLoaded =====
 document.addEventListener("DOMContentLoaded", () => {
   
   // 1. Init UI ESM
@@ -46,20 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initLanguage();
   initBottomNavigation();
   initServiceFilters();
-
-  // 2. Panggil fungsi dari fail legacy (Guna semakan 'typeof' macam asal)
-  if (typeof window.initDynamicServices === 'function') {
-    window.initDynamicServices();
-  } else {
-    console.warn("⚠️ window.initDynamicServices tidak dijumpai.");
-  }
-
-  if (typeof window.initChatbot === 'function') {
-    window.initChatbot();
-  }
-
-  // 3. Init ESM yang lain
-  initGallery();
   initTranslation();
   initShareLocation();
   initLightboxControls();
@@ -67,6 +53,25 @@ document.addEventListener("DOMContentLoaded", () => {
   initServiceWorker();
   initPwaInstall();
   initBooking();
+
+  // 2. PEMBETULAN: Tunggu fungsi legacy benar-benar wujud sebelum dipanggil
+  let attempts = 0;
+  const waitForServices = setInterval(() => {
+    attempts++;
+    if (typeof window.initDynamicServices === 'function') {
+      clearInterval(waitForServices); // Berhenti menunggu
+      window.initDynamicServices();   // Jalankan servis!
+      console.log("✅ Servis Firebase berjaya dimulakan.");
+    } else if (attempts >= 20) { // Tunggu maksimum 5 saat (20 x 250ms)
+      clearInterval(waitForServices);
+      console.error("❌ Gagal: Fail services-ui.js tidak dimuatkan langsung.");
+    }
+  }, 250);
+
+  // 3. Chatbot
+  if (typeof window.initChatbot === 'function') {
+    window.initChatbot();
+  }
 
   // 4. Facebook Overlay
   const fbOverlay = document.getElementById('fb-overlay');
@@ -90,4 +95,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (currentYear) {
     currentYear.textContent = new Date().getFullYear();
   }
-}); 
+});
