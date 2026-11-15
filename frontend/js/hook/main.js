@@ -16,6 +16,7 @@ import { initShareButton, initShareSocial, initShareLocation } from './esm/featu
 import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
 import { initSocialDots } from './esm/features/social-dots.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
+import { translations } from './esm/i18n/translations.js';
 
 // ===== BRIDGE ke window.* (untuk fail legacy) =====
 window.escapeHtml = escapeHtml;
@@ -26,6 +27,7 @@ window.initTestimonials = initTestimonials;
 window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
+window.translations = translations;
 
 // Fallback initBooking
 function initBooking() {}
