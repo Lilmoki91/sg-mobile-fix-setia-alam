@@ -1,5 +1,5 @@
 /**
- * main.js — Entry Point ESM (Final)
+ * main.js — Entry Point ESM (Final - Fix Booking UI)
  */
 
 import { escapeHtml, showToast } from './esm/core/utils.js';
@@ -16,9 +16,12 @@ import { initShareButton, initShareSocial, initShareLocation } from './esm/featu
 import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
 import { initSocialDots } from './esm/features/social-dots.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
+
+// 🔥 TAMBAH INI: Supaya fail legacy boleh guna terjemahan
 import { translations } from './esm/i18n/translations.js';
 
 // ===== BRIDGE ke window.* (untuk fail legacy) =====
+window.translations = translations; // 🔥 DEDAHKAN TRANSLATIONS
 window.escapeHtml = escapeHtml;
 window.showToast = showToast;
 window.shareCard = shareCard;
@@ -27,10 +30,6 @@ window.initTestimonials = initTestimonials;
 window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
-window.translations = translations;
-
-// Fallback initBooking
-function initBooking() {}
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. Init UI ESM
@@ -46,7 +45,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initSocialDots();
   initServiceWorker();
   initPwaInstall();
-  initBooking();
+  
+  // 🔥 FIX: Panggil initBooking dari window (fail legacy booking-ui.js)
+  if (typeof window.initBooking === 'function') {
+    window.initBooking();
+  }
 
   // 2. Panggil data Firebase (Beri masa 500ms untuk pastikan legacy JS sedia)
   setTimeout(() => {
