@@ -1,28 +1,28 @@
 /**
  * main.js — Entry Point ESM
  * Lokasi: js/hook/main.js
- * Semua modul ESM dalam js/esm/
+ * Semua modul ESM dalam js/hook/esm/ (Berdasarkan struktur GitHub)
  */
 
 // ===== CORE =====
-import { escapeHtml, showToast } from '../esm/core/utils.js';
+import { escapeHtml, showToast } from './esm/core/utils.js';
 
 // ===== I18N =====
-import { initTranslation } from '../esm/i18n/index.js';
+import { initTranslation } from './esm/i18n/index.js';
 
 // ===== FEATURES =====
-import { initTheme, applyTheme } from '../esm/features/theme.js';
-import { initLanguage } from '../esm/features/language.js';
-import { initMenu } from '../esm/features/menu.js';
-import { initBottomNavigation } from '../esm/features/nav.js';
-import { initServiceFilters } from '../esm/features/filters.js';
-import { initGallery, initLightboxControls } from '../esm/features/gallery.js';
-import { initTestimonials } from '../esm/features/testimonials.js';
-import { shareCard, saveCard } from '../esm/features/card.js';
-import { initShareButton, initShareSocial, initShareLocation } from '../esm/features/share.js';
-import { initFacebookOverlay } from '../esm/features/facebook-overlay.js';
-import { initSocialDots } from '../esm/features/social-dots.js';
-import { initServiceWorker, initPwaInstall } from '../esm/features/pwa.js';
+import { initTheme, applyTheme } from './esm/features/theme.js';
+import { initLanguage } from './esm/features/language.js';
+import { initMenu } from './esm/features/menu.js';
+import { initBottomNavigation } from './esm/features/nav.js';
+import { initServiceFilters } from './esm/features/filters.js';
+import { initGallery, initLightboxControls } from './esm/features/gallery.js';
+import { initTestimonials } from './esm/features/testimonials.js';
+import { shareCard, saveCard } from './esm/features/card.js';
+import { initShareButton, initShareSocial, initShareLocation } from './esm/features/share.js';
+import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
+import { initSocialDots } from './esm/features/social-dots.js';
+import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
 
 // ===== BRIDGE ke window.* (untuk fail legacy) =====
 window.escapeHtml = escapeHtml;
