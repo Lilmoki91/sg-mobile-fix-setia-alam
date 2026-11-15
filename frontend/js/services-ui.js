@@ -1,37 +1,21 @@
 // ============================================================
 // 📱 SERVICE CARDS UI - Guna Firebase
 // ============================================================
-// Fail ini menggantikan kad servis statik di index.html dengan
-// kad yang dijana secara dinamik daripada Firebase Firestore.
 // services-ui.js
 
 (function() {
   'use strict';
 
-  // Cache servis terkini
   let servicesCache = [];
 
-  // 🔥 Ikon servis ikut jenis (DAH DITAMBAH 'fas' UNTUK PAPAR ICON)
   const iconMap = {
-    battery: 'fas fa-battery-full',
-    camera: 'fas fa-camera',
-    casing: 'fas fa-mobile-alt',
-    charging: 'fas fa-plug',
-    diagnostic: 'fas fa-search',
-    speaker: 'fas fa-volume-up',
-    power: 'fas fa-power-off',
-    screen: 'fas fa-mobile',
-    software: 'fas fa-code',
-    tablet: 'fas fa-tablet-alt',
-    water: 'fas fa-tint',
-    button: 'fab fa-apple',
-    backglass: 'fas fa-layer-group',
-    watch: 'fas fa-clock',
-    faceid: 'fas fa-user-circle',
-    motherboard: 'fas fa-microchip',
-    screencolor: 'fas fa-exclamation-triangle',
-    genuine: 'fab fa-apple',
-    default: 'fas fa-tools'
+    battery: 'fas fa-battery-full', camera: 'fas fa-camera', casing: 'fas fa-mobile-alt',
+    charging: 'fas fa-plug', diagnostic: 'fas fa-search', speaker: 'fas fa-volume-up',
+    power: 'fas fa-power-off', screen: 'fas fa-mobile', software: 'fas fa-code',
+    tablet: 'fas fa-tablet-alt', water: 'fas fa-tint', button: 'fab fa-apple',
+    backglass: 'fas fa-layer-group', watch: 'fas fa-clock', faceid: 'fas fa-user-circle',
+    motherboard: 'fas fa-microchip', screencolor: 'fas fa-exclamation-triangle',
+    genuine: 'fab fa-apple', default: 'fas fa-tools'
   };
 
   const colorMap = {
@@ -61,10 +45,6 @@
 
   function getGradientClass(type) {
     return colorMap[(type || '').toLowerCase()] || 'from-blue-600 to-blue-800 border-blue-700 hover:border-blue-400';
-  }
-
-  function getWhatsAppId(index) {
-    return `whatsapp-service-${index}`;
   }
 
   function formatPrice(price) {
@@ -99,8 +79,10 @@
     const price = formatPrice(service.price);
     const whatsAppMsg = encodeURIComponent(service.whatsapp || '👋 hi saya ingin tanya tentang servis ini');
     const whatsappHref = `https://wa.me/60122626434?text=${whatsAppMsg}`;
-    const whatsappId = getWhatsAppId(index);
-    const t = window.translations[lang] || window.translations.ms;
+    const whatsappId = `whatsapp-service-${index}`;
+    
+    // 🔥 FIX: Fallback kukuh untuk elak ralat 'window.translations is undefined'
+    const t = (window.translations && (window.translations[lang] || window.translations.ms)) || { WhatsApp: 'WhatsApp' };
 
     const card = document.createElement('div');
     card.className = `service-card flex-shrink-0 w-80 bg-gradient-to-br ${gradient} rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 snap-start`;
@@ -130,16 +112,17 @@
   }
 
   function renderServices(services) {
-    const container = document.getElementById('cardsContainer');
+    const container = document.getElementById('serviceScrollContainer') || document.getElementById('cardsContainer');
     const counter = document.getElementById('visibleCount');
-    if (!container) return;
+    
+    if (!container) {
+        console.error("❌ Waduh, container servis tiada di HTML!");
+        return;
+    }
 
     servicesCache = services || [];
-
-    // Padam semua kad servis lama
     container.innerHTML = '';
 
-    // Hanya tunjukkan servis aktif
     const activeServices = servicesCache.filter(s => s.active !== false);
 
     activeServices.forEach((service, index) => {
@@ -147,30 +130,25 @@
       container.appendChild(card);
     });
 
-    // Kemas kini penunjuk jumlah
     if (counter) counter.textContent = activeServices.length;
 
-    // Trigger semula filter semasa jika ada
     if (typeof window.reapplyServiceFilter === 'function') {
       window.reapplyServiceFilter();
     }
   }
 
   function initDynamicServices() {
-    // Pasang real-time listener
     if (typeof window.startServicesListener === 'function') {
       window.startServicesListener((services) => {
         renderServices(services);
       });
     } else {
-      // Fallback
       window.getServicesFromFirebase().then(result => {
         if (result.success) renderServices(result.services);
       }).catch(err => console.error('Gagal muat servis:', err));
     }
   }
 
-  // Pendedahan global
   window.initDynamicServices = initDynamicServices;
   window.servicesCache = servicesCache;
 })();
