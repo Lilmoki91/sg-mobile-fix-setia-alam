@@ -1,15 +1,9 @@
 /**
- * main.js — Entry Point ESM
- * Lokasi: js/hook/main.js
+ * main.js — Entry Point ESM (Versi Diagnostik)
  */
 
-// ===== CORE =====
 import { escapeHtml, showToast } from './esm/core/utils.js';
-
-// ===== I18N =====
 import { initTranslation } from './esm/i18n/index.js';
-
-// ===== FEATURES =====
 import { initTheme, applyTheme } from './esm/features/theme.js';
 import { initLanguage } from './esm/features/language.js';
 import { initMenu } from './esm/features/menu.js';
@@ -23,7 +17,6 @@ import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
 import { initSocialDots } from './esm/features/social-dots.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
 
-// ===== BRIDGE ke window.* (untuk fail legacy) =====
 window.escapeHtml = escapeHtml;
 window.showToast = showToast;
 window.shareCard = shareCard;
@@ -33,13 +26,18 @@ window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
 
-// Fallback initBooking
 function initBooking() {}
 
-// ===== DOMContentLoaded =====
+// 🔥 FUNGSI UNTUK PAPAR MESEJ DI SKRIN 🔥
+function showDebugMessage(msg, isError = false) {
+  const div = document.createElement('div');
+  div.style.cssText = `position:fixed;top:10px;left:10px;right:10px;padding:15px;z-index:99999;border-radius:8px;font-size:14px;font-family:monospace;white-space:pre-wrap;box-shadow:0 4px 6px rgba(0,0,0,0.5); ${isError ? 'background:#ffebee;color:#c62828;border:2px solid #c62828;' : 'background:#e8f5e9;color:#2e7d32;border:2px solid #2e7d32;'}`;
+  div.textContent = msg;
+  document.body.appendChild(div);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  
-  // 1. Init UI ESM
+  // 1. Init UI
   initMenu();
   initShareButton();
   initTheme();
@@ -54,45 +52,49 @@ document.addEventListener("DOMContentLoaded", () => {
   initPwaInstall();
   initBooking();
 
-  // 2. PEMBETULAN: Tunggu fungsi legacy benar-benar wujud sebelum dipanggil
-  let attempts = 0;
-  const waitForServices = setInterval(() => {
-    attempts++;
+  // 2. Ujian Firebase (Tunggu 1.5 saat untuk pastikan fail legacy siap)
+  setTimeout(async () => {
+    // Cuba jalankan fungsi asal
     if (typeof window.initDynamicServices === 'function') {
-      clearInterval(waitForServices); // Berhenti menunggu
-      window.initDynamicServices();   // Jalankan servis!
-      console.log("✅ Servis Firebase berjaya dimulakan.");
-    } else if (attempts >= 20) { // Tunggu maksimum 5 saat (20 x 250ms)
-      clearInterval(waitForServices);
-      console.error("❌ Gagal: Fail services-ui.js tidak dimuatkan langsung.");
+      window.initDynamicServices();
     }
-  }, 250);
 
-  // 3. Chatbot
-  if (typeof window.initChatbot === 'function') {
-    window.initChatbot();
-  }
+    // Uji sambungan Firebase secara terus
+    if (typeof window.getServicesFromFirebase === 'function') {
+      try {
+        const res = await window.getServicesFromFirebase();
+        if (res.success) {
+          if (res.services.length === 0) {
+            showDebugMessage(`⚠️ Sambungan ke Firebase BERJAYA, tetapi 0 data dijumpai.\n\nPunca: Firestore Rules menghalang bacaan, atau Collection ID salah.`, true);
+          } else {
+            showDebugMessage(`✅ BERJAYA! Dapat ${res.services.length} servis dari Firebase.`, false);
+          }
+        } else {
+          showDebugMessage(`❌ Ralat Firebase: ${res.error}`, true);
+        }
+      } catch (e) {
+        showDebugMessage(`❌ Ralat Sistem: ${e.message}`, true);
+      }
+    } else {
+      showDebugMessage(`❌ Gagal: window.getServicesFromFirebase tiada.\nFail services-firebase.js tidak dimuatkan.`, true);
+    }
+  }, 1500);
 
-  // 4. Facebook Overlay
+  // Baki init
   const fbOverlay = document.getElementById('fb-overlay');
   if (fbOverlay) {
     window.facebookOverlay = initFacebookOverlay();
     initShareSocial();
   }
 
-  // 5. Auto buka side menu
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('menu') === 'open') {
     setTimeout(() => {
       window.openMenu?.();
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
     }, 300);
   }
 
-  // 6. Set Tahun
   const currentYear = document.getElementById('current-year');
-  if (currentYear) {
-    currentYear.textContent = new Date().getFullYear();
-  }
+  if (currentYear) currentYear.textContent = new Date().getFullYear();
 });
