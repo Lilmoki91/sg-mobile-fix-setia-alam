@@ -4,7 +4,7 @@ Projek ini menggunakan **ESM (ES Modules)** dengan satu entry point dan folder k
 
 ## 🗂️ Struktur
 
-```ascii.py
+```ascii.css
 js/
 ├── hook/
 │   └── main.js              ⭐ entry point (tag HTML)
