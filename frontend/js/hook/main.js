@@ -32,7 +32,7 @@ window.initTestimonials = initTestimonials;
 window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
-window.translations = translations;
+
 
 // Fallback initBooking
 function initBooking() {}
