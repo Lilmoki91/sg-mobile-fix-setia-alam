@@ -1,9 +1,10 @@
-# 📁 Struktur Folder ESM
+## 📁 Struktur Folder ESM
 
 Projek ini menggunakan **ESM (ES Modules)** dengan satu entry point dan folder khas untuk modul.
 
 ## 🗂️ Struktur
-```
+
+```ascii.py
 js/
 ├── hook/
 │   └── main.js              ⭐ entry point (tag HTML)
