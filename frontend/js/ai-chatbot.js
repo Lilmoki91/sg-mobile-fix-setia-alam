@@ -958,7 +958,74 @@ async function initChatbot() {
   messages.addEventListener("scroll", updateScrollDownButton, { passive: true });
   scrollDownButton?.addEventListener("click", scrollToBottom);
 
-  toggle.addEventListener("click", showChat);
+  // Butang float boleh diseret. Kedudukan hanya dalam memori (tidak disimpan),
+  // jadi selepas refresh ia kembali ke posisi asal dalam CSS.
+  const DRAG_MARGIN = 8;
+  const DRAG_THRESHOLD = 6;
+  let dragState = null;
+  let suppressToggleClick = false;
+
+  const clampTogglePosition = () => {
+    if (!toggle.style.left) return; // belum pernah dialihkan
+    const rect = toggle.getBoundingClientRect();
+    if (!rect.width) return; // disembunyikan semasa chatbot dibuka
+    const maxLeft = Math.max(DRAG_MARGIN, window.innerWidth - rect.width - DRAG_MARGIN);
+    const maxTop = Math.max(DRAG_MARGIN, window.innerHeight - rect.height - DRAG_MARGIN);
+    toggle.style.left = `${Math.min(Math.max(DRAG_MARGIN, rect.left), maxLeft)}px`;
+    toggle.style.top = `${Math.min(Math.max(DRAG_MARGIN, rect.top), maxTop)}px`;
+  };
+
+  toggle.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const rect = toggle.getBoundingClientRect();
+    dragState = {
+      id: event.pointerId,
+      startX: event.clientX, startY: event.clientY,
+      offsetLeft: rect.left, offsetTop: rect.top,
+      width: rect.width, height: rect.height,
+      moved: false
+    };
+    try { toggle.setPointerCapture(event.pointerId); } catch {}
+  });
+  toggle.addEventListener("pointermove", (event) => {
+    if (!dragState || event.pointerId !== dragState.id) return;
+    const dx = event.clientX - dragState.startX;
+    const dy = event.clientY - dragState.startY;
+    if (!dragState.moved) {
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      dragState.moved = true;
+      toggle.classList.add("is-dragging");
+    }
+    event.preventDefault();
+    const maxLeft = Math.max(DRAG_MARGIN, window.innerWidth - dragState.width - DRAG_MARGIN);
+    const maxTop = Math.max(DRAG_MARGIN, window.innerHeight - dragState.height - DRAG_MARGIN);
+    // Tukar kepada left/top supaya right/bottom CSS asal tidak mengganggu.
+    toggle.style.right = "auto";
+    toggle.style.bottom = "auto";
+    toggle.style.left = `${Math.min(Math.max(DRAG_MARGIN, dragState.offsetLeft + dx), maxLeft)}px`;
+    toggle.style.top = `${Math.min(Math.max(DRAG_MARGIN, dragState.offsetTop + dy), maxTop)}px`;
+  });
+  const endToggleDrag = (event) => {
+    if (!dragState || event.pointerId !== dragState.id) return;
+    const wasDragged = dragState.moved;
+    dragState = null;
+    toggle.classList.remove("is-dragging");
+    try { toggle.releasePointerCapture(event.pointerId); } catch {}
+    if (wasDragged) {
+      // Elak klik selepas seret daripada membuka chatbot.
+      suppressToggleClick = true;
+      setTimeout(() => { suppressToggleClick = false; }, 0);
+    }
+  };
+  toggle.addEventListener("pointerup", endToggleDrag);
+  toggle.addEventListener("pointercancel", endToggleDrag);
+  window.addEventListener("resize", clampTogglePosition);
+  window.visualViewport?.addEventListener("resize", clampTogglePosition);
+
+  toggle.addEventListener("click", (event) => {
+    if (suppressToggleClick) { event.preventDefault(); return; }
+    showChat();
+  });
   closeButton?.addEventListener("click", () => hideChat());
   resetButton?.addEventListener("click", resetChat);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && windowElement.classList.contains("visible")) { event.preventDefault(); hideChat(); } });
