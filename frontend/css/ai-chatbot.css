@@ -1,7 +1,7 @@
 /*ai-chatbot.css*/
 /* Chatbot styles are independent of CDN utilities. */
 body.chatbot-open {
-  overflow: hidden;
+  overflow: ;
 }
 
 #chatbot-toggle {
@@ -43,6 +43,12 @@ body.chatbot-open {
 
 body.chatbot-open #chatbot-toggle {
   display: none;
+}
+
+/*Overlay menu sisi mesti berada di atas chatbot (z-index 45) supaya klik di luar menu menutupnya.
+   Kekal di bawah menu sisi (210) dan nav bawah (100). */
+body.chatbot-open #mobile-menu-overlay {
+  z-index: 50;
 }
 
 #chatbot-window {
