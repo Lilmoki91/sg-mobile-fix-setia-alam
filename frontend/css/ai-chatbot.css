@@ -20,13 +20,25 @@ body.chatbot-open {
   /* border: 1px solid rgba(255, 255, 255, .5); */
   border-radius: 50%;
   box-shadow: 0 8px 24px #6366f166;
-  cursor: pointer;
+  cursor: grab;
   transition: transform .2s, box-shadow .2s;
+  /* Benarkan seret dengan jari tanpa menatal halaman */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #chatbot-toggle:hover {
   transform: scale(1.08);
   box-shadow: 0 8px 30px #6366f199;
+}
+
+#chatbot-toggle.is-dragging {
+  cursor: grabbing;
+  transform: scale(1.12);
+  box-shadow: 0 12px 34px #6366f1b3;
+  transition: none;
 }
 
 body.chatbot-open #chatbot-toggle {
