@@ -1,4 +1,3 @@
-/* admin-panel.css*/
 
 /* ==========================================
    ADMIN PANEL CSS - SG Mobile Fix Setia Alam
@@ -250,9 +249,21 @@ html[data-theme="dark"] .admin-sidebar-heading p {
 }
 
 html[data-theme="dark"] .admin-sidebar-language {
-  background: #1e3a5f;
-  border-color: #3b82f6;
-  color: #bfdbfe;
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+html[data-theme="dark"] .admin-sidebar-language:hover {
+  background: #475569;
+}
+
+html[data-theme="dark"] .admin-sidebar-language:active,
+html[data-theme="dark"] .admin-sidebar-language:focus-visible {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
 }
 
 @media (max-width: 480px) {
