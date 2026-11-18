@@ -963,14 +963,20 @@ async function initChatbot() {
   resetButton?.addEventListener("click", resetChat);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape" && windowElement.classList.contains("visible")) { event.preventDefault(); hideChat(); } });
   document.querySelectorAll(".mobile-bottom-nav [data-nav]").forEach((link) => { link.addEventListener("click", () => hideChat(false)); });
+  // Menu sisi (Telefon Dijual, Profil Saya) menukar tab di belakang chatbot; tutup chatbot supaya halaman baharu kelihatan.
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("#phones-menu-action, #profile-menu-action")) hideChat(false);
+  }, true);
   updateChatBounds();
   updateScrollDownButton();
   sendButton.addEventListener("click", sendMessage);
   input.addEventListener("keydown", (event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.isComposing) { event.preventDefault(); sendMessage(); } });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function startChatbot() {
     // Carian Firebase tidak perlu menunggu API key model AI daripada IPFS.
     initChatbot();
     initElizaAI();
-});
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startChatbot, { once: true });
+else startChatbot();
