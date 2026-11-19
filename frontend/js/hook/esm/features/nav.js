@@ -1,3 +1,4 @@
+// nav.js
 export function initBottomNavigation() {
   if (!document.querySelector('.mobile-bottom-nav')) {
     const nav = document.createElement('nav');
@@ -7,7 +8,7 @@ export function initBottomNavigation() {
       <a href="#" class="active" data-nav="home-tab"><i class="fas fa-home"></i><span data-i18n-key="NavHome">Home</span></a>
       <a href="#" data-nav="services-tab"><i class="fas fa-tools"></i><span data-i18n-key="NavServices">Servis</span></a>
       <a href="#" data-nav="location-tab"><i class="fas fa-map-marker-alt"></i><span data-i18n-key="NavLocation">Lokasi</span></a>
-      <a href="#" data-nav="contact-tab"><i class="fas fa-phone"></i><span data-i18n-key="NavContact">Contact</span></a>
+      <a href="#" data-nav="contact-tab"><i class="fas fa-phone"></i><span class="booking-notification-dot" aria-hidden="true" hidden></span><span data-i18n-key="NavContact">Contact</span><span id="booking-nav-notification-text" class="sr-only"></span></a>
       <a href="#" data-nav="card-tab"><i class="fas fa-id-card"></i><span data-i18n-key="NavCard">Kad</span></a>
     `;
     document.body.appendChild(nav);
