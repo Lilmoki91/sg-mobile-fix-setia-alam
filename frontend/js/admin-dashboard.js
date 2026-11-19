@@ -405,17 +405,22 @@
   // ============================================================
   // TINDAKAN BOOKING
   // ============================================================
-  async function updateStatus(id, status) {
-    const button = [...bookingList.querySelectorAll('button[data-id]')].find(btn => btn.dataset.id === id);
+  async function updateStatus(id, status, clickedBtn) {
+    const button = clickedBtn || [...bookingList.querySelectorAll('button[data-id]')].find(btn => btn.dataset.id === id);
     const card = button?.closest('.admin-card');
     const message = card?.querySelector('.booking-admin-message')?.value || '';
     const buttons = card?.querySelectorAll('button[data-status]') || [];
+    // Elak klik berganda semasa permintaan sedang berjalan.
     if ([...buttons].some(btn => btn.disabled)) return;
+    const originalHtml = clickedBtn ? clickedBtn.innerHTML : '';
     buttons.forEach(btn => { btn.disabled = true; });
+    if (clickedBtn) clickedBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
       const result = await window.updateBookingStatusInFirebase(id, status, message);
       if (!result.success) alert(t('Gagal kemas kini status: ') + result.error);
     } finally {
+      // Pulihkan label butang (kad mungkin sudah dirender semula oleh listener).
+      if (clickedBtn && clickedBtn.isConnected) clickedBtn.innerHTML = originalHtml;
       buttons.forEach(btn => { btn.disabled = false; });
     }
   }
@@ -757,13 +762,8 @@
     const status = btn.dataset.status;
     const action = btn.dataset.action;
 
-    if (status) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      updateStatus(id, status).then(() => {
-        btn.disabled = false;
-      });
-    }
+    // updateStatus() menguruskan keadaan disabled/spinner sendiri.
+    if (status) updateStatus(id, status, btn);
     if (action === 'delete') deleteBooking(id);
   });
 
