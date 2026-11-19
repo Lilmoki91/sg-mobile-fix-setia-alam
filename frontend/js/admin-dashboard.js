@@ -369,7 +369,16 @@
           </div>
         ` : ''}
 
+        <label class="block text-sm font-semibold mb-3">
+          ${t('Mesej respons kepada pelanggan (pilihan)', 'Response message to customer (optional)')}
+          <textarea class="booking-admin-message w-full rounded-lg border border-gray-300 p-3 mt-1 bg-white text-gray-800" rows="2" maxlength="2000">${window.escapeHtml(rawBooking.adminMessage || '')}</textarea>
+        </label>
+        ${rawBooking.adminResponseId ? `<p class="text-xs text-gray-500 mb-3">${rawBooking.userReadResponseId === rawBooking.adminResponseId ? t('Respons telah dibaca', 'Response read') : t('Respons belum dibaca', 'Response unread')}</p>` : ''}
         <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+          <button data-id="${booking.id}" data-status="${['pending', 'confirmed', 'rejected'].includes(booking.status) ? booking.status : 'pending'}"
+                  class="btn-action flex-1 min-w-[110px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
+            ${t('Hantar respons', 'Send response')}
+          </button>
           <button data-id="${booking.id}" data-status="confirmed"
                   class="btn-action flex-1 min-w-[110px] bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg">
             <i class="fas fa-check mr-1"></i> ${getAdminTranslations().BookingStatusConfirmed}
@@ -397,8 +406,18 @@
   // TINDAKAN BOOKING
   // ============================================================
   async function updateStatus(id, status) {
-    const result = await window.updateBookingStatusInFirebase(id, status);
-    if (!result.success) alert(t('Gagal kemas kini status: ') + result.error);
+    const button = [...bookingList.querySelectorAll('button[data-id]')].find(btn => btn.dataset.id === id);
+    const card = button?.closest('.admin-card');
+    const message = card?.querySelector('.booking-admin-message')?.value || '';
+    const buttons = card?.querySelectorAll('button[data-status]') || [];
+    if ([...buttons].some(btn => btn.disabled)) return;
+    buttons.forEach(btn => { btn.disabled = true; });
+    try {
+      const result = await window.updateBookingStatusInFirebase(id, status, message);
+      if (!result.success) alert(t('Gagal kemas kini status: ') + result.error);
+    } finally {
+      buttons.forEach(btn => { btn.disabled = false; });
+    }
   }
 
   async function deleteBooking(id) {
