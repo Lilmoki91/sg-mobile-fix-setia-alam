@@ -222,8 +222,28 @@
       }[status] || 'bg-gray-100 text-gray-800';
     }
 
+    function updateNotifications() {
+      const en = document.documentElement.lang === 'en';
+      const count = window.sgmAuth?.current?.role === 'pelanggan'
+        ? bookingCache.filter(window.isBookingResponseUnread).length : 0;
+      const text = count ? (en ? `${count} booking(s) have a new admin response. Open My Bookings to read.` : `${count} tempahan mempunyai respons baharu daripada admin. Buka Tempahan Saya untuk membaca.`) : '';
+      const dot = document.querySelector('.booking-notification-dot');
+      if (dot) dot.hidden = !count;
+      document.getElementById('booking-appointment-link')?.classList.toggle('booking-has-unread', count > 0);
+      const navText = document.getElementById('booking-nav-notification-text');
+      if (navText) navText.textContent = text;
+      const link = document.getElementById('booking-appointment-link');
+      if (link) {
+        if (count) link.setAttribute('aria-describedby', 'booking-notification-summary');
+        else link.removeAttribute('aria-describedby');
+      }
+      const summary = document.getElementById('booking-notification-summary');
+      if (summary) { summary.hidden = !count; summary.textContent = text; }
+    }
+
     function renderBookings(bookings) {
       bookingCache = bookings || [];
+      updateNotifications();
 
       if (!bookingCache.length) {
         listContainer.innerHTML = `<p class="text-gray-500 text-sm text-center py-4" data-i18n-key="BookingNoAppointments">${window.translations[document.documentElement.lang || 'ms']?.BookingNoAppointments}</p>`;
@@ -238,7 +258,8 @@
         const booking = { ...rawBooking };
         ['id', 'code', 'name', 'phone', 'device', 'service', 'date', 'time', 'notes'].forEach(k => { booking[k] = window.escapeHtml(booking[k]); });
         const card = document.createElement('div');
-        card.className = 'bg-gray-50 rounded-xl p-4 border border-gray-100';
+        const unread = window.isBookingResponseUnread(rawBooking);
+        card.className = 'bg-gray-50 rounded-xl p-4 border border-gray-100' + (unread ? ' booking-response-unread' : '');
         card.innerHTML = `
           <div class="flex justify-between items-start mb-3">
             <div>
@@ -259,8 +280,16 @@
             <p><span class="text-gray-500">${t.BookingCreatedAt || 'Waktu Pendaftaran'}:</span> <span class="font-semibold">${formatCreatedAt(booking.createdAt)}</span></p>
           </div>
           ${booking.notes ? `<p class="text-sm text-gray-600 bg-white rounded-lg p-2 mb-3"><span class="text-gray-500">${t.BookingNotes}:</span> ${booking.notes}</p>` : ''}
+                    ${rawBooking.adminResponseId ? `
+          <div class="booking-response">
+            ${unread ? `<span class="booking-unread-label">${lang === 'en' ? 'New response' : 'Respons baharu'}</span>` : ''}
+            <p><strong>${lang === 'en' ? 'Admin response' : 'Respons admin'}:</strong> ${booking.status === 'pending' ? t.BookingStatusPending : (booking.status === 'confirmed' ? t.BookingStatusConfirmed : t.BookingStatusRejected)}</p>
+            ${rawBooking.adminMessage ? `<p class="booking-response-message">${window.escapeHtml(rawBooking.adminMessage)}</p>` : ''}
+            <p class="text-xs">${formatCreatedAt(rawBooking.adminRespondedAt)}</p>
+            ${unread ? `<button type="button" class="booking-read-btn" data-id="${booking.id}">${lang === 'en' ? 'Mark as read' : 'Tandakan dibaca'}</button>` : `<p class="text-xs">${lang === 'en' ? 'Read' : 'Telah dibaca'}</p>`}
+          </div>` : ''}
           <div class="flex gap-2">
-            <a href="https://wa.me/60122626434?text=${encodeURIComponent(getStatusWhatsAppMessage(booking))}" target="_blank" rel="noopener noreferrer"
+             <a href="https://wa.me/60122626434?text=${encodeURIComponent(getStatusWhatsAppMessage(booking))}" target="_blank" rel="noopener noreferrer"
                class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2 px-3 rounded-lg text-center transition">
               <i class="fab fa-whatsapp mr-1"></i> ${t.WhatsApp || 'WhatsApp'}
             </a>
@@ -272,6 +301,21 @@
           </div>
         `;
         listContainer.appendChild(card);
+      });
+
+      listContainer.querySelectorAll('.booking-read-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const booking = bookingCache.find(b => b.id === btn.dataset.id);
+          if (!booking || !window.isBookingResponseUnread(booking)) return;
+          btn.disabled = true;
+          const result = await window.markBookingResponseRead(booking.id, booking.adminResponseId);
+          if (!result.success) {
+            btn.disabled = false;
+            window.showToast(document.documentElement.lang === 'en'
+              ? 'Unable to mark as read. Check your connection or reload for the latest response.'
+              : 'Gagal tandakan dibaca. Semak sambungan atau muat semula untuk respons terkini.');
+          }
+        });
       });
 
       // Event listener untuk delete (hanya padam butang yang wujud)
@@ -364,14 +408,12 @@
     // Pasang real-time listener
     if (typeof window.startBookingListener === 'function') {
       window.startBookingListener((bookings) => {
-        cleanupExpiredBookings(bookings);
         renderBookings(bookings);
       });
     } else {
       // Fallback
       window.getBookingsFromFirebase().then(result => {
         if (result.success) {
-          cleanupExpiredBookings(result.bookings);
           renderBookings(result.bookings);
         }
       }).catch(err => {
