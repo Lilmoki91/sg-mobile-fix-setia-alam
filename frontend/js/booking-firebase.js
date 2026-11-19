@@ -281,7 +281,10 @@
       return { success: true, booking: {
         code: b.code, name: b.name, device: b.device,
         service: b.service, date: b.date, time: b.time,
-        status: b.status || 'pending'
+        status: b.status || 'pending',
+        // Mesej respons admin kepada pelanggan ini sahaja (rekod milik pelanggan).
+        adminMessage: typeof b.adminMessage === 'string' ? b.adminMessage.trim() : '',
+        adminRespondedAt: b.adminRespondedAt?.toDate?.().toISOString() || null
       } };
     } catch (error) {
       console.error('Carian tempahan chatbot gagal:', error);
