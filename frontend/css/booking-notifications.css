@@ -7,6 +7,15 @@
   -webkit-text-fill-color: #ef4444;
 }
 .booking-notification-dot[hidden], .booking-notification-summary[hidden] { display: none !important; }
+/* Teks untuk pembaca skrin sahaja; jangan bergantung pada Tailwind/tema supaya tidak bertindih ikon. */
+.mobile-bottom-nav #booking-nav-notification-text {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important; overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important; clip-path: inset(50%) !important;
+  white-space: nowrap !important; border: 0 !important;
+  background: none !important; color: transparent !important;
+  -webkit-text-fill-color: transparent !important; pointer-events: none;
+}
 #booking-appointment-link.booking-has-unread { outline: 3px solid #ef4444; outline-offset: 2px; }
 .booking-notification-summary { margin: 12px 0; padding: 12px 16px; border: 1px solid #ef4444; border-radius: 12px; background: #fef2f2; color: #991b1b; font-size: 14px; font-weight: 600; }
 #booking-list .booking-response-unread { border: 2px solid #ef4444 !important; }
