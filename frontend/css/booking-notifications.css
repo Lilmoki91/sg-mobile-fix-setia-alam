@@ -3,7 +3,7 @@
 .mobile-bottom-nav .booking-notification-dot {
   position: absolute; top: 4px; left: calc(50% + 7px);
   width: 10px; height: 10px; border-radius: 50%;
-  background: #ef4444; border: 2px solid #fff;
+  background: #ef4444; border: 0;
   -webkit-text-fill-color: #ef4444;
 }
 .booking-notification-dot[hidden], .booking-notification-summary[hidden] { display: none !important; }
@@ -31,4 +31,3 @@
 .booking-read-btn:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
 html[data-theme="dark"] .booking-notification-summary { background: #450a0a; color: #fecaca; }
 html[data-theme="dark"] .booking-response { background: #172554; color: #dbeafe; }
-html[data-theme="dark"] .mobile-bottom-nav .booking-notification-dot { border-color: #111827; }
