@@ -125,20 +125,47 @@
   // ============================================================
   // KEMAS KINI STATUS
   // ============================================================
-  window.updateBookingStatusInFirebase = async function(docId, status) {
+  window.updateBookingStatusInFirebase = async function(docId, status, adminMessage = '') {
     try {
       const fns = await getFirestoreFns();
       const db = getDb();
       const s = await window.sgmAuth.require();
       if (s.role !== 'admin') throw new Error('Status hanya boleh dikemas kini oleh admin.');
+      if (!['pending', 'confirmed', 'rejected'].includes(status)) throw new Error('Status tidak sah.');
+      const message = String(adminMessage).trim();
+      if (message.length > 2000) throw new Error('Mesej maksimum 2000 aksara.');
       const ref = fns.doc(db, COLLECTION_NAME, docId);
       await fns.updateDoc(ref, {
         status: status,
+        adminMessage: message,
+        adminResponseId: crypto.randomUUID(),
+        adminRespondedAt: fns.serverTimestamp(),
         updatedAt: fns.serverTimestamp()
       });
       return { success: true };
     } catch (error) {
       console.error('Gagal kemas kini status tempahan:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  window.isBookingResponseUnread = function(booking) {
+    return !!booking.adminResponseId && booking.adminResponseId !== booking.userReadResponseId;
+  };
+
+  window.markBookingResponseRead = async function(docId, responseId) {
+    try {
+      const s = await window.sgmAuth.require();
+      if (s.role !== 'pelanggan' || !responseId) throw new Error('Respons pelanggan sahaja.');
+      const fns = await getFirestoreFns();
+      // Rules require this exact response ID, preventing a new response being marked read accidentally.
+      await fns.updateDoc(fns.doc(getDb(), COLLECTION_NAME, docId), {
+        userReadResponseId: responseId,
+        userReadAt: fns.serverTimestamp()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Gagal tandakan respons dibaca:', error);
       return { success: false, error: error.message };
     }
   };
