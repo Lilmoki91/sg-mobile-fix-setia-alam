@@ -13,6 +13,9 @@
   margin: -1px !important; padding: 0 !important; overflow: hidden !important;
   clip: rect(0, 0, 0, 0) !important; clip-path: inset(50%) !important;
   white-space: nowrap !important; border: 0 !important;
+  /* Mod gelap: tab aktif guna background-clip:text pada <a>, yang melukis glyph
+     semua anak walaupun dipotong. Saiz fon 0 = tiada glyph untuk dilukis. */
+  font-size: 0 !important; line-height: 0 !important;
   background: none !important; color: transparent !important;
   -webkit-text-fill-color: transparent !important; pointer-events: none;
 }
