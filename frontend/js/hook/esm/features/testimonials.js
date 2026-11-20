@@ -3,58 +3,14 @@ import { translations } from '../i18n/translations.js';
 let testimonialObserver = null;
 let stopTestimonialVideo = null;
 
-async function fetchVideosFromFirebase() {
-  if (!window.db) return [];
-
-  // Guna nama collection yang tepat berdasarkan Rules anda: 'testimonialVideos'
-  try {
-    const snapshot = await window.db.collection('testimonialVideos').get();
-    if (snapshot.empty) return [];
-
-    const videos = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      // Ambil video yang aktif/published sahaja
-      if (data.published !== false && data.active !== false && data.hidden !== true) {
-        videos.push({
-          id: data.videoId || data.tiktokId || data.url || doc.id,
-          titleMs: data.titleMs || data.title || "Testimoni",
-          titleEn: data.titleEn || data.title || "Testimonial",
-          order: data.order || 99
-        });
-      }
-    });
-    
-    // Susun mengikut turutan
-    videos.sort((a, b) => a.order - b.order);
-    return videos;
-  } catch (e) {
-    console.error("Gagal tarik video:", e);
-    return [];
-  }
-}
-
-export async function initTestimonials() {
+export function initTestimonials(managedVideos = []) {
   const container = document.getElementById('videoScrollContainer');
   const dotsContainer = document.getElementById('videoDotsContainer');
   if (!container || !dotsContainer) return;
 
   testimonialObserver?.disconnect();
   stopTestimonialVideo?.();
-
-  let attempts = 0;
-  while (!window.db && attempts < 20) {
-    await new Promise(r => setTimeout(r, 200));
-    attempts++;
-  }
-
-  const rawVideos = await fetchVideosFromFirebase();
-  if (!rawVideos || rawVideos.length === 0) return;
-
-  const videos = rawVideos.map(v => [
-    v.id, 
-    document.documentElement.lang === 'en' ? v.titleEn : v.titleMs
-  ]);
+  const videos = managedVideos.map(v => [v.id, document.documentElement.lang === 'en' ? v.titleEn : v.titleMs]);
 
   const tr = (key) => {
     const lang = document.documentElement.lang || 'ms';
@@ -119,12 +75,13 @@ export async function initTestimonials() {
     const dot = document.createElement('button');
     dot.type = 'button';
     dot.className = `h-2.5 rounded-full transition-all duration-300 ${index === 0 ? 'w-7 bg-blue-600' : 'w-2.5 bg-gray-300 hover:bg-gray-400'}`;
-    dot.setAttribute('aria-label', `Pergi ke testimoni ${index + 1}`);
+    dot.setAttribute('aria-label', `${document.documentElement.lang === 'en' ? 'Go to testimonial' : 'Pergi ke testimoni'} ${index + 1}`);
     dot.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
     dotsContainer.appendChild(dot);
     dotElements.push({ card, dot });
   });
 
+  if (!('IntersectionObserver' in window)) return;
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
