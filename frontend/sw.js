@@ -1,11 +1,14 @@
-const CACHE_NAME = 'sg-mobile-fix-V18';
+const CACHE_NAME = 'sg-mobile-fix-V19';
 
 // Hanya aset awam. Jangan cache shell login, respons API atau data pengguna.
 const urlsToCache = [
-  '/styles.css',
-  '/script.js',
-  '/auth.css',
-  '/auth-client.js',
+  '/css/styles.css',
+  '/css/auth.css',
+  '/js/auth-client.js',
+  '/js/hook/main.js?v=2',
+  '/js/testimonial-videos.js?v=2',
+  '/js/hook/esm/features/testimonials.js?v=2',
+  '/js/hook/esm/i18n/translations.js',
   '/manifest.json'
 ];
 
