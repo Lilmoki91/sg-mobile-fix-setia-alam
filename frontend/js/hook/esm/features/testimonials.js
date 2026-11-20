@@ -6,35 +6,32 @@ let stopTestimonialVideo = null;
 async function fetchVideosFromFirebase() {
   if (!window.db) return [];
 
-  // Uji beberapa nama collection (Tukar jika perlu)
-  const possibleCollections = ['testimonialVideos', 'testimonials', 'videos'];
-  
-  for (const colName of possibleCollections) {
-    try {
-      const snapshot = await window.db.collection(colName).get();
-      if (!snapshot.empty) {
-        const videos = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.published !== false && data.active !== false && data.hidden !== true) {
-            videos.push({
-              id: data.videoId || data.tiktokId || data.url || doc.id,
-              titleMs: data.titleMs || data.title || "Testimoni",
-              titleEn: data.titleEn || data.title || "Testimonial",
-              order: data.order || 99
-            });
-          }
+  // Guna nama collection yang tepat berdasarkan Rules anda: 'testimonialVideos'
+  try {
+    const snapshot = await window.db.collection('testimonialVideos').get();
+    if (snapshot.empty) return [];
+
+    const videos = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      // Ambil video yang aktif/published sahaja
+      if (data.published !== false && data.active !== false && data.hidden !== true) {
+        videos.push({
+          id: data.videoId || data.tiktokId || data.url || doc.id,
+          titleMs: data.titleMs || data.title || "Testimoni",
+          titleEn: data.titleEn || data.title || "Testimonial",
+          order: data.order || 99
         });
-        if (videos.length > 0) {
-          videos.sort((a, b) => a.order - b.order);
-          return videos;
-        }
       }
-    } catch (e) {
-      // Abaikan jika tiada akses atau collection tiada
-    }
+    });
+    
+    // Susun mengikut turutan
+    videos.sort((a, b) => a.order - b.order);
+    return videos;
+  } catch (e) {
+    console.error("Gagal tarik video:", e);
+    return [];
   }
-  return [];
 }
 
 export async function initTestimonials() {
