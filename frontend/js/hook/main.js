@@ -22,6 +22,7 @@ function feature(path, setup) {
   });
 }
 
+// Fungsi queueRenderer hanya digunakan untuk Gallery (kerana gallery-client.js wujud)
 function queueRenderer(name) {
   let pendingArgs;
   window[name] = (...args) => { pendingArgs = args; };
@@ -36,7 +37,6 @@ function queueRenderer(name) {
 }
 
 const connectGallery = queueRenderer('initGallery');
-const connectTestimonials = queueRenderer('initTestimonials');
 
 window.stopTestimonialVideo = () => {
   if (document.querySelector('#videoScrollContainer iframe')) window.__tiktokStop?.();
@@ -82,10 +82,13 @@ feature('./esm/features/gallery.js', async module => {
   await safe('lightbox', module.initLightboxControls);
   await connectGallery(module.initGallery);
 });
+
+// 🔥 PEMBETULAN: Panggil terus initTestimonials tanpa queue
 feature('./esm/features/testimonials.js', async module => {
   await languageReady;
-  await connectTestimonials(module.initTestimonials);
+  await safe('testimonials', module.initTestimonials); 
 });
+
 feature('./esm/features/card.js', module => {
   window.shareCard = module.shareCard;
   window.saveCard = module.saveCard;
@@ -101,10 +104,8 @@ feature('./esm/features/facebook-overlay.js', async module => {
   }
 });
 
-// 🔥 PEMBETULAN: social-dots.js (Ada 's')
 feature('./esm/features/social-dots.js', module => module.initSocialDots()); 
 
-// 🔥 PEMBETULAN: filters.js (Ada 's')
 const filtersReady = feature('./esm/features/filters.js', async module => {
   await languageReady;
   await safe('serviceFilters', module.initServiceFilters);
@@ -131,8 +132,6 @@ const bookingReady = safe('booking', async () => {
     () => typeof window.initBooking === 'function',
     () => window.initBooking());
 });
-
-// (Nota: booking-ai.js dibuang jika fail itu tiada dalam folder anda)
 
 safe('services', async () => {
   await Promise.all([utilitiesReady, translationsReady, filtersReady]);
