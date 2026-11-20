@@ -1071,6 +1071,8 @@ async function initChatbot() {
 }
 
 function startChatbot() {
+    // Admin menggunakan penjana respons sahaja; muat AI apabila diminta.
+    if (!document.getElementById('ai-chatbot-container') && !document.getElementById('chatbot-toggle')) return;
     // Carian Firebase tidak perlu menunggu API key model AI daripada IPFS.
     initChatbot();
     ensureElizaReady();
