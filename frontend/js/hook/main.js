@@ -16,6 +16,7 @@ import { initShareButton, initShareSocial, initShareLocation } from './esm/featu
 import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
 import { initSocialDots } from './esm/features/social-dots.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
+import { initBookingAI } from '../esm/features/booking-ai.js';
 
 // 🔥 TAMBAH INI: Supaya fail legacy boleh guna terjemahan
 import { translations } from './esm/i18n/translations.js';
@@ -50,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof window.initBooking === 'function') {
     window.initBooking();
   }
+  initBookingAI();
 
   // 2. Panggil data Firebase (Beri masa 500ms untuk pastikan legacy JS sedia)
   setTimeout(() => {
