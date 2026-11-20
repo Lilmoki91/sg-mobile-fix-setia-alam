@@ -152,6 +152,13 @@ body.admin-menu-open {
   background: #dbeafe;
 }
 
+html:not([data-theme="dark"]) .admin-sidebar-language:active,
+html:not([data-theme="dark"]) .admin-sidebar-language:focus-visible {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
 .admin-sidebar-theme {
   display: flex;
   align-items: center;
