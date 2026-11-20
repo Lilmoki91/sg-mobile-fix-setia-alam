@@ -3,20 +3,44 @@ import { translations } from '../i18n/translations.js';
 let testimonialObserver = null;
 let stopTestimonialVideo = null;
 
-// 🔥 FUNGSI TARIK DATA DARI FIREBASE
+// 🔥 FUNGSI MENUNGGU FIREBASE SIAP
+function waitForDb(timeout = 5000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const check = () => {
+      if (window.db) return resolve(true);
+      if (Date.now() - start > timeout) return resolve(false);
+      setTimeout(check, 200);
+    };
+    check();
+  });
+}
+
+// 🔥 FUNGSI TARIK DATA
 async function fetchVideosFromFirebase() {
+  const dbReady = await waitForDb();
+  if (!dbReady) {
+    console.error("❌ Firebase DB tak muncul selepas 5 saat.");
+    return [];
+  }
+
   try {
-    if (!window.db) return [];
-    
-    // Pastikan nama collection ini betul ('testimonials' atau 'videos')
+    // ⚠️ TUKAR 'testimonials' KEPADA NAMA COLLECTION ANDA (cth: 'videos', 'video_testimoni')
     const snapshot = await window.db.collection('testimonials').get();
     const videos = [];
     snapshot.forEach(doc => {
-      videos.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      // Kita ambil 'id' (nama dokumen), atau 'videoId' / 'url' jika ada
+      videos.push({ 
+        docId: doc.id, 
+        id: data.videoId || data.tiktokId || doc.id, 
+        ...data 
+      });
     });
+    console.log("✅ Data video berjaya ditarik:", videos.length);
     return videos;
   } catch (error) {
-    console.error("Gagal tarik video testimoni:", error);
+    console.error("❌ Gagal tarik video testimoni:", error);
     return [];
   }
 }
@@ -31,10 +55,12 @@ export async function initTestimonials(managedVideos = null) {
 
   let rawVideos = managedVideos;
   
-  // Jika tiada data dihantar, tarik dari Firebase
   if (!rawVideos || !Array.isArray(rawVideos) || rawVideos.length === 0) {
     rawVideos = await fetchVideosFromFirebase();
   }
+
+  // Jika masih tiada video, keluar (skrin akan kosong)
+  if (!rawVideos || rawVideos.length === 0) return;
 
   const videos = rawVideos.map(v => [v.id, document.documentElement.lang === 'en' ? (v.titleEn || v.title) : (v.titleMs || v.title)]);
 
@@ -65,7 +91,7 @@ export async function initTestimonials(managedVideos = null) {
       <span style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.95);color:#000;display:flex;align-items:center;justify-content:center;font-size:28px;padding-left:5px;box-shadow:0 6px 20px rgba(0,0,0,.4);"><i class="fas fa-play" aria-hidden="true"></i></span>
       <span style="font-size:14px;font-weight:600;"></span>
     `;
-    poster.lastElementChild.textContent = titleKey;
+    poster.lastElementChild.textContent = titleKey || "Testimoni";
     frame.appendChild(poster);
 
     poster.addEventListener('click', () => {
@@ -101,7 +127,7 @@ export async function initTestimonials(managedVideos = null) {
     const dot = document.createElement('button');
     dot.type = 'button';
     dot.className = `h-2.5 rounded-full transition-all duration-300 ${index === 0 ? 'w-7 bg-blue-600' : 'w-2.5 bg-gray-300 hover:bg-gray-400'}`;
-    dot.setAttribute('aria-label', `${document.documentElement.lang === 'en' ? 'Go to testimonial' : 'Pergi ke testimoni'} ${index + 1}`);
+    dot.setAttribute('aria-label', `Pergi ke testimoni ${index + 1}`);
     dot.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
     dotsContainer.appendChild(dot);
     dotElements.push({ card, dot });
