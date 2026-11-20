@@ -3,14 +3,40 @@ import { translations } from '../i18n/translations.js';
 let testimonialObserver = null;
 let stopTestimonialVideo = null;
 
-export function initTestimonials(managedVideos = []) {
+// 🔥 FUNGSI TARIK DATA DARI FIREBASE
+async function fetchVideosFromFirebase() {
+  try {
+    if (!window.db) return [];
+    
+    // Pastikan nama collection ini betul ('testimonials' atau 'videos')
+    const snapshot = await window.db.collection('testimonials').get();
+    const videos = [];
+    snapshot.forEach(doc => {
+      videos.push({ id: doc.id, ...doc.data() });
+    });
+    return videos;
+  } catch (error) {
+    console.error("Gagal tarik video testimoni:", error);
+    return [];
+  }
+}
+
+export async function initTestimonials(managedVideos = null) {
   const container = document.getElementById('videoScrollContainer');
   const dotsContainer = document.getElementById('videoDotsContainer');
   if (!container || !dotsContainer) return;
 
   testimonialObserver?.disconnect();
   stopTestimonialVideo?.();
-  const videos = managedVideos.map(v => [v.id, document.documentElement.lang === 'en' ? v.titleEn : v.titleMs]);
+
+  let rawVideos = managedVideos;
+  
+  // Jika tiada data dihantar, tarik dari Firebase
+  if (!rawVideos || !Array.isArray(rawVideos) || rawVideos.length === 0) {
+    rawVideos = await fetchVideosFromFirebase();
+  }
+
+  const videos = rawVideos.map(v => [v.id, document.documentElement.lang === 'en' ? (v.titleEn || v.title) : (v.titleMs || v.title)]);
 
   const tr = (key) => {
     const lang = document.documentElement.lang || 'ms';
