@@ -13,6 +13,7 @@ async function safe(name, fn) {
   }
 }
 
+// Import juga mesti dilindungi; try/catch pada init sahaja tidak mencukupi.
 function feature(path, setup) {
   return safe(path, async () => {
     const module = await import(path);
@@ -22,7 +23,8 @@ function feature(path, setup) {
   });
 }
 
-// Fungsi queueRenderer hanya digunakan untuk Gallery (kerana gallery-client.js wujud)
+// Klien legacy boleh menerima data sebelum modul renderer selesai dimuatkan.
+// Simpan data terakhir tanpa memadam kandungan sedia ada dengan init kosong.
 function queueRenderer(name) {
   let pendingArgs;
   window[name] = (...args) => { pendingArgs = args; };
@@ -37,10 +39,7 @@ function queueRenderer(name) {
 }
 
 const connectGallery = queueRenderer('initGallery');
-
-window.stopTestimonialVideo = () => {
-  if (document.querySelector('#videoScrollContainer iframe')) window.__tiktokStop?.();
-};
+// testimonial-videos.js mengurus renderer dan kitar hayatnya sendiri.
 
 const utilitiesReady = feature('./esm/core/utils.js', module => {
   window.escapeHtml = module.escapeHtml;
@@ -50,6 +49,7 @@ const translationsReady = feature('./esm/i18n/translations.js', module => {
   window.translations = module.translations;
 });
 
+// Navigasi asas tidak menunggu AI, Firebase, terjemahan atau PWA.
 const navigationReady = feature('./esm/features/nav.js', async module => {
   window.showTab = module.showTab;
   await safe('bottomNav', module.initBottomNavigation);
@@ -82,13 +82,6 @@ feature('./esm/features/gallery.js', async module => {
   await safe('lightbox', module.initLightboxControls);
   await connectGallery(module.initGallery);
 });
-
-// 🔥 PEMBETULAN: Panggil terus initTestimonials tanpa queue
-feature('./esm/features/testimonials.js', async module => {
-  await languageReady;
-  await safe('testimonials', module.initTestimonials); 
-});
-
 feature('./esm/features/card.js', module => {
   window.shareCard = module.shareCard;
   window.saveCard = module.saveCard;
@@ -103,20 +96,20 @@ feature('./esm/features/facebook-overlay.js', async module => {
     window.facebookOverlay = await safe('facebookOverlay', module.initFacebookOverlay);
   }
 });
-
-feature('./esm/features/social-dots.js', module => module.initSocialDots()); 
-
-const filtersReady = feature('./esm/features/filters.js', async module => {
+feature('./esm/features/social-dot.js', module => module.initSocialDots());
+const filtersReady = feature('./esm/features/filter.js', async module => {
   await languageReady;
   await safe('serviceFilters', module.initServiceFilters);
 });
 feature('./esm/features/pwa.js', async module => {
+  // L'enregistrement du service worker ne doit pas bloquer le bouton installer.
   await Promise.all([
     safe('serviceWorker', module.initServiceWorker),
     safe('pwaInstall', module.initPwaInstall)
   ]);
 });
 
+// defer biasanya sudah siap pada DOMContentLoaded; tunggu secara terhad jika lewat.
 async function initLegacy(name, isReady, initialize) {
   await domReady;
   for (let attempt = 0; attempt < 40; attempt++) {
@@ -132,7 +125,10 @@ const bookingReady = safe('booking', async () => {
     () => typeof window.initBooking === 'function',
     () => window.initBooking());
 });
-
+feature('./esm/features/booking-ai.js', async module => {
+  await bookingReady;
+  await safe('bookingAI', module.initBookingAI);
+});
 safe('services', async () => {
   await Promise.all([utilitiesReady, translationsReady, filtersReady]);
   await initLegacy('services',
@@ -142,6 +138,7 @@ safe('services', async () => {
     () => window.initDynamicServices());
 });
 
+// ai-chatbot.js memulakan dirinya sendiri; jangan gandakan event listener di sini.
 safe('currentYear', async () => {
   await domReady;
   const currentYear = document.getElementById('current-year');
