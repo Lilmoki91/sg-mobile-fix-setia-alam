@@ -568,6 +568,32 @@ async function askAI(systemPrompt, userMessage, history) {
     return "Maaf, sistem saya sedang sibuk. Sila WhatsApp 012-262 6434.";
 }
 
+let elizaInitialization = null;
+function ensureElizaReady() {
+    if (apiKeyLoaded && API_KEY) return Promise.resolve(true);
+    if (!elizaInitialization) {
+        elizaInitialization = initElizaAI().finally(() => { elizaInitialization = null; });
+    }
+    return elizaInitialization;
+}
+
+// Guna model, fallback dan API key sedia ada; modul nota tidak membaca kunci.
+// Ini masih API browser sedia ada, bukan endpoint server yang menyembunyikan kunci.
+window.sgmBookingAI = {
+    async generate(systemPrompt, customerData) {
+        const session = await window.sgmAuth.require();
+        if (!await ensureElizaReady()) throw new Error('AI belum sedia. Sila cuba lagi.');
+        if (window.sgmAuth.current?.uid !== session.uid) throw new Error('Sesi telah berubah.');
+        let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, customerData, [], API_KEY, true);
+        if (!text || /^API Error\b/.test(text)) {
+            text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, customerData, [], API_KEY, true);
+        }
+        if (!text || /^API Error\b/.test(text)) throw new Error('Gagal menjana nota. Sila cuba lagi.');
+        if (window.sgmAuth.current?.uid !== session.uid) throw new Error('Sesi telah berubah.');
+        return text;
+    }
+};
+
 async function initElizaAI() {
     try {
         await loadLocalJSON(); 
@@ -1047,7 +1073,7 @@ async function initChatbot() {
 function startChatbot() {
     // Carian Firebase tidak perlu menunggu API key model AI daripada IPFS.
     initChatbot();
-    initElizaAI();
+    ensureElizaReady();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startChatbot, { once: true });
 else startChatbot();
