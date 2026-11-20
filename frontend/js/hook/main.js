@@ -8,15 +8,15 @@ import { initTheme, applyTheme } from './esm/features/theme.js';
 import { initLanguage } from './esm/features/language.js';
 import { initMenu } from './esm/features/menu.js';
 import { initBottomNavigation, showTab } from './esm/features/nav.js';
-import { initServiceFilters } from './esm/features/filters.js';
+import { initServiceFilters } from './esm/features/filter.js';
 import { initGallery, initLightboxControls } from './esm/features/gallery.js';
 import { initTestimonials } from './esm/features/testimonials.js';
 import { shareCard, saveCard } from './esm/features/card.js';
 import { initShareButton, initShareSocial, initShareLocation } from './esm/features/share.js';
 import { initFacebookOverlay } from './esm/features/facebook-overlay.js';
-import { initSocialDots } from './esm/features/social-dots.js';
+import { initSocialDots } from './esm/features/social-dot.js';
 import { initServiceWorker, initPwaInstall } from './esm/features/pwa.js';
-import { initBookingAI } from '../esm/features/booking-ai.js';
+import { initBookingAI } from './esm/features/booking-ai.js';
 
 // 🔥 TAMBAH INI: Supaya fail legacy boleh guna terjemahan
 import { translations } from './esm/i18n/translations.js';
@@ -32,26 +32,38 @@ window.initGallery = initGallery;
 window.applyTheme = applyTheme;
 window.showTab = showTab;
 
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Init UI ESM
-  initMenu();
-  initShareButton();
-  initTheme();
-  initLanguage();
-  initBottomNavigation();
-  initServiceFilters();
-  initTranslation();
-  initShareLocation();
-  initLightboxControls();
-  initSocialDots();
-  initServiceWorker();
-  initPwaInstall();
-  
-  // 🔥 FIX: Panggil initBooking dari window (fail legacy booking-ui.js)
-  if (typeof window.initBooking === 'function') {
-    window.initBooking();
+// Jalankan init dengan selamat: satu ralat tidak akan hentikan init lain
+const safe = (name, fn) => {
+  try {
+    const result = fn();
+    if (result && typeof result.catch === 'function') {
+      result.catch(err => console.error(`[init] ${name} gagal:`, err));
+    }
+  } catch (err) {
+    console.error(`[init] ${name} gagal:`, err);
   }
-  initBookingAI();
+};
+
+const start = () => {
+  // 1. Init UI ESM
+  safe('menu', initMenu);
+  safe('shareButton', initShareButton);
+  safe('theme', initTheme);
+  safe('language', initLanguage);
+  safe('bottomNav', initBottomNavigation);
+  safe('serviceFilters', initServiceFilters);
+  safe('translation', initTranslation);
+  safe('shareLocation', initShareLocation);
+  safe('lightbox', initLightboxControls);
+  safe('socialDots', initSocialDots);
+  safe('serviceWorker', initServiceWorker);
+  safe('pwaInstall', initPwaInstall);
+
+  // Panggil initBooking dari window (fail legacy booking-ui.js)
+  safe('booking', () => {
+    if (typeof window.initBooking === 'function') window.initBooking();
+  });
+  safe('bookingAI', initBookingAI);
 
   // 2. Panggil data Firebase (Beri masa 500ms untuk pastikan legacy JS sedia)
   setTimeout(() => {
@@ -86,4 +98,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (currentYear) {
     currentYear.textContent = new Date().getFullYear();
   }
-});
+};
+
+// Modul dimuat selepas DOM mungkin sudah siap, jadi semak readyState
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}
