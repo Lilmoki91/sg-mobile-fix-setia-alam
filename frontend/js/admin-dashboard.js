@@ -399,6 +399,7 @@
         </div>
       `;
       bookingList.appendChild(card);
+      window.AdminResponseAI?.mount(card, rawBooking);
     });
   }
 
