@@ -30,8 +30,8 @@ async function loadLocalJSON() {
     try {
         // Muat arahan terkini termasuk penapisan keselamatan mengikut konteks.
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-tiara-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./js/prompt-tiara-ai.json?v=7', { cache: 'no-store' })
+            fetch('./js/persona-tiara-ai.json?v=4', { cache: 'no-store' }),
+            fetch('./js/prompt-tiara-ai.json?v=8', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
