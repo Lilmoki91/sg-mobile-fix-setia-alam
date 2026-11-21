@@ -96,7 +96,7 @@ feature('./esm/features/facebook-overlay.js', async module => {
     window.facebookOverlay = await safe('facebookOverlay', module.initFacebookOverlay);
   }
 });
-feature('./esm/features/social-dot.js', module => module.initSocialDots());
+feature('./esm/features/social-dots.js', module => module.initSocialDots());
 const filtersReady = feature('./esm/features/filter.js', async module => {
   await languageReady;
   await safe('serviceFilters', module.initServiceFilters);
