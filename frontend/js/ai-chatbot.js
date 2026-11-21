@@ -1,10 +1,10 @@
-// ==================== ELIZA AI + AI CHATBOT (GABUNGAN FINAL) ====================
+// ==================== Tiara AI + AI CHATBOT  ====================
 "use strict";
 
 // ==========================================
 // 🔐 1. KONFIGURASI IPFS & MODEL AI
 // ==========================================
-const ELIZA_CONFIG = {
+const TIARA_CONFIG = {
     apiKeyCid: "QmWrpDR5vvquNBHv7mWNJK3tLK47E4jZvZ3e6o2a8qV7DC",
     aesKeyCid: "QmPxbi8UGcuZBf3Anon2fBG5ZKzZDWfvWTeNGnxWCrGWdS",
     gateways: [
@@ -30,8 +30,8 @@ async function loadLocalJSON() {
     try {
         // Muat arahan terkini termasuk penapisan keselamatan mengikut konteks.
         const [personaRes, promptRes] = await Promise.all([
-            fetch('./js/persona-eliza-ai.json?v=3', { cache: 'no-store' }),
-            fetch('./js/prompt-eliza-ai.json?v=7', { cache: 'no-store' })
+            fetch('./js/persona-tiara-ai.json?v=3', { cache: 'no-store' }),
+            fetch('./js/prompt-tiara-ai.json?v=7', { cache: 'no-store' })
         ]);
 
         // Semak sama ada ia betul-betul fail JSON (bukan page HTML 404)
@@ -58,11 +58,11 @@ async function decryptAESGCM(combined, keyBase64) {
 }
 
 async function fetchFromIPFS(cid) {
-    for (let i = 0; i < ELIZA_CONFIG.gateways.length; i++) {
+    for (let i = 0; i < TIARA_CONFIG.gateways.length; i++) {
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 10000);
-            const response = await fetch(ELIZA_CONFIG.gateways[i] + cid, { signal: controller.signal });
+            const response = await fetch(TIARA_CONFIG.gateways[i] + cid, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return new Uint8Array(await response.arrayBuffer());
@@ -74,9 +74,9 @@ async function fetchFromIPFS(cid) {
 }
 
 async function getApiKeyFromIPFS() {
-    const aesDataRaw = await fetchFromIPFS(ELIZA_CONFIG.aesKeyCid);
+    const aesDataRaw = await fetchFromIPFS(TIARA_CONFIG.aesKeyCid);
     const aesKey = JSON.parse(new TextDecoder().decode(aesDataRaw)).aes_key;
-    const encryptedData = await fetchFromIPFS(ELIZA_CONFIG.apiKeyCid);
+    const encryptedData = await fetchFromIPFS(TIARA_CONFIG.apiKeyCid);
     const decryptedData = await decryptAESGCM(encryptedData, aesKey);
     return JSON.parse(new TextDecoder().decode(decryptedData)).API_KEY;
 }
@@ -181,7 +181,7 @@ async function loadChatbotPhones() {
       products: data.products.map(p => Object.fromEntries(keys.map(key => [key, p[key] ?? null])))
     };
   } catch (error) {
-    console.warn('Katalog telefon untuk Eliza tidak tersedia:', error.message);
+    console.warn('Katalog telefon untuk Tiara tidak tersedia:', error.message);
     // Kegagalan katalog tidak menyekat pertanyaan servis, lokasi atau waktu operasi.
     return { success: false, products: [] };
   }
@@ -196,7 +196,7 @@ async function loadChatbotHours() {
     await withFirebaseTimeout(window.shopHours.refresh());
     return window.shopHours.value;
   } catch (error) {
-    console.warn('Waktu operasi untuk Eliza tidak tersedia:', error.message);
+    console.warn('Waktu operasi untuk Tiara tidak tersedia:', error.message);
     return null;
   }
 }
@@ -379,12 +379,12 @@ function buildSystemPrompt(services, bookings, lang = 'ms', shopHours = null, ph
 - Waktu Operasi: ${operatingHours}
 - Tetapan waktu dashboard di atas mengatasi waktu dalam persona atau sejarah perbualan. Jangan gunakan jawapan terdahulu sebagai jadual terkini.
 - Status buka/tutup ialah mengikut jadual, bukan pengesahan staf bertugas atau pengecualian cuti. Jangan reka pengecualian cuti.
-- Eliza masih boleh membantu di luar waktu kedai, tetapi jangan menjanjikan balasan staf segera.
+- Tiara masih boleh membantu di luar waktu kedai, tetapi jangan menjanjikan balasan staf segera.
 - Untuk pertanyaan media sosial, gunakan URL rasmi di atas sahaja. Jangan reka URL; jika tiada, minta pelanggan menghubungi kedai.
   `;
 
   return `
-Anda adalah ${personaData?.name || "ELIZA AI"}, ${personaData?.role || "Pembantu Servis"}.
+Anda adalah ${personaData?.name || "TIARA AI"}, ${personaData?.role || "Pembantu Servis"}.
 Sifat anda: ${Array.isArray(personaData?.traits) ? personaData.traits.join(", ") : "Mesra"}.
 Nada: ${personaData?.tone || "Profesional"}.
 Latar belakang: ${personaData?.background || "Bekerja di SG Mobile Fix"}.
@@ -558,23 +558,23 @@ FORMAT JAWAPAN WAJIB:
 async function askAI(systemPrompt, userMessage, history) {
     if (!apiKeyLoaded || !API_KEY) throw new Error('API key belum sedia');
     
-    let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
+    let text = await callGoogleAI(TIARA_CONFIG.primaryModel, systemPrompt, userMessage, history, API_KEY);
     if (text) return text;
 
-    const isGemma4Fallback = /^gemma[-_]?4(?:[-_]|$)/i.test(ELIZA_CONFIG.fallbackModel.trim());
-    text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY, isGemma4Fallback);
+    const isGemma4Fallback = /^gemma[-_]?4(?:[-_]|$)/i.test(TIARA_CONFIG.fallbackModel.trim());
+    text = await callGoogleAI(TIARA_CONFIG.fallbackModel, systemPrompt, userMessage, history, API_KEY, isGemma4Fallback);
     if (text) return text;
 
     return "Maaf, sistem saya sedang sibuk. Sila WhatsApp 012-262 6434.";
 }
 
-let elizaInitialization = null;
-function ensureElizaReady() {
+let tiaraInitialization = null;
+function ensureTiaraReady() {
     if (apiKeyLoaded && API_KEY) return Promise.resolve(true);
-    if (!elizaInitialization) {
-        elizaInitialization = initElizaAI().finally(() => { elizaInitialization = null; });
+    if (!tiaraInitialization) {
+        tiaraInitialization = initTiaraAI().finally(() => { tiaraInitialization = null; });
     }
-    return elizaInitialization;
+    return tiaraInitialization;
 }
 
 // Guna model, fallback dan API key sedia ada; modul nota tidak membaca kunci.
@@ -582,11 +582,11 @@ function ensureElizaReady() {
 window.sgmBookingAI = {
     async generate(systemPrompt, customerData) {
         const session = await window.sgmAuth.require();
-        if (!await ensureElizaReady()) throw new Error('AI belum sedia. Sila cuba lagi.');
+        if (!await ensureTiaraReady()) throw new Error('AI belum sedia. Sila cuba lagi.');
         if (window.sgmAuth.current?.uid !== session.uid) throw new Error('Sesi telah berubah.');
-        let text = await callGoogleAI(ELIZA_CONFIG.primaryModel, systemPrompt, customerData, [], API_KEY, true);
+        let text = await callGoogleAI(TIARA_CONFIG.primaryModel, systemPrompt, customerData, [], API_KEY, true);
         if (!text || /^API Error\b/.test(text)) {
-            text = await callGoogleAI(ELIZA_CONFIG.fallbackModel, systemPrompt, customerData, [], API_KEY, true);
+            text = await callGoogleAI(TIARA_CONFIG.fallbackModel, systemPrompt, customerData, [], API_KEY, true);
         }
         if (!text || /^API Error\b/.test(text)) throw new Error('Gagal menjana nota. Sila cuba lagi.');
         if (window.sgmAuth.current?.uid !== session.uid) throw new Error('Sesi telah berubah.');
@@ -594,13 +594,13 @@ window.sgmBookingAI = {
     }
 };
 
-async function initElizaAI() {
+async function initTiaraAI() {
     try {
         await loadLocalJSON(); 
         API_KEY = await getApiKeyFromIPFS();
         apiKeyLoaded = true;
         initError = "";
-        console.log('✅ ELIZA AI sedia!');
+        console.log('✅ TIARA AI sedia!');
         return true;
     } catch (error) {
         console.error('❌ Gagal init:', error);
@@ -609,21 +609,21 @@ async function initElizaAI() {
     }
 }
 
-async function chatEliza(message, language = 'ms', history = []) {
-    console.log("[CHAT] chatEliza start", { language, historyLen: history.length });
+async function chatTiara(message, language = 'ms', history = []) {
+    console.log("[CHAT] chatTiara start", { language, historyLen: history.length });
     const bookingRequest = getBookingRequest(message, history);
     if (bookingRequest.requested) return lookupChatbotBooking(bookingRequest, language, history);
     if (!apiKeyLoaded) {
         console.error("[CHAT] apiKeyLoaded=false, initError:", initError);
-        throw new Error(initError || 'ELIZA AI belum sedia.');
+        throw new Error(initError || 'TIARA AI belum sedia.');
     }
     console.log("[CHAT] fetching services...");
-      const [services, shopHours, phones] = await Promise.all([
-    loadChatbotServices(), loadChatbotHours(), loadChatbotPhones()
-  ]);
-  console.log("[CHAT] services loaded:", services.length);
-  const bookings = await loadChatbotBookings();
-  const sysPrompt = buildSystemPrompt(services, bookings, language, shopHours, phones);
+    const [services, shopHours, phones] = await Promise.all([
+        loadChatbotServices(), loadChatbotHours(), loadChatbotPhones()
+    ]);
+    console.log("[CHAT] services loaded:", services.length);
+    const bookings = await loadChatbotBookings();
+    const sysPrompt = buildSystemPrompt(services, bookings, language, shopHours, phones);
     const promptPreview = sysPrompt.replace(/\s+/g, " ").slice(0, 320);
     console.log(`[CHAT] prompt services count: ${Array.isArray(services) ? services.length : 0}`);
     console.log("[CHAT] prompt preview:", promptPreview + (sysPrompt.length > 320 ? "..." : ""));
@@ -758,7 +758,7 @@ async function initChatbot() {
     stopSpeaking();
     
     const text = bubble.textContent.trim()
-      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1') // Tukar markdown link ke teks
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
       // 🔥 KUNCI UTAMA: HANYA KEKALKAN HURUF (A-Z), NOMBOR (0-9), RUANG, & TANDA BACA ASAS. BUANG SEMUA EMOJI & SIMBOL.
       .replace(/[^\p{L}\p{N}\s.,!?;:\-\(\)]/gu, '')
       .replace(/\s+/g, ' ').trim();
@@ -916,7 +916,7 @@ async function initChatbot() {
   };
   const showLoading = () => {
     const wrapper = document.createElement("div"); wrapper.id = "loading-bubble"; wrapper.className = "chatbot-message chatbot-message--assistant";
-    const typingText = document.documentElement.lang === "en" ? "Eliza is typing..." : "Eliza sedang menaip...";
+    const typingText = document.documentElement.lang === "en" ? "Tiara is typing..." : "Tiara sedang menaip...";
     const bubble = document.createElement("div"); bubble.className = "chatbot-bubble"; bubble.style.opacity = "0.7";
     bubble.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${typingText}`;
     wrapper.appendChild(bubble); messages.appendChild(wrapper); messages.scrollTop = messages.scrollHeight;
@@ -937,7 +937,7 @@ async function initChatbot() {
     try {
       const session = await window.sgmAuth.require();
       const privateBooking = getBookingRequest(question, chatHistory).requested;
-      const reply = await chatEliza(question, lang, chatHistory);
+      const reply = await chatTiara(question, lang, chatHistory);
       if (window.sgmAuth.current?.uid !== session.uid || chatSessionVersion !== requestVersion) return;
       removeLoading(); lastResponse = reply; addMessage(lastResponse, false, question); playTone('receive');
       chatHistory.push({ role: "user", text: question, privateBooking });
@@ -1075,7 +1075,7 @@ function startChatbot() {
     if (!document.getElementById('ai-chatbot-container') && !document.getElementById('chatbot-toggle')) return;
     // Carian Firebase tidak perlu menunggu API key model AI daripada IPFS.
     initChatbot();
-    ensureElizaReady();
+    ensureTiaraReady();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startChatbot, { once: true });
 else startChatbot();
