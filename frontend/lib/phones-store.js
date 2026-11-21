@@ -70,10 +70,9 @@ export async function savePhoneVideos(env, videos, updateTime) {
     currentDocument: updateTime ? { updateTime } : { exists: false }
   }] });
 }
-export const DEFAULT_TESTIMONIAL_VIDEOS = ['7640849215236705544', '7637524923703037202', '7668308481039977735'].map((id, index) => ({ id, titleMs: `Testimoni ${index + 1}`, titleEn: `Testimonial ${index + 1}`, active: true }));
 export async function getTestimonialVideos(env) {
   const doc = await request(env, '/testimonialVideos/config');
-  return doc ? documentValue(doc) : { videos: DEFAULT_TESTIMONIAL_VIDEOS, updateTime: '' };
+  return doc ? documentValue(doc) : { videos: [], updateTime: '' };
 }
 export async function saveTestimonialVideos(env, videos, updateTime) {
   await request(env, ':commit', 'POST', { writes: [{
