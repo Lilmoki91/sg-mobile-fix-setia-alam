@@ -2,6 +2,108 @@ import { translations } from '../i18n/translations.js';
 
 let testimonialObserver = null;
 let stopTestimonialVideo = null;
+let testimonialsStarted = false;
+
+// Senarai hanya datang daripada Firestore melalui API backend sedia ada.
+export function startTestimonials() {
+  const container = document.getElementById('videoScrollContainer');
+  const home = document.getElementById('home-tab');
+  const status = document.getElementById('testimonial-status');
+  const retry = document.getElementById('testimonial-retry');
+  if (testimonialsStarted || !container || !home || !status || !retry) return;
+  testimonialsStarted = true;
+
+  let videos = null, busy = false, failed = false;
+  let renderedKey, refreshAgain = false;
+  const en = () => document.documentElement.lang === 'en';
+  const active = () => home.classList.contains('active') && !document.hidden;
+
+  function labels() {
+    status.textContent = failed
+      ? (videos?.length
+        ? (en() ? 'Unable to update testimonials. Showing the last list loaded from Firebase.' : 'Testimoni tidak dapat dikemas kini. Memaparkan senarai terakhir daripada Firebase.')
+        : (en() ? 'Unable to load testimonials. Please try again.' : 'Testimoni tidak dapat dimuatkan. Sila cuba semula.'))
+      : videos === null
+        ? (en() ? 'Loading testimonials…' : 'Memuatkan testimoni…')
+        : !videos.length ? (en() ? 'No testimonials to display.' : 'Tiada testimoni untuk dipaparkan.') : '';
+    status.hidden = !status.textContent;
+    retry.textContent = busy ? (en() ? 'Loading…' : 'Memuatkan…') : (en() ? 'Refresh' : 'Muat semula');
+    retry.hidden = !failed;
+    retry.style.display = failed ? 'inline-flex' : 'none';
+    retry.disabled = busy;
+    container.setAttribute('aria-busy', String(busy));
+  }
+
+  function render() {
+    if (videos === null) return;
+    const key = JSON.stringify([document.documentElement.lang, videos]);
+    if (key === renderedKey) return;
+    initTestimonials(videos);
+    renderedKey = key;
+  }
+
+  async function refresh() {
+    if (busy || document.hidden) return;
+    busy = true;
+    labels();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+    try {
+      const response = await fetch('/api/phones/testimonials', {
+        credentials: 'same-origin', cache: 'no-store', signal: controller.signal
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      if (!Array.isArray(data?.videos) || data.videos.length > 30 || data.videos.some(v =>
+        !v || typeof v.id !== 'string' || !/^\d{19}$/.test(v.id) ||
+        typeof v.titleMs !== 'string' || typeof v.titleEn !== 'string'
+      )) throw new Error('Invalid testimonials');
+      videos = data.videos;
+      render();
+      failed = false;
+    } catch (error) {
+      failed = true;
+      console.warn('[testimonials] Testimoni Firebase gagal dimuatkan:', error);
+    } finally {
+      clearTimeout(timeout);
+      busy = false;
+      labels();
+      if (refreshAgain) {
+        refreshAgain = false;
+        if (active()) refresh();
+      }
+    }
+  }
+
+  const stopVideo = () => stopTestimonialVideo?.();
+  retry.addEventListener('click', refresh);
+  new MutationObserver(() => {
+    try { render(); }
+    catch (error) {
+      failed = true;
+      console.error('[testimonials] Paparan bahasa gagal:', error);
+    }
+    labels();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  new MutationObserver(() => {
+    if (active()) refresh();
+    else stopVideo();
+  }).observe(home, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopVideo();
+    else if (active()) refresh();
+  });
+  document.addEventListener('sgm-auth-changed', event => {
+    if (!event.detail) { stopVideo(); return; }
+    if (busy) refreshAgain = true;
+    else if (active()) refresh();
+  });
+  window.addEventListener('online', () => { if (active()) refresh(); });
+  window.addEventListener('pageshow', event => { if (event.persisted && active()) refresh(); });
+  setInterval(() => { if (active()) refresh(); }, 60000);
+  labels();
+  refresh();
+}
 
 export function initTestimonials(managedVideos = []) {
   const container = document.getElementById('videoScrollContainer');
