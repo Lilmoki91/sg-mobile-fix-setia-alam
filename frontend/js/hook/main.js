@@ -39,7 +39,7 @@ function queueRenderer(name) {
 }
 
 const connectGallery = queueRenderer('initGallery');
-// testimonial-videos.js mengurus renderer dan kitar hayatnya sendiri.
+feature('./esm/features/testimonials.js?v=3', module => module.startTestimonials());
 
 const utilitiesReady = feature('./esm/core/utils.js', module => {
   window.escapeHtml = module.escapeHtml;
