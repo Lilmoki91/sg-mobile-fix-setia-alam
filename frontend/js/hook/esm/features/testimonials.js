@@ -226,15 +226,24 @@ function createTestimonialCard(video, index, isEn) {
   poster.append(icon, playBadge, titleLabel);
   frame.appendChild(poster);
 
-  poster.addEventListener('click', () => {
+  // -----------------------------------------------------------------
+    poster.addEventListener('click', () => {
     if (typeof window.__tiktokStop === 'function') {
       window.__tiktokStop();
     }
 
-    // tiktok v2
+    const params = new URLSearchParams({
+      autoplay: '1',
+      controls: '1',
+      description: '0',
+      music_info: '0',
+      rel: '0',
+    });
+
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.tiktok.com/embed/v2/${video.id}`;
+    iframe.src = `https://www.tiktok.com/player/v1/${video.id}?${params.toString()}`;
     iframe.title = title;
+    iframe.loading = 'eager';
     iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
     iframe.setAttribute('allowfullscreen', '');
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -253,6 +262,7 @@ function createTestimonialCard(video, index, isEn) {
     window.__tiktokStop = stop;
   });
 
+  // ------------------------------------------------------------------
   const fallback = document.createElement('a');
   fallback.href = videoUrl;
   fallback.target = '_blank';
