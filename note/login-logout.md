@@ -1,4 +1,4 @@
-ARAHAN SISTEM (LOGIN + SIGNUP + CAPTCHA + KESELAMATAN)
+## ARAHAN SISTEM (LOGIN + SIGNUP + CAPTCHA + KESELAMATAN)
 
 1. ALIRAN LOGIN & CAPTCHA (Pintu Masuk)
 - Pengguna wajib Login Gmail (Firebase Auth) untuk masuk.
