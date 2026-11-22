@@ -45,8 +45,5 @@
 - Simulasikan kegagalan atau timeout Firebase ketika pemulihan sesi. Paparan mesti menunjukkan ralat dan butang “Cuba semula sambungan”, bukan kekal pada “Menyemak sesi selamat…”.
 - Sambungkan semula rangkaian dan cuba semula; sesi mesti disahkan oleh backend sebelum laman dibuka.
 - Uji kembali melalui Back/Forward ketika semakan sesi sedang berlangsung. Percubaan lama mesti selesai tanpa membuka laman, kemudian semakan baharu dilakukan.
-- Uji sesi tamat atau dibatalkan: respons 401/403 mesti kekal mengunci akses. Pemulihan tidak memanjangkan had 24 jam.
-
----
-
-`- Pembetulan klien: pemulihan menggunakan ID percubaan yang sama hingga sign-in Firebase selesai supaya ralatnya tidak diabaikan; cache service worker dinaikkan ke V14.`
+- **Uji sesi tamat atau dibatalkan**: respons 401/403 mesti kekal mengunci akses. Pemulihan tidak memanjangkan had 24 jam.
+- **Pembetulan klien**: pemulihan menggunakan ID percubaan yang sama hingga sign-in Firebase selesai supaya ralatnya tidak diabaikan; cache service worker dinaikkan ke V14.
