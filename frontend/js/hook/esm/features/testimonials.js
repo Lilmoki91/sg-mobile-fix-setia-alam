@@ -147,15 +147,17 @@ export function initTestimonials(managedVideos = []) {
     poster.addEventListener('click', () => {
       if (typeof window.__tiktokStop === 'function') window.__tiktokStop();
       const iframe = document.createElement('iframe');
-      // 🔥 MENGGUNAKAN TIKTOK EMBED V2
-      iframe.src = `https://www.tiktok.com/embed/v2/${id}`;
+      
+      // 🔄 KEMBALI KE PLAYER V1 + TAMBAH PARAMETER REGION=MY
+      iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0&region=MY`;
+      
       iframe.title = titleKey;
-      // Tambah 'encrypted-media' untuk V2
-      iframe.allow = 'encrypted-media; picture-in-picture; fullscreen'; 
+      iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
       iframe.setAttribute('allowfullscreen', '');
       iframe.referrerPolicy = 'strict-origin-when-cross-origin';
       iframe.style.cssText = 'position:absolute;inset:0;display:block;width:100%;height:100%;border:none;border-radius:16px;';
       frame.replaceChildren(iframe);
+      
       const stop = () => {
         frame.replaceChildren(poster);
         if (window.__tiktokStop === stop) window.__tiktokStop = null;
