@@ -1,37 +1,92 @@
 # SG Mobile Fix Setia Alam
 
-Laman web statik untuk kedai pembaikan telefon "SG Mobile Fix Setia Alam". Papar servis, galeri, lokasi, dan butang hubungi (WhatsApp / Email). Termasuk sokongan dua bahasa (Melayu / Inggeris), mod gelap, dan chatbot ringkas.
+Laman web statik untuk kedai pembaikan telefon **SG Mobile Fix Setia Alam**. Projek ini memaparkan perkhidmatan pembaikan, galeri, lokasi kedai, pilihan hubungi melalui WhatsApp atau e-mel, serta sokongan bahasa Melayu dan Inggeris.
 
-## 🌐 link url:
-https://sg-mobile-fix-setia-alam.pages.dev/
+## 🌐 Laman langsung
+
+- **Produksi:** https://sg-mobile-fix-setia-alam.pages.dev/
 
 ## Ciri utama
-- Halaman tunggal (SPA) berfokus pada mudah alih
-- Senarai perkhidmatan dengan kad dan pautan WhatsApp siap mesej
-- Galeri imej dan testimoni (TikTok embed)
-- Peta lokasi (Google Maps) dan butang arah (Google Maps / Waze)
-- Tukar bahasa (ms/en) dan mod gelap
-- Chatbot ringan dengan jawapan terprogram
 
-## Struktur
-- frontend/index.html — markup utama dan embed
-- frontend/script.js — logik UI: i18n, menu, theme, filters, chatbot, WhatsApp/email links
-- frontend/styles.css — gaya dan override mod gelap
+- Reka bentuk responsif dan mesra mudah alih
+- Senarai perkhidmatan dengan pautan WhatsApp yang sudah mengandungi mesej
+- Penukaran bahasa Melayu / Inggeris
+- Mod terang / gelap
+- Penapis telefon dan maklumat perkhidmatan
+- Galeri imej serta testimoni
+- Peta lokasi dengan pautan Google Maps dan Waze
+- Chatbot ringkas dengan jawapan terprogram
+- Sokongan PWA melalui manifest dan service worker
+- Halaman pentadbiran, profil dan katalog telefon
 
-## Cara jalankan (lokal)
-1. Clone repo
-2. Serve folder `frontend` sebagai static site:
-   - Contoh cepat:  
-     cd frontend  
-     python3 -m http.server 8000
-   - Buka http://localhost:8000
+## Struktur projek
 
-(Nota: beberapa embed/iframe memerlukan served site (http) untuk berfungsi sempurna.)
+```text
+.
+├── assets/                    # Aset projek utama
+├── backend-admin-panel/       # Sumber panel pentadbiran
+├── frontend/
+│   ├── assets/                # Imej dan media
+│   ├── css/                   # Gaya laman
+│   ├── js/                    # Logik JavaScript
+│   ├── json/                  # Data konfigurasi / kandungan
+│   ├── lib/                   # Sumber atau pustaka pihak ketiga
+│   ├── functions/             # Fungsi sokongan
+│   ├── index.html             # Halaman utama
+│   ├── admin.html             # Halaman pentadbiran
+│   ├── ai-chatbot.html        # Antara muka chatbot
+│   ├── phones.html            # Katalog telefon
+│   ├── profile.html           # Halaman profil
+│   ├── manifest.json          # Manifest PWA
+│   └── sw.js                  # Service worker PWA
+├── .github/                   # Konfigurasi GitHub
+├── LICENSE                    # Lesen MIT
+└── README.md
+```
 
-## Nota & cadangan
-- Manifest PWA (`/manifest.json`) dirujuk di index.html tetapi tidak disertakan — tambah jika mahu PWA.
-- Imej luaran dihoskan di i.postimg.cc; pertimbangkan hosting sendiri atau optimasi webp untuk muat naik lebih cepat.
-- Jika mahu workflow pembangunan (Tailwind build, npm), saya boleh bantu tambah package.json dan arahan bina.
+## Jalankan secara tempatan
+
+Laman ini menggunakan fail statik dan boleh dijalankan melalui pelayan HTTP pilihan anda.
+
+```bash
+cd frontend
+python3 -m http.server 8000
+```
+
+Kemudian buka:
+
+- http://localhost:8000/
+
+> **Nota:** Gunakan pelayan HTTP dan bukannya membuka `index.html` terus melalui `file://`. Beberapa fungsi embed, manifest PWA, dan service worker memerlukan pelayan untuk berfungsi dengan betul.
+
+## Halaman tersedia
+
+- `/` — Halaman utama
+- `/phones.html` — Senarai atau maklumat telefon
+- `/profile.html` — Profil kedai
+- `/admin.html` — Panel pentadbiran
+- `/ai-chatbot.html` — Antara muka chatbot
+
+## Teknologi
+
+- HTML5
+- CSS3
+- JavaScript vanilla
+- PWA: Web App Manifest dan Service Worker
+- Imej, iframe dan sumber luar seperti TikTok serta Google Maps
+
+## Pembangunan
+
+- Kekalkan struktur folder `frontend` apabila menambah atau mengubah halaman.
+- Uji perubahan pada desktop dan saiz skrin mudah alih.
+- Gunakan pautan relatif yang betul untuk aset dan fail dalam folder `frontend`.
+- Sahkan pautan WhatsApp, e-mel, peta, embed dan PWA selepas penukaran kandungan.
+- Optimumkan imej baharu kepada format bersaiz kecil seperti WebP apabila sesuai.
+
+## Lesen
+
+Repositori ini menggunakan [MIT License](LICENSE).
 
 ## Hubungi
-Pemilik repo: SG Mobile Fix Setia Alam — pautan WhatsApp dalam laman.
+
+Untuk maklumat lanjut, harga atau tempahan perkhidmatan, sila gunakan butang WhatsApp atau e-mel yang tersedia di laman utama.
