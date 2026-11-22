@@ -147,7 +147,8 @@ export function initTestimonials(managedVideos = []) {
     poster.addEventListener('click', () => {
       if (typeof window.__tiktokStop === 'function') window.__tiktokStop();
       const iframe = document.createElement('iframe');
-      iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
+      // iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
+      iframe.src = `https://www.tiktok.com/embed/v2/${id}`;
       iframe.title = titleKey;
       iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
       iframe.setAttribute('allowfullscreen', '');
