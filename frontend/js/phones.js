@@ -231,60 +231,99 @@
       }
     } finally { videosLoading = false; }
   }
+
+// --- 📌 VIDEO TIKTOK 📌 ---
   let videoObserver = null;
-  function initVideos() {
-    if (activeVideo) window.__tiktokStop?.();
-    videoObserver?.disconnect();
-    const container = $('phoneVideoScrollContainer'), dots = $('phoneVideoDotsContainer');
-    container.replaceChildren(); dots.replaceChildren(); videoItems = [];
-    if (!videos.length) {
-      const text = U.node('p', U.t(videosLoaded ? 'videoEmpty' : 'loading'), 'phone-note');
-      text.dataset.phoneText = videosLoaded ? 'videoEmpty' : 'loading'; container.append(text);
-    }
-    videos.forEach((video, index) => {
-      const { id } = video;
-      const card = U.node('div', undefined, 'phone-video-card');
-      const frame = U.node('div', undefined, 'phone-video-frame');
-      const poster = U.node('button', undefined, 'phone-video-poster'); poster.type = 'button';
-      const logo = U.node('i', undefined, 'fab fa-tiktok'); logo.setAttribute('aria-hidden', 'true');
-      const play = U.node('span', '▶', 'phone-video-play'); play.setAttribute('aria-hidden', 'true');
-      const title = U.node('span', videoTitle(video));
-      poster.append(logo, play, title); frame.append(poster);
-      poster.addEventListener('click', () => {
-        window.__tiktokStop?.();
-        const iframe = U.node('iframe');
-        iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0`;
-        iframe.title = videoTitle(video); iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
-        iframe.setAttribute('allowfullscreen', ''); iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        frame.replaceChildren(iframe); activeVideo = { iframe, video };
-        const stop = () => {
-          frame.replaceChildren(poster); activeVideo = null;
-          if (window.__tiktokStop === stop) window.__tiktokStop = null;
-        };
-        window.__tiktokStop = stop;
-      });
-      const fallback = U.node('a', U.t('openTikTok'), 'phone-video-fallback'); fallback.dataset.phoneText = 'openTikTok';
-      fallback.href = `https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`; fallback.target = '_blank'; fallback.rel = 'noopener noreferrer';
-      card.append(frame, fallback); container.append(card);
-      const dot = U.node('button'); dot.type = 'button'; dots.append(dot);
-      dot.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
-      videoItems.push({ card, dot, index, title, video });
-    });
-    function mark(index) {
-      videoItems.forEach(item => {
-        item.dot.classList.toggle('is-active', item.index === index);
-        item.dot.setAttribute('aria-pressed', String(item.index === index));
-      });
-    }
-    mark(0);
-    if ('IntersectionObserver' in window) {
-      videoObserver = new IntersectionObserver(entries => {
-        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible.length) mark(videoItems.findIndex(item => item.card === visible[0].target));
-      }, { root: container, threshold: 0.6 });
-      videoItems.forEach(item => videoObserver.observe(item.card));
-    }
+function initVideos() {
+  if (activeVideo) window.__tiktokStop?.();
+  videoObserver?.disconnect();
+  const container = $('phoneVideoScrollContainer'), dots = $('phoneVideoDotsContainer');
+  container.replaceChildren(); dots.replaceChildren(); videoItems = [];
+  if (!videos.length) {
+    const text = U.node('p', U.t(videosLoaded ? 'videoEmpty' : 'loading'), 'phone-note');
+    text.dataset.phoneText = videosLoaded ? 'videoEmpty' : 'loading'; container.append(text);
   }
+  videos.forEach((video, index) => {
+    const { id } = video;
+    const card = U.node('div', undefined, 'phone-video-card');
+    const frame = U.node('div', undefined, 'phone-video-frame');
+    const poster = U.node('button', undefined, 'phone-video-poster'); poster.type = 'button';
+    const logo = U.node('i', undefined, 'fab fa-tiktok'); logo.setAttribute('aria-hidden', 'true');
+    const play = U.node('span', '▶', 'phone-video-play'); play.setAttribute('aria-hidden', 'true');
+    const title = U.node('span', videoTitle(video));
+    poster.append(logo, play, title); frame.append(poster);
+    
+    // 🔥 TUKAR BAHAGIAN INI UNTUK GUNA TIKWM & HTML5 VIDEO
+    poster.addEventListener('click', async () => {
+      window.__tiktokStop?.();
+      
+      // Tunjuk loading
+      poster.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:30px; color:#fff;"></i>';
+
+      try {
+        const res = await fetch(`https://www.tikwm.com/api/?url=https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`);
+        const json = await res.json();
+
+        if (json.code === 0 && json.data && json.data.play) {
+          const videoEl = U.node('video');
+          videoEl.src = json.data.play;
+          videoEl.controls = true;
+          videoEl.autoplay = true;
+          videoEl.playsInline = true;
+          // Style untuk pastikan video penuhkan bingkai frame
+          videoEl.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000;';
+          
+          frame.replaceChildren(videoEl); 
+          activeVideo = { iframe: videoEl, video };
+          
+          const stop = () => {
+            videoEl.pause();
+            frame.replaceChildren(poster); 
+            activeVideo = null;
+            // Kembalikan semula kandungan poster asal
+            poster.innerHTML = '';
+            poster.append(logo, play, title);
+            if (window.__tiktokStop === stop) window.__tiktokStop = null;
+          };
+          window.__tiktokStop = stop;
+        } else {
+          throw new Error('Gagal dapat video');
+        }
+      } catch (err) {
+        console.error('TikWM gagal:', err);
+        // Fallback: Buka di tab baru
+        window.open(`https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`, '_blank');
+        // Kembalikan poster
+        poster.innerHTML = '';
+        poster.append(logo, play, title);
+      }
+    });
+
+    const fallback = U.node('a', U.t('openTikTok'), 'phone-video-fallback'); fallback.dataset.phoneText = 'openTikTok';
+    fallback.href = `https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`; fallback.target = '_blank'; fallback.rel = 'noopener noreferrer';
+    card.append(frame, fallback); container.append(card);
+    const dot = U.node('button'); dot.type = 'button'; dots.append(dot);
+    dot.addEventListener('click', () => card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }));
+    videoItems.push({ card, dot, index, title, video });
+  });
+  function mark(index) {
+    videoItems.forEach(item => {
+      item.dot.classList.toggle('is-active', item.index === index);
+      item.dot.setAttribute('aria-pressed', String(item.index === index));
+    });
+  }
+  mark(0);
+  if ('IntersectionObserver' in window) {
+    videoObserver = new IntersectionObserver(entries => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible.length) mark(videoItems.findIndex(item => item.card === visible[0].target));
+    }, { root: container, threshold: 0.6 });
+    videoItems.forEach(item => videoObserver.observe(item.card));
+  }
+}
+
+// 📌 ------
+
   function observeVideoTab() {
     new MutationObserver(() => {
       if (!host.classList.contains('active')) {
