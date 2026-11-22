@@ -90,11 +90,18 @@ export function initTestimonials(managedVideos = []) {
   stopTestimonialVideo?.();
   const videos = managedVideos.map(v => [v.id, document.documentElement.lang === 'en' ? v.titleEn : v.titleMs]);
 
+  const tr = (key) => {
+    const lang = document.documentElement.lang || 'ms';
+    const dict = translations[lang] || translations.ms;
+    return dict[key] || key;
+  };
+
   container.replaceChildren();
   dotsContainer.replaceChildren();
   const dotElements = [];
 
   videos.forEach(([id, titleKey], index) => {
+    const videoUrl = `https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`;
     const card = document.createElement('div');
     card.className = 'snap-center flex-shrink-0';
     card.style.cssText = 'flex: 0 0 auto; width: 100%; max-width: 420px;';
@@ -102,7 +109,6 @@ export function initTestimonials(managedVideos = []) {
     const frame = document.createElement('div');
     frame.style.cssText = 'position:relative;width:100%;height:0;padding-top:177.78%;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.15);';
 
-    // Kad Poster (Sebelum Video Dimainkan)
     const poster = document.createElement('button');
     poster.type = 'button';
     poster.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:0;margin:0;padding:16px;cursor:pointer;color:#fff;background:linear-gradient(160deg,#0f172a 0%,#1e293b 55%,#000 100%);-webkit-tap-highlight-color:transparent;';
@@ -114,20 +120,16 @@ export function initTestimonials(managedVideos = []) {
     poster.lastElementChild.textContent = titleKey;
     frame.appendChild(poster);
 
-    // Event Bila Ditekan
     poster.addEventListener('click', async () => {
       if (typeof window.__tiktokStop === 'function') window.__tiktokStop();
       
-      // Tunjuk loading sementara tarik video
       poster.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:30px;"></i>';
 
       try {
-        // 🔥 GUNA API TIKWM UNTUK DAPATKAN LINK VIDEO MP4
         const res = await fetch(`https://www.tikwm.com/api/?url=https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`);
         const json = await res.json();
 
         if (json.code === 0 && json.data && json.data.play) {
-          // Main menggunakan tag <video> HTML5 biasa!
           const video = document.createElement('video');
           video.src = json.data.play;
           video.controls = true;
@@ -156,8 +158,7 @@ export function initTestimonials(managedVideos = []) {
         }
       } catch (err) {
         console.error(err);
-        // Fallback: Jika API TikWM gagal, buka terus di tab baru
-        window.open(`https://www.tiktok.com/@sgmobilesetiaalam/video/${id}`, '_blank');
+        window.open(videoUrl, '_blank');
         poster.innerHTML = `
           <i class="fab fa-tiktok" style="font-size:40px;" aria-hidden="true"></i>
           <span style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.95);color:#000;display:flex;align-items:center;justify-content:center;font-size:28px;padding-left:5px;box-shadow:0 6px 20px rgba(0,0,0,.4);"><i class="fas fa-play" aria-hidden="true"></i></span>
@@ -166,8 +167,17 @@ export function initTestimonials(managedVideos = []) {
       }
     });
 
-    // Buang teks link "Tak dapat main" yang tidak perlu
-    card.append(frame);
+    // 🔥 TAMBAH BALIK TEKS LINK FALLBACK DI SINI
+    const fallback = document.createElement('a');
+    fallback.href = videoUrl;
+    fallback.target = '_blank';
+    fallback.rel = 'noopener noreferrer';
+    fallback.style.cssText = 'display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:#0ea5e9;text-decoration:underline;';
+    fallback.setAttribute('data-i18n-key', 'VideoOpenTikTok');
+    fallback.textContent = tr('VideoOpenTikTok');
+
+    // Masukkan frame DAN link fallback ke dalam kad
+    card.append(frame, fallback);
     container.appendChild(card);
 
     const dot = document.createElement('button');
