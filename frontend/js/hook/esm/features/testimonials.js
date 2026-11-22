@@ -149,7 +149,7 @@ export function initTestimonials(managedVideos = []) {
       const iframe = document.createElement('iframe');
       
       // 🔄 KEMBALI KE PLAYER V1 + TAMBAH PARAMETER REGION=MY
-      iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0&region=MY`;
+      iframe.src = `https://www.tiktok.com/player/v1/${id}?autoplay=1&controls=1&description=0&music_info=0&rel=0&region=US`;
       
       iframe.title = titleKey;
       iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
