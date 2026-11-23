@@ -1,6 +1,6 @@
 # SG Mobile Fix Setia Alam
 
-![SG Mobile Fix Setia Alam](https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-avatar/1795411164618.jpg)
+![SG Mobile Fix Setia Alam](https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-avatar/IMG-20261123-WA9871.jpg)
 
 Repositori ini mengandungi laman web statik **SG Mobile Fix Setia Alam**, kedai pembaikan telefon pintar, tablet dan jualan peranti di Setia Alam. Laman menyediakan maklumat servis, katalog telefon, galeri, profil kedai, tempahan perkhidmatan serta chatbot maya **Tiara AI**.
 
