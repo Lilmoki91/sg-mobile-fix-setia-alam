@@ -1,6 +1,8 @@
 # SG Mobile Fix Setia Alam
 
-Laman web statik untuk kedai pembaikan telefon **SG Mobile Fix Setia Alam**. Projek ini memaparkan perkhidmatan pembaikan, galeri, lokasi kedai, pilihan hubungi melalui WhatsApp atau e-mel, serta sokongan bahasa Melayu dan Inggeris.
+![SG Mobile Fix Setia Alam](https://raw.githubusercontent.com/Lilmoki91/sg-mobile-fix-setia-alam/refs/heads/main/assets/picture-avatar/1795411164618.jpg)
+
+Laman web statik untuk kedai pembaikan telefon **SG Mobile Fix Setia Alam**. Projek ini memaparkan perkhidmatan pembaikan, galeri, lokasi kedai, pilihan hubungi melalui WhatsApp atau e-mel, serta sokongan kandungan dalam dua bahasa.
 
 ## 🌐 Laman langsung
 
