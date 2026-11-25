@@ -53,7 +53,16 @@ const translationsReady = feature('./esm/i18n/translations.js', module => {
 const navigationReady = feature('./esm/features/nav.js', async module => {
   window.showTab = module.showTab;
   await safe('bottomNav', module.initBottomNavigation);
+  // Pautan notifikasi servis boleh membuka tab terus selepas navigasi siap.
+  const linkedTab = window.location.hash.slice(1);
+  if (['phones-tab', 'services-tab'].includes(linkedTab)) {
+    module.showTab(linkedTab);
+    document.querySelectorAll('.mobile-bottom-nav a[data-nav]').forEach(link => {
+      link.classList.toggle('active', link.dataset.nav === linkedTab);
+    });
+  }
 });
+feature('./esm/features/notifications.js', module => module.initNotifications());
 feature('./esm/features/menu.js', async module => {
   await safe('menu', module.initMenu);
   await safe('menuLink', () => {
@@ -96,7 +105,7 @@ feature('./esm/features/facebook-overlay.js', async module => {
     window.facebookOverlay = await safe('facebookOverlay', module.initFacebookOverlay);
   }
 });
-feature('./esm/features/social-dots.js', module => module.initSocialDots());
+feature('./esm/features/social-dot.js', module => module.initSocialDots());
 const filtersReady = feature('./esm/features/filter.js', async module => {
   await languageReady;
   await safe('serviceFilters', module.initServiceFilters);
