@@ -761,6 +761,35 @@ html[data-theme="dark"] nav {
   border-color: #475569 !important;
 }
 
+/* Kontras loceng ditetapkan berasingan daripada warna teks umum. */
+#notifications-bell {
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+#notifications-bell:hover {
+  background-color: #d1d5db !important;
+}
+
+#notifications-bell i {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme="dark"] #notifications-bell {
+  background-color: #334155 !important;
+  color: #f9fafb !important;
+}
+
+html[data-theme="dark"] #notifications-bell:hover {
+  background-color: #475569 !important;
+}
+
+#notifications-dot {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 html[data-theme="dark"] main,
 html[data-theme="dark"] .tab-content,
 html[data-theme="dark"] section.bg-white,
