@@ -176,6 +176,8 @@
 
     bookingPanel?.classList.toggle('hidden', tab !== 'bookings');
     servicePanel?.classList.toggle('hidden', tab !== 'services');
+    document.getElementById('admin-notifications-panel')?.classList.toggle('hidden', tab !== 'notifications');
+    if (tab === 'notifications') refreshStoreNotifications();
     document.getElementById('admin-gallery-panel')?.classList.toggle('hidden', tab !== 'gallery');
     if (tab === 'gallery') window.refreshAdminGallery?.();
     document.getElementById('admin-hours-panel')?.classList.toggle('hidden', tab !== 'hours');
@@ -544,6 +546,17 @@
           </button>
         </div>
       `;
+      const notify = document.createElement('button');
+      notify.type = 'button';
+      notify.className = 'btn-action bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 px-3 rounded-lg disabled:opacity-50';
+      notify.textContent = t('Notifikasi 7 hari', '7-day notification');
+      notify.disabled = service.active === false;
+      notify.addEventListener('click', () => {
+        window.StoreNotificationAdmin?.open('service', service.id, service.titleMs || service.titleEn,
+          `${service.descMs || service.descEn || ''}\n${service.price || ''}`.trim(),
+          service.titleEn || '', service.descEn ? `${service.descEn}\n${service.price || ''}`.trim() : '');
+      });
+      card.querySelector('.border-t').append(notify);
       serviceList.appendChild(card);
     });
   }
@@ -768,6 +781,126 @@
     if (action === 'delete') deleteBooking(id);
   });
 
+  // NOTIFIKASI AWAM — SDK modular yang sama seperti firebase-config.js.
+  const notificationForm = document.getElementById('store-notification-form');
+  notificationForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const submit = document.getElementById('store-notification-submit');
+    const status = document.getElementById('store-notification-admin-status');
+    if (submit.disabled) return;
+    const originalText = submit.textContent;
+    submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
+    submit.textContent = t('Menghantar…', 'Sending…');
+    status.textContent = '';
+    try {
+      if (window.sgmAuth?.current?.role !== 'admin') {
+        throw new Error(t('Sila log masuk sebagai admin.', 'Please sign in as an admin.'));
+      }
+      const type = document.getElementById('store-notification-type').value;
+      const lifetime = document.getElementById('store-notification-lifetime').value;
+      if (!['permanent', 'temporary'].includes(lifetime)) throw new Error(t('Tempoh tidak sah.', 'Invalid lifetime.'));
+      const title = document.getElementById('store-notification-title').value.trim();
+      const message = document.getElementById('store-notification-message').value.trim();
+      const titleEn = document.getElementById('store-notification-title-en').value.trim();
+      const messageEn = document.getElementById('store-notification-message-en').value.trim();
+      const rawLink = document.getElementById('store-notification-link').value.trim();
+      if (!['stock', 'service', 'announcement'].includes(type) || !title || !message
+          || title.length > 120 || message.length > 1000 || titleEn.length > 120 || messageEn.length > 1000 || rawLink.length > 500) {
+        throw new Error(t('Sila isi kategori, tajuk dan mesej yang sah.', 'Please enter a valid category, title and message.'));
+      }
+      let link = rawLink || null;
+      if (link) {
+        const url = new URL(link, document.baseURI);
+        if (!['http:', 'https:'].includes(url.protocol) || url.origin !== location.origin) {
+          throw new Error(t('Gunakan pautan dalaman sahaja.', 'Use an internal link only.'));
+        }
+        // Kekalkan dua alias skema; pautan relatif lain disimpan sebagai URL penuh.
+        if (!['/phones', '/servis'].includes(link)) link = url.href;
+      }
+      const { collection, addDoc, serverTimestamp, Timestamp } = await window.ensureFirestoreFns();
+      await addDoc(collection(window.db, 'store_notifications'), {
+        type, lifetime, title, message, titleMs: title, messageMs: message, titleEn, messageEn, link,
+        createdAt: serverTimestamp(),
+        expiresAt: lifetime === 'permanent' ? null : Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+        isActive: true
+      });
+      notificationForm.reset();
+      status.textContent = lifetime === 'permanent'
+        ? t('Notifikasi kekal dihantar sehingga admin padam.', 'Permanent notification sent until deleted by admin.')
+        : t('Notifikasi sementara dihantar untuk 7 hari.', 'Temporary notification sent for 7 days.');
+      refreshStoreNotifications();
+    } catch (error) {
+      console.error('Gagal menghantar notifikasi:', error);
+      status.textContent = t('Gagal menghantar: ', 'Unable to send: ') + error.message;
+    } finally {
+      submit.disabled = false;
+      submit.removeAttribute('aria-busy');
+      submit.textContent = originalText;
+    }
+  });
+
+  // Pembersihan ini hanya berjalan semasa sesi admin aktif. TTL menguruskan pemadaman server.
+  let refreshingNotifications = false;
+  async function refreshStoreNotifications() {
+    if (refreshingNotifications || window.sgmAuth?.current?.role !== 'admin') return;
+    const list = document.getElementById('store-notifications-admin-list');
+    if (!list) return;
+    refreshingNotifications = true;
+    try {
+      const { collection, getDocs, doc, deleteDoc } = await window.ensureFirestoreFns();
+      const snapshot = await getDocs(collection(window.db, 'store_notifications'));
+      const now = Date.now();
+      const items = [];
+      for (const record of snapshot.docs) {
+        const data = record.data();
+        const expires = data.expiresAt?.toMillis?.();
+        if (Number.isFinite(expires) && expires <= now) {
+          await deleteDoc(doc(window.db, 'store_notifications', record.id));
+        } else items.push({ ...data, id: record.id });
+      }
+      if (window.sgmAuth?.current?.role !== 'admin') { list.replaceChildren(); return; }
+      items.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      list.replaceChildren();
+      if (!items.length) list.textContent = t('Tiada notifikasi.', 'No notifications.');
+      for (const item of items) {
+        const row = document.createElement('div');
+        row.className = 'border rounded-xl p-3';
+        const title = document.createElement('h4');
+        title.className = 'font-semibold';
+        title.textContent = document.documentElement.lang === 'en'
+          ? (item.titleEn || item.titleMs || item.title || '') : (item.titleMs || item.title || item.titleEn || '');
+        const message = document.createElement('p');
+        message.className = 'text-sm whitespace-pre-wrap';
+        message.textContent = document.documentElement.lang === 'en'
+          ? (item.messageEn || item.messageMs || item.message || '') : (item.messageMs || item.message || item.messageEn || '');
+        const info = document.createElement('p');
+        info.className = 'text-xs text-gray-500 my-2';
+        const permanent = item.lifetime === 'permanent' && item.expiresAt == null;
+        info.textContent = permanent ? t('Kekal sehingga admin padam', 'Permanent until deleted')
+          : t('Tamat: ', 'Expires: ') + (item.expiresAt?.toDate?.().toLocaleString(document.documentElement.lang === 'en' ? 'en-MY' : 'ms-MY') || '-');
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'text-sm text-red-600 font-semibold';
+        remove.textContent = t('Padam', 'Delete');
+        remove.addEventListener('click', async () => {
+          if (!confirm(t('Padam notifikasi ini?', 'Delete this notification?'))) return;
+          remove.disabled = true;
+          try { await deleteDoc(doc(window.db, 'store_notifications', item.id)); await refreshStoreNotifications(); }
+          catch (error) { alert(error.message); }
+          finally { remove.disabled = false; }
+        });
+        row.append(title, message, info, remove);
+        list.append(row);
+      }
+    } catch (error) {
+      list.textContent = t('Gagal memuatkan / membersihkan notifikasi: ', 'Unable to load / clean notifications: ') + error.message;
+    } finally { refreshingNotifications = false; }
+  }
+  document.getElementById('store-notifications-refresh')?.addEventListener('click', refreshStoreNotifications);
+  setInterval(() => { if (currentAdminTab === 'notifications') refreshStoreNotifications(); }, 60000);
+  document.addEventListener('admin-language', () => { if (currentAdminTab === 'notifications') refreshStoreNotifications(); });
+
   // Service events
   serviceForm?.addEventListener('submit', saveService);
   serviceCancelBtn?.addEventListener('click', resetServiceForm);
@@ -932,7 +1065,8 @@
       phones: ['Telefon Dijual', 'Phones for Sale'],
       'phone-videos': ['Video Telefon Dijual', 'Phone Sales Videos'],
       'testimonial-videos': ['Video Testimoni', 'Testimonial Videos'],
-      gallery: ['Gambar Kedai', 'Shop Gallery']
+      gallery: ['Gambar Kedai', 'Shop Gallery'],
+      notifications: ['Notifikasi', 'Notifications']
     };
 
     document.querySelectorAll('.admin-tab-btn').forEach(btn => {
