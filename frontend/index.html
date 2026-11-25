@@ -162,6 +162,25 @@
   <i class="fab fa-facebook-f"></i>
 </a>
 
+<!-- Notifikasi awam -->
+<div id="store-notifications" class="relative">
+  <button id="notifications-bell" type="button"
+          class="relative w-9 h-9 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center"
+          aria-label="Notifikasi" aria-expanded="false" aria-controls="notifications-dropdown">
+    <i class="fas fa-bell" aria-hidden="true"></i>
+    <span id="notifications-dot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" aria-hidden="true" hidden></span>
+  </button>
+  <div id="notifications-dropdown" class="absolute right-0 mt-3 z-50 bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden"
+       style="width:min(22rem,calc(100vw - 2rem))" role="region" aria-labelledby="notifications-title" hidden>
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+      <h2 id="notifications-title" class="font-bold text-gray-800">Notifikasi Kedai</h2>
+      <button id="notifications-close" type="button" class="w-8 h-8 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Tutup notifikasi">&times;</button>
+    </div>
+    <p id="notifications-status" class="p-4 text-sm text-gray-500" role="status" aria-live="polite">Memuatkan…</p>
+    <ul id="notifications-list" class="max-h-80 overflow-y-auto"></ul>
+  </div>
+</div>
+
 <!-- Share Button -->
 <button id="share-btn" 
         class="w-9 h-9 rounded-full bg-blue-500 hover:bg-amber-500 text-white flex items-center justify-center transition-all duration-300 text-xl shadow-md hover:shadow-lg hover:scale-105">
@@ -1025,7 +1044,7 @@
   <script src="js/phones.js" defer></script>
 
   <!-- 📌 MAIN.JS (Dimuatkan paling akhir) 📌 -->
-  <script type="module" src="js/hook/main.js?v=2"></script>
+  <script type="module" src="js/hook/main.js?v=3"></script>
 </body>
 </html>
 <!-- =============================================== -->
