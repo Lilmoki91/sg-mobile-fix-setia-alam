@@ -790,6 +790,50 @@ html[data-theme="dark"] #notifications-bell:hover {
   box-shadow: none !important;
 }
 
+/* Kontras panel dan mesej notifikasi dalam tema gelap. */
+html[data-theme="dark"] #notifications-dropdown {
+  background-color: #1f2937 !important;
+  border-color: #475569 !important;
+}
+
+html[data-theme="dark"] #notifications-dropdown > div,
+html[data-theme="dark"] #notifications-list > li > a,
+html[data-theme="dark"] #notifications-list > li > button {
+  border-color: #374151 !important;
+}
+
+html[data-theme="dark"] #notifications-list > li > a,
+html[data-theme="dark"] #notifications-list > li > button {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] #notifications-list > li > .bg-blue-50 {
+  background-color: #243b53 !important;
+  color: #f9fafb !important;
+}
+
+html[data-theme="dark"] #notifications-list > li > a:hover,
+html[data-theme="dark"] #notifications-list > li > button:hover {
+  background-color: #334155 !important;
+}
+
+html[data-theme="dark"] #notifications-list h3,
+html[data-theme="dark"] #notifications-list p {
+  color: inherit !important;
+}
+
+html[data-theme="dark"] #notifications-list time,
+html[data-theme="dark"] #notifications-status {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] #notifications-list > li > a:focus-visible,
+html[data-theme="dark"] #notifications-list > li > button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: -2px;
+}
+
 html[data-theme="dark"] main,
 html[data-theme="dark"] .tab-content,
 html[data-theme="dark"] section.bg-white,
