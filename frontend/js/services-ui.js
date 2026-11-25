@@ -86,6 +86,7 @@
 
     const card = document.createElement('div');
     card.className = `service-card flex-shrink-0 w-80 bg-gradient-to-br ${gradient} rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 snap-start`;
+    card.dataset.serviceId = service.id;
     card.dataset.category = service.category || '';
     card.dataset.title = (title || '').toLowerCase();
     card.dataset.desc = (desc || '').toLowerCase();
@@ -111,6 +112,27 @@
     return card;
   }
 
+  let openedTarget = '';
+  function openNotificationCard() {
+    const url = new URL(location.href);
+    const id = url.searchParams.get('notificationTarget');
+    if (url.searchParams.get('notificationType') !== 'service' || !id || openedTarget === id) return;
+    if (!document.getElementById('services-tab')?.classList.contains('active')) return;
+    const card = [...document.querySelectorAll('.service-card')].find(el => el.dataset.serviceId === id);
+    if (!card) return;
+    openedTarget = id;
+    const search = document.getElementById('service-search');
+    if (search) search.value = '';
+    document.querySelector('.filter-btn[data-filter="all"]')?.click();
+    card.tabIndex = -1;
+    requestAnimationFrame(() => {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      card.focus({ preventScroll: true });
+      card.animate([{ outline: '4px solid #f59e0b' }, { outline: '4px solid transparent' }], { duration: 2500 });
+    });
+  }
+  window.addEventListener('store-notification-target', () => { openedTarget = ''; openNotificationCard(); });
+
   function renderServices(services) {
     const container = document.getElementById('serviceScrollContainer') || document.getElementById('cardsContainer');
     const counter = document.getElementById('visibleCount');
@@ -135,6 +157,7 @@
     if (typeof window.reapplyServiceFilter === 'function') {
       window.reapplyServiceFilter();
     }
+    openNotificationCard();
   }
 
   function initDynamicServices() {
