@@ -170,7 +170,22 @@
     U.options($('phones-sort'), [['latest', U.t('latest')], ['low', U.t('low')], ['high', U.t('high')]]);
     $('phones-search').placeholder = U.t('search');
   }
+  let openedNotificationTarget = '';
+  function notificationProduct() {
+    const url = new URL(location.href);
+    if (url.searchParams.get('notificationType') !== 'stock' || !host.classList.contains('active')) return null;
+    const id = url.searchParams.get('notificationTarget');
+    return id && id !== openedNotificationTarget ? products.find(p => p.id === id) : null;
+  }
+  window.addEventListener('store-notification-target', async () => {
+    openedNotificationTarget = '';
+    if (await ensureModule()) { if (!loaded || failed) await refresh(); else render(); }
+  });
   function render() {
+    const targeted = notificationProduct();
+    if (targeted) {
+      $('phones-search').value = ''; $('phones-brand').value = ''; $('phones-condition').value = '';
+    }
     const query = $('phones-search').value.trim().toLocaleLowerCase();
     const matches = products.filter(p => (!query || [p.name, p.brand, p.model, p.ram, p.storage, p.code].join(' ').toLocaleLowerCase().includes(query)) &&
       (!$('phones-brand').value || p.brand === $('phones-brand').value) && (!$('phones-condition').value || p.condition === $('phones-condition').value));
@@ -184,6 +199,11 @@
       if (p.status === 'available' && p.stock > 0) actions.append(U.whatsapp(p));
       card.append(actions); return card;
     }));
+    if (targeted) {
+      openedNotificationTarget = targeted.id; selectedId = targeted.id;
+      detail(targeted);
+      if (!dialog.open) dialog.showModal();
+    }
     if (dialog.open) {
       const selected = products.find(p => p.id === selectedId);
       if (selected) detail(selected); else dialog.close();
@@ -373,7 +393,9 @@ function initVideos() {
   });
   async function activate() {
     if (await ensureModule()) {
-      if (host.classList.contains('active') && (!loaded || failed)) refresh();
+      if (host.classList.contains('active')) {
+        if (!loaded || failed) refresh(); else render();
+      }
     }
   }
   new MutationObserver(() => {
