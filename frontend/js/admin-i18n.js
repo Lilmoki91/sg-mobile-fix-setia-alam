@@ -2,6 +2,25 @@
 (function () {
   'use strict';
   const words = {
+    'Notifikasi Awam': 'Public Notifications',
+    'Pilih kekal untuk info kedai, atau sementara 7 hari untuk info servis dan telefon dijual. Jangan masukkan data peribadi pelanggan.': 'Choose permanent for shop information, or temporary for 7-day service and phone sales updates. Do not include customer personal data.',
+    'Tempoh Notifikasi': 'Notification Lifetime',
+    'Kekal — sehingga admin padam (info kedai)': 'Permanent — until admin deletes (shop info)',
+    'Sementara — 7 hari (servis / telefon dijual)': 'Temporary — 7 days (services / phones for sale)',
+    'Stok Telefon': 'Phone Stock',
+    'Servis': 'Services',
+    'Pengumuman': 'Announcement',
+    'Tajuk': 'Title',
+    'Mesej': 'Message',
+    'Mesej (BM)': 'Message (BM)',
+    'Tajuk (EN, pilihan)': 'Title (EN, optional)',
+    'Mesej (EN, pilihan)': 'Message (EN, optional)',
+    'Isi kedua-dua bahasa untuk paparan dwibahasa. Jika English kosong, teks BM digunakan.': 'Fill in both languages for bilingual display. If English is empty, BM text is used.',
+    'Link (pilihan)': 'Link (optional)',
+    'Pautan dalaman sahaja. Kosongkan untuk notifikasi tanpa pautan.': 'Internal links only. Leave empty for notifications without a link.',
+    'Hantar Notifikasi': 'Send Notification',
+    'Senarai Notifikasi': 'Notification List',
+    'Muat semula / Bersihkan tamat tempoh': 'Refresh / Clean expired notifications',
     'Panel Admin': 'Admin Panel',
     'Kembali': 'Back',
     'Kata Laluan': 'Password',
@@ -126,7 +145,7 @@
   // nodes preserves icons, checkbox controls, listeners and unsaved form values.
   const bindings = [];
   const excluded = '[data-i18n-key], [data-phone-text], textarea, script, #service-form-title, #service-submit-btn, #gallery-save, #login-form button';
-  document.querySelectorAll('#login-screen, #admin-service-panel, #admin-hours-panel, #admin-gallery-panel').forEach(root => {
+  document.querySelectorAll('#login-screen, #admin-service-panel, #admin-hours-panel, #admin-gallery-panel, #admin-notifications-panel').forEach(root => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let node;
     while ((node = walker.nextNode())) {
@@ -144,6 +163,12 @@
   ['ms', 'en'].forEach(lang => {
     window.translations[lang] = window.translations[lang] || {};
     window.translations[lang].AdminFilterAll = lang === 'en' ? 'All' : 'Semua';
+    window.translations[lang].ServiceNotificationHelp = lang === 'en'
+      ? 'Save the service first, then click 7-day notification on an active service card below.'
+      : 'Simpan servis dahulu, kemudian klik Notifikasi 7 hari pada kad servis aktif di bawah.';
+    window.translations[lang].PhoneNotificationHelp = lang === 'en'
+      ? 'Save and publish the product first, then click 7-day notification on its card below.'
+      : 'Simpan dan terbitkan produk dahulu, kemudian klik Notifikasi 7 hari pada kad produk di bawah.';
   });
   function translate() {
     const header = document.querySelector('#admin-header h1');
