@@ -1,5 +1,4 @@
 // ============================================================
-// gallery-admin.js
 // 🔥 KONFIGURASI FIREBASE CLIENT SDK
 // ============================================================
 // GUNAKAN Firebase Client SDK (bukan Admin SDK) untuk aplikasi web.
@@ -22,7 +21,7 @@ let app, db;
 async function initFirebase() {
     const [{ initializeApp }, { getFirestore }, {
     collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
-    onSnapshot, query, orderBy, where, serverTimestamp
+    onSnapshot, query, orderBy, where, serverTimestamp, Timestamp
   }] = await Promise.all([
     import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
     import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"),
@@ -35,7 +34,7 @@ async function initFirebase() {
   window.db = db;
   window.firestoreFns = {
     collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
-    onSnapshot, query, orderBy, where, serverTimestamp
+    onSnapshot, query, orderBy, where, serverTimestamp, Timestamp
   };
   window.firebaseGlobalReady = true;
 }
