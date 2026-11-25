@@ -761,14 +761,21 @@ html[data-theme="dark"] nav {
   border-color: #475569 !important;
 }
 
-/* Kontras loceng ditetapkan berasingan daripada warna teks umum. */
+/* Latar telus mengikut header; keadaan aktif mengikut panel terbuka. */
 #notifications-bell {
-  background-color: #e5e7eb !important;
+  background: transparent !important;
   color: #374151 !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-#notifications-bell:hover {
-  background-color: #d1d5db !important;
+#notifications-bell[aria-expanded="true"] {
+  background: #94a3b8 !important;
+  color: #111827 !important;
+}
+
+#notifications-bell:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
 }
 
 #notifications-bell i {
@@ -777,12 +784,13 @@ html[data-theme="dark"] nav {
 }
 
 html[data-theme="dark"] #notifications-bell {
-  background-color: #334155 !important;
+  background: transparent !important;
   color: #f9fafb !important;
 }
 
-html[data-theme="dark"] #notifications-bell:hover {
-  background-color: #475569 !important;
+html[data-theme="dark"] #notifications-bell[aria-expanded="true"] {
+  background: #64748b !important;
+  color: #ffffff !important;
 }
 
 #notifications-dot {
