@@ -122,6 +122,9 @@
         <button type="button" class="admin-tab-btn bg-gray-200 text-gray-700" data-tab="testimonial-videos">
           <i class="fas fa-comments" aria-hidden="true"></i> <span data-phone-text="testimonialMenu">Video Testimoni</span>
         </button>
+        <button type="button" class="admin-tab-btn bg-gray-200 text-gray-700" data-tab="notifications">
+          <i class="fas fa-bell" aria-hidden="true"></i> <span>Notifikasi</span>
+        </button>
         <button type="button" class="admin-tab-btn bg-gray-200 text-gray-700" data-tab="gallery">
           <i class="fas fa-images" aria-hidden="true"></i> <span>Gambar Kedai</span>
         </button>
@@ -296,6 +299,7 @@
               <input type="checkbox" id="service-original" class="w-4 h-4 text-amber-600 rounded ml-4">
               <label for="service-original" class="text-sm font-semibold text-gray-700">Original Part</label>
             </div>
+            <p class="text-sm text-gray-500" data-i18n-key="ServiceNotificationHelp">Simpan servis dahulu, kemudian klik Notifikasi 7 hari pada kad servis aktif di bawah.</p>
             <div class="flex gap-2 pt-2">
               <button type="submit" id="service-submit-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">
                 <i class="fas fa-plus mr-2"></i> Tambah Servis
@@ -341,6 +345,7 @@
                 <div id="phone-image-editor" class="phone-image-editor"></div>
                 <div class="phone-actions"><button type="submit" data-phone-text="save">Simpan produk</button><button id="phone-cancel" type="button" data-phone-text="cancel">Batal edit</button></div>
               </form>
+              <p class="phone-note" data-i18n-key="PhoneNotificationHelp">Simpan dan terbitkan produk dahulu, kemudian klik Notifikasi 7 hari pada kad produk di bawah.</p>
               <div id="phone-admin-list" class="phone-grid"></div>
             </div>
           </div>
@@ -413,6 +418,57 @@
           </div>
         </section>
 
+        <section id="admin-notifications-panel" class="hidden" aria-labelledby="notification-admin-title">
+          <div class="admin-card p-5 mb-6">
+            <h2 id="notification-admin-title" class="text-lg font-bold mb-2">Notifikasi Awam</h2>
+            <p class="text-sm text-gray-500 mb-4">Pilih kekal untuk info kedai, atau sementara 7 hari untuk info servis dan telefon dijual. Jangan masukkan data peribadi pelanggan.</p>
+            <form id="store-notification-form" class="space-y-4">
+              <div>
+                <label for="store-notification-lifetime" class="block text-sm font-semibold mb-1">Tempoh Notifikasi</label>
+                <select id="store-notification-lifetime" class="w-full border rounded-xl px-4 py-2" required>
+                  <option value="permanent">Kekal — sehingga admin padam (info kedai)</option>
+                  <option value="temporary">Sementara — 7 hari (servis / telefon dijual)</option>
+                </select>
+              </div>
+              <div>
+                <label for="store-notification-type" class="block text-sm font-semibold mb-1">Kategori</label>
+                <select id="store-notification-type" class="w-full border rounded-xl px-4 py-2" required>
+                  <option value="stock">Stok Telefon</option>
+                  <option value="service">Servis</option>
+                  <option value="announcement">Pengumuman</option>
+                </select>
+              </div>
+              <div>
+                <label for="store-notification-title" class="block text-sm font-semibold mb-1">Tajuk (BM)</label>
+                <input id="store-notification-title" type="text" maxlength="120" class="w-full border rounded-xl px-4 py-2" required>
+              </div>
+              <div>
+                <label for="store-notification-message" class="block text-sm font-semibold mb-1">Mesej (BM)</label>
+                <textarea id="store-notification-message" rows="3" maxlength="1000" class="w-full border rounded-xl px-4 py-2" required></textarea>
+              </div>
+              <div>
+                <label for="store-notification-title-en" class="block text-sm font-semibold mb-1">Tajuk (EN, pilihan)</label>
+                <input id="store-notification-title-en" type="text" maxlength="120" class="w-full border rounded-xl px-4 py-2">
+              </div>
+              <div>
+                <label for="store-notification-message-en" class="block text-sm font-semibold mb-1">Mesej (EN, pilihan)</label>
+                <textarea id="store-notification-message-en" rows="3" maxlength="1000" class="w-full border rounded-xl px-4 py-2"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Isi kedua-dua bahasa untuk paparan dwibahasa. Jika English kosong, teks BM digunakan.</p>
+              </div>
+              <div>
+                <label for="store-notification-link" class="block text-sm font-semibold mb-1">Link (pilihan)</label>
+                <input id="store-notification-link" type="text" maxlength="500" placeholder="/phones atau /servis" aria-describedby="store-notification-link-help" class="w-full border rounded-xl px-4 py-2">
+                <p id="store-notification-link-help" class="text-xs text-gray-500 mt-1">Pautan dalaman sahaja. Kosongkan untuk notifikasi tanpa pautan.</p>
+              </div>
+              <button type="submit" id="store-notification-submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl disabled:opacity-60">Hantar Notifikasi</button>
+              <p id="store-notification-admin-status" class="text-sm text-gray-600" role="status" aria-live="polite"></p>
+            </form>
+            <h3 class="font-bold mt-6 mb-3">Senarai Notifikasi</h3>
+            <button id="store-notifications-refresh" type="button" class="text-sm font-semibold text-blue-600 mb-3">Muat semula / Bersihkan tamat tempoh</button>
+            <div id="store-notifications-admin-list" class="space-y-3"></div>
+          </div>
+        </section>
+
         <section id="admin-gallery-panel" class="hidden">
           <div class="admin-card p-5 mb-6">
             <h2 class="text-lg font-bold mb-2">Pengurusan Gambar Kedai</h2>
@@ -468,6 +524,7 @@
   <script src="js/shop-hours.js" defer></script>
   <script src="js/phones.js" defer></script>
   <script src="js/phone-videos-admin.js" defer></script>
+  <script src="js/admin-notifications.js" defer></script>
   <script src="js/phones-admin.js" defer></script>
   <script src="js/ai-chatbot.js" defer></script>
   <script src="js/admin-response-ai.js" defer></script>
