@@ -116,7 +116,12 @@
         } catch (err) { message('error', true, err.message); }
         finally { setBusy(false); }
       });
-      actions.append(editButton, del); card.append(actions); return card;
+      const notify = U.node('button', window.StoreNotificationAdmin?.label() || 'Notifikasi 7 hari');
+      notify.type = 'button'; notify.disabled = busy || !p.published;
+      notify.addEventListener('click', () => window.StoreNotificationAdmin?.open('stock', p.id, p.name,
+        `${p.descriptionMs || p.descriptionEn || p.name}\n${U.price(p)} · ${p.ram} RAM · ${p.storage}`,
+        p.name, p.descriptionEn ? `${p.descriptionEn}\n${U.price(p)} · ${p.ram} RAM · ${p.storage}` : ''));
+      actions.append(editButton, del, notify); card.append(actions); return card;
     }));
   }
   function setBusy(value) {
